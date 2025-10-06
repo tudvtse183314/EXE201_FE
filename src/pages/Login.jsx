@@ -11,7 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
