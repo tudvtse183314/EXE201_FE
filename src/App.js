@@ -7,7 +7,7 @@ import PublicHome from './pages/public/Home';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
 import Services from './pages/public/Services';
-import UserDashboard from './pages/user/Dashboard';
+import UserDashboard from './pages/user/UserDashboard';
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
 
 function App() {

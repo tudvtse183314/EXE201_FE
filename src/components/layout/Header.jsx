@@ -10,12 +10,25 @@ export default function Header() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const navigationItems = [
+  // Different navigation items based on authentication status
+  const publicNavigationItems = [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
     { label: 'Services', path: '/services' },
     { label: 'Contact', path: '/contact' }
   ];
+
+  const userNavigationItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Profile', path: '/dashboard' },
+    { label: 'Shop', path: '/shop' },
+    { label: 'Order', path: '/orders' },
+    { label: 'AI Analysis', path: '/ai-analysis' },
+    { label: 'Premium', path: '/premium' },
+    { label: 'Chat', path: '/chat' }
+  ];
+
+  const navigationItems = user ? userNavigationItems : publicNavigationItems;
 
   const iconButtons = [
     { icon: Search, label: 'Search', action: () => console.log('Search clicked') },
