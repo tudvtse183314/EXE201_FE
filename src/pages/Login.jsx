@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import publicApi from '../api/publicApi';
+import publicApi, { fetchUserAccount } from '../api/publicApi';
 import { useAuth } from '../context/AuthContext';
 import { backgrounds } from '../assets/images';
 
@@ -63,14 +63,20 @@ export default function Login() {
       const response = await publicApi.post('/login', formData);
       console.log('Login response:', response);
       
-      // Expect backend to return { user: {...}, token: '...' }
-      const { user, token } = response.data;
+      // Get token from response
+      const { token } = response.data;
       if (!token) {
         setErrors({ general: 'Login failed: no token returned' });
         return;
       }
       
-      login(user, token);
+      // Fetch user data using the token
+      console.log('Fetching user account data...');
+      const userData = await fetchUserAccount(token);
+      console.log('User account data:', userData);
+      
+      // Login with both token and user data
+      login(userData, token);
       navigate(from, { replace: true });
     } catch (err) {
       console.error('Login error:', err);

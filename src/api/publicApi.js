@@ -53,7 +53,7 @@ async function handleWithMockApi(config) {
     if (method?.toLowerCase() === 'post') {
       return await mockAxios.post(endpoint, data);
     } else if (method?.toLowerCase() === 'get') {
-      return await mockAxios.get(endpoint);
+      return await mockAxios.get(endpoint, config);
     }
     
     throw new Error(`Mock API: Method ${method} not supported`);
@@ -62,5 +62,41 @@ async function handleWithMockApi(config) {
     throw error;
   }
 }
+
+// Function to fetch user account data
+export const fetchUserAccount = async (token) => {
+  try {
+    console.log('Fetching user account data with token:', token ? `${token.substring(0, 10)}...` : 'null');
+    
+    const response = await publicApi.get('/account', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log('User account response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user account:', error);
+    
+    // If using mock API, return mock user data
+    if (USE_MOCK_API && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+      console.log('Backend unavailable, returning mock user data...');
+      return {
+        id: 1,
+        fullName: 'Test User',
+        email: 'test@example.com',
+        phone: '1234567890',
+        role: 'CUSTOMER',
+        petName: 'Buddy',
+        petType: 'dog',
+        petAge: '2 years',
+        petSize: 'medium'
+      };
+    }
+    
+    throw error;
+  }
+};
 
 export default publicApi;

@@ -12,6 +12,7 @@ import UserHome from './pages/user/Home';
 import UserDashboard from './pages/user/UserDashboard';
 import UserShop from './pages/user/Shop';
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
+import DebugPanel from './components/debug/DebugPanel';
 
 function App() {
   return (
@@ -125,6 +126,9 @@ function App() {
             }
           />
         </Routes>
+        
+        {/* Debug Panel - Only shows in development */}
+        <DebugPanel />
       </BrowserRouter>
     </AuthProvider>
   );

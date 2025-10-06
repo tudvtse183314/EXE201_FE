@@ -5,6 +5,8 @@ import ProductCard from '../../components/common/ProductCard';
 import UserHeader from '../../components/layout/UserHeader';
 import { mockProducts, getProductsByCategory, getFeaturedProduct } from '../../data/products';
 import Shuffle from '../../components/effects/Shuffle';
+import ShinyText from '../../components/effects/ShinyText';
+import { HotGradient, DiscountGradient, AIGradient, PremiumGradient } from '../../components/effects/GradientText';
 
 export default function UserShop() {
   const { user } = useAuth();
@@ -77,16 +79,21 @@ export default function UserShop() {
       <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-xl">
-            <h2 className="text-4xl font-bold mb-4">
-              <Shuffle
-                text={`Welcome to Shop, ${user?.fullName?.split(' ')[0] || 'Pet Parent'}!`}
-                shuffleDirection="up"
-                duration={0.6}
-                ease="power3.out"
-                stagger={0.05}
-                glowColor="#ffffff"
-              />
-            </h2>
+            <div className="flex items-center gap-4 mb-4">
+              <h2 className="text-4xl font-bold">
+                <Shuffle
+                  text={`Welcome to Shop, ${user?.fullName?.split(' ')[0] || 'Pet Parent'}!`}
+                  shuffleDirection="up"
+                  duration={0.6}
+                  ease="power3.out"
+                  stagger={0.05}
+                  glowColor="#ffffff"
+                />
+              </h2>
+              <PremiumGradient size="text-2xl" weight="font-bold">
+                👑 PREMIUM
+              </PremiumGradient>
+            </div>
             <p className="text-indigo-100 mb-2">
               {featuredProduct.description}
             </p>

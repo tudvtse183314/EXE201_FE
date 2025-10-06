@@ -154,6 +154,45 @@ class MockApi {
     };
   }
 
+  // Mock account endpoint
+  async getAccount(token) {
+    await this.delay(800); // Simulate network delay
+    
+    // Extract user ID from token (mock_token_1_1234567890)
+    const tokenParts = token.split('_');
+    const userId = parseInt(tokenParts[2]);
+    
+    const user = this.users.find(u => u.id === userId);
+    
+    if (!user) {
+      throw {
+        response: {
+          data: {
+            message: 'User not found'
+          }
+        }
+      };
+    }
+    
+    return {
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        petName: user.petName,
+        petAge: user.petAge,
+        petType: user.petType,
+        petSize: user.petSize,
+        enabled: true,
+        accountNonLocked: true,
+        accountNonExpired: true,
+        credentialsNonExpired: true
+      }
+    };
+  }
+
   // Mock health check
   async health() {
     await this.delay(500);
@@ -193,10 +232,18 @@ export const mockAxios = {
         throw new Error(`Mock API: Endpoint ${url} not implemented`);
     }
   },
-  get: async (url) => {
+  get: async (url, config) => {
     switch (url) {
       case '/health':
         return await mockApi.health();
+      case '/account':
+        // Extract token from Authorization header
+        const authHeader = config?.headers?.Authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          throw new Error('Mock API: Authorization header required for /account');
+        }
+        const token = authHeader.replace('Bearer ', '');
+        return await mockApi.getAccount(token);
       default:
         throw new Error(`Mock API: Endpoint ${url} not implemented`);
     }

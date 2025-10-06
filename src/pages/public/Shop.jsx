@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import ProductCard from '../../components/common/ProductCard';
 import { mockProducts, getProductsByCategory, getFeaturedProduct } from '../../data/products';
 import Shuffle from '../../components/effects/Shuffle';
+import ShinyText from '../../components/effects/ShinyText';
+import { HotGradient, DiscountGradient, AIGradient } from '../../components/effects/GradientText';
 
 export default function PublicShop() {
   const { user } = useAuth();
@@ -224,16 +226,21 @@ export default function PublicShop() {
 
         {/* Toy Recommendations */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Shuffle
-              text="Toy Recommendations"
-              shuffleDirection="right"
-              duration={0.5}
-              ease="power3.out"
-              stagger={0.03}
-              glowColor="#ec4899"
-            />
-          </h2>
+          <div className="flex items-center gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              <Shuffle
+                text="Toy Recommendations"
+                shuffleDirection="right"
+                duration={0.5}
+                ease="power3.out"
+                stagger={0.03}
+                glowColor="#ec4899"
+              />
+            </h2>
+            <HotGradient size="text-lg" weight="font-bold">
+              🔥 HOT DEALS
+            </HotGradient>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {toyProducts.map(product => (
               <ProductCard 
@@ -248,16 +255,21 @@ export default function PublicShop() {
 
         {/* Food & Treat Recommendations */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Shuffle
-              text="Food & Treat Recommendations"
-              shuffleDirection="up"
-              duration={0.5}
-              ease="power3.out"
-              stagger={0.03}
-              glowColor="#f59e0b"
-            />
-          </h2>
+          <div className="flex items-center gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              <Shuffle
+                text="Food & Treat Recommendations"
+                shuffleDirection="up"
+                duration={0.5}
+                ease="power3.out"
+                stagger={0.03}
+                glowColor="#f59e0b"
+              />
+            </h2>
+            <DiscountGradient size="text-lg" weight="font-bold">
+              💰 BEST PRICES
+            </DiscountGradient>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {foodProducts.map(product => (
               <ProductCard 
@@ -272,16 +284,21 @@ export default function PublicShop() {
 
         {/* Trending Accessories */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Shuffle
-              text="Trending Accessories"
-              shuffleDirection="down"
-              duration={0.5}
-              ease="power3.out"
-              stagger={0.03}
-              glowColor="#10b981"
-            />
-          </h2>
+          <div className="flex items-center gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              <Shuffle
+                text="Trending Accessories"
+                shuffleDirection="down"
+                duration={0.5}
+                ease="power3.out"
+                stagger={0.03}
+                glowColor="#10b981"
+              />
+            </h2>
+            <AIGradient size="text-lg" weight="font-bold">
+              🤖 AI RECOMMENDED
+            </AIGradient>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {accessories.map(product => (
               <ProductCard 

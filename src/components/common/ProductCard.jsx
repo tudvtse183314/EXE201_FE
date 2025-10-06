@@ -2,6 +2,8 @@ import React from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ShinyText from '../effects/ShinyText';
+import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
@@ -40,6 +42,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
     }
   };
 
+  // Helper function to determine badge type and component
+  const getBadgeComponent = (badge) => {
+    if (!badge) return null;
+    
+    const badgeText = badge.replace('%', '').replace('off', '').trim();
+    const discountPercent = parseInt(badgeText);
+    
+    if (discountPercent >= 30) {
+      return <HotGradient size="text-xs" weight="font-bold">{badge}</HotGradient>;
+    } else if (discountPercent >= 20) {
+      return <DiscountGradient size="text-xs" weight="font-bold">{badge}</DiscountGradient>;
+    } else {
+      return <SaleGradient size="text-xs" weight="font-bold">{badge}</SaleGradient>;
+    }
+  };
+
   // Generate placeholder image based on category
   const getPlaceholderImage = (categoryName) => {
     const imageMap = {
@@ -61,9 +79,9 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
       {/* Product Image */}
       <div className="relative bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
         {product.badge && (
-          <span className="absolute top-2 right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full font-semibold z-10">
-            {product.badge}
-          </span>
+          <div className="absolute top-2 right-2 bg-white bg-opacity-90 backdrop-blur-sm px-2 py-1 rounded-full font-semibold z-10 shadow-lg">
+            {getBadgeComponent(product.badge)}
+          </div>
         )}
         
         {/* Placeholder Image */}
