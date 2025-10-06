@@ -17,7 +17,7 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/user/home';
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });

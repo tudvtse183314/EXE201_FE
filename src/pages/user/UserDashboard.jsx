@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Heart, ShoppingCart, User, Check, ChevronRight, MessageCircle } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { pets, products, petGifs } from '../../assets/images';
 import Image from '../../components/common/Image';
 import { HeroCarousel } from '../../components/common/Carousel';
+import UserHeader from '../../components/layout/UserHeader';
 // Animation components temporarily disabled
 
 export default function UserDashboard() {
@@ -185,40 +186,8 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <span className="text-xl font-bold text-gray-900">Pawfect Match</span>
-              <div className="hidden md:flex space-x-6">
-                {['Home', 'Profile', 'Shop', 'Order', 'AI Analysis', 'Premium', 'Chat'].map((item) => (
-                  <button 
-                    key={item}
-                    className={`text-sm font-medium transition-colors hover:text-indigo-600 ${
-                      item === 'Profile' ? 'text-indigo-600' : 'text-gray-700'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Search className="w-5 h-5 text-gray-600 cursor-pointer hover:text-indigo-600 transition-colors" />
-              <Heart className="w-5 h-5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors" />
-              <ShoppingCart className="w-5 h-5 text-gray-600 cursor-pointer hover:text-indigo-600 transition-colors" />
-              <MessageCircle className="w-5 h-5 text-gray-600 cursor-pointer hover:text-indigo-600 transition-colors" />
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center cursor-pointer">
-                <User className="w-5 h-5 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Carousel */}
-      <HeroCarousel items={carouselItems} />
+      {/* Enhanced User Header with Shuffle Animation */}
+      <UserHeader />
 
       {/* Pet Profile Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
