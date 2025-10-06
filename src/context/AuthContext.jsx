@@ -4,11 +4,32 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
+        return JSON.parse(storedUser);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      localStorage.removeItem('user');
+      return null;
+    }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('authToken'));
+  const [token, setToken] = useState(() => {
+    try {
+      const storedToken = localStorage.getItem('authToken');
+      if (storedToken && storedToken !== 'undefined' && storedToken !== 'null') {
+        return storedToken;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting token from localStorage:', error);
+      localStorage.removeItem('authToken');
+      return null;
+    }
+  });
 
   const login = (userData, tokenValue) => {
     setUser(userData);

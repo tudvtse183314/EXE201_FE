@@ -1,20 +1,25 @@
 import React from 'react';
-import MainLayout from '../../components/layout/MainLayout';
+import { useNavigate } from 'react-router-dom';
 import { pets, products, petGifs } from '../../assets/images';
 import Image from '../../components/common/Image';
 import { HeroCarousel } from '../../components/common/Carousel';
+import UserHeader from '../../components/layout/UserHeader';
+import { useAuth } from '../../context/AuthContext';
 
-export default function PawfectMatch() {
+export default function UserHome() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const handleGetStarted = () => {
-    alert('Get Started clicked!');
+    navigate('/dashboard');
   };
 
   const handleLearnMore = () => {
-    alert('Learn More clicked!');
+    navigate('/services');
   };
 
   const handleGetRecommendations = () => {
-    alert('Get Personalized Recommendations clicked!');
+    navigate('/ai-analysis');
   };
 
   const handleSubscribe = (email) => {
@@ -31,7 +36,7 @@ export default function PawfectMatch() {
           alt="Happy Dog"
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.target.src = petGifs.dog1Static;
+            e.target.src = pets.dog1;
           }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -39,23 +44,23 @@ export default function PawfectMatch() {
       
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-          Dogs Love Unconditionally
+          Welcome Back, {user?.fullName?.split(' ')[0] || 'Pet Parent'}!
         </h1>
         <p className="text-xl md:text-2xl mb-8 drop-shadow-md">
-          Find your loyal companion who will be your best friend for life
+          Continue setting up your pet's profile for personalized recommendations
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button 
             onClick={handleGetStarted}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Find My Dog
+            Complete Profile
           </button>
           <button 
             onClick={handleLearnMore}
             className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm border border-white border-opacity-30"
           >
-            Learn More
+            Browse Shop
           </button>
         </div>
       </div>
@@ -69,7 +74,7 @@ export default function PawfectMatch() {
           alt="Playful Cat"
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.target.src = petGifs.cat1Static;
+            e.target.src = pets.cat1;
           }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -77,23 +82,23 @@ export default function PawfectMatch() {
       
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-          Cats Bring Joy
+          Discover Perfect Matches
         </h1>
         <p className="text-xl md:text-2xl mb-8 drop-shadow-md">
-          Discover the perfect feline friend who will fill your home with purrs and playfulness
+          Our AI analyzes your pet's needs to recommend the best accessories
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button 
             onClick={handleGetStarted}
             className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Find My Cat
+            AI Analysis
           </button>
           <button 
             onClick={handleLearnMore}
             className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm border border-white border-opacity-30"
           >
-            Learn More
+            View Recommendations
           </button>
         </div>
       </div>
@@ -107,7 +112,7 @@ export default function PawfectMatch() {
           alt="Happy Pets"
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.target.src = petGifs.dog2Static;
+            e.target.src = pets.dog2;
           }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -115,23 +120,23 @@ export default function PawfectMatch() {
       
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-          Find Your Perfect Match
+          Your Pet's Perfect Match
         </h1>
         <p className="text-xl md:text-2xl mb-8 drop-shadow-md">
-          Whether you prefer dogs, cats, or both - we'll help you find the perfect companion
+          Join thousands of happy pet parents who found their perfect companion through our platform
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button 
             onClick={handleGetStarted}
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Get Started
+            Start Shopping
           </button>
           <button 
             onClick={handleLearnMore}
             className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm border border-white border-opacity-30"
           >
-            Learn More
+            Chat Support
           </button>
         </div>
       </div>
@@ -139,15 +144,18 @@ export default function PawfectMatch() {
   ];
 
   return (
-    <MainLayout>
-      {/* Hero Carousel with Pet GIFs */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Enhanced User Header */}
+      <UserHeader />
+
+      {/* Hero Carousel */}
       <HeroCarousel items={carouselItems} />
 
       {/* Featured Services Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Featured Services</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Your Personalized Services</h2>
             <p className="text-xl text-gray-600">Everything your pet needs, delivered with love</p>
           </div>
           
@@ -162,7 +170,7 @@ export default function PawfectMatch() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
                 <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-2xl font-bold">Pet Matching</h3>
+                  <h3 className="text-2xl font-bold">AI Pet Matching</h3>
                   <p className="text-sm opacity-90">Find the perfect companion</p>
                 </div>
               </div>
@@ -227,117 +235,6 @@ export default function PawfectMatch() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-xl text-gray-600">Simple steps to find your perfect pet match</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">1️⃣</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Tell Us About Yourself</h3>
-              <p className="text-gray-600">
-                Share your lifestyle, living situation, and preferences to help us understand what you're looking for.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">2️⃣</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Get Matched</h3>
-              <p className="text-gray-600">
-                Our AI analyzes your preferences and matches you with compatible pets in your area.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">3️⃣</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Meet & Adopt</h3>
-              <p className="text-gray-600">
-                Connect with your matched pets and start your journey together with our support.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Happy Pet Parents</h2>
-            <p className="text-xl text-gray-600">See what our community has to say</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                    alt="Sarah Johnson"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">Sarah Johnson</h4>
-                  <p className="text-gray-600">Dog Owner</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "Pawfect Match helped me find the perfect companion for my lifestyle. The matching process was so accurate!"
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                    alt="Mike Chen"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">Mike Chen</h4>
-                  <p className="text-gray-600">Cat Owner</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "Amazing service! The AI matching was spot-on and the support team was incredibly helpful throughout the process."
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
-                  <Image 
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                    alt="Emily Davis"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">Emily Davis</h4>
-                  <p className="text-gray-600">Pet Parent</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "I found my perfect match through Pawfect Match. The whole experience was seamless and enjoyable!"
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-indigo-600">
         <div className="max-w-4xl mx-auto text-center px-4">
@@ -380,6 +277,6 @@ export default function PawfectMatch() {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </div>
   );
 }
