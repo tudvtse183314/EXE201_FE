@@ -7,8 +7,10 @@ import PublicHome from './pages/public/Home';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
 import Services from './pages/public/Services';
+import PublicShop from './pages/public/Shop';
 import UserHome from './pages/user/Home';
 import UserDashboard from './pages/user/UserDashboard';
+import UserShop from './pages/user/Shop';
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/shop" element={<PublicShop />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -45,12 +48,7 @@ function App() {
             path="/user/shop"
             element={
               <PrivateRoute>
-                <div className="min-h-screen bg-gray-100 p-8">
-                  <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-6">Shop</h1>
-                    <p className="text-lg text-gray-700">Shop page coming soon...</p>
-                  </div>
-                </div>
+                <UserShop />
               </PrivateRoute>
             }
           />
