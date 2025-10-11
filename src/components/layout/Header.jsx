@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, User, Heart, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
+import SvgLogo from '../common/SvgLogo';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -64,7 +65,13 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-4">
+            <SvgLogo 
+              size="medium"
+              variant="default"
+              onClick={() => handleNavigation('/')}
+              className="hover:scale-110"
+            />
             <span 
               className="text-xl font-bold text-gray-900 cursor-pointer"
               onClick={() => handleNavigation('/')}

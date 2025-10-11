@@ -19,7 +19,7 @@ export default function MockAPIDemo() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-yellow-800 mb-3">⚠️ Backend Server Unavailable</h3>
           <div className="space-y-2 text-yellow-700">
-            <p>• Backend server at <code>http://localhost:8080</code> is not running</p>
+            <p>• Backend server is not available or not responding</p>
             <p>• Mock API is automatically used for development</p>
             <p>• All registration and login functionality works with mock data</p>
             <p>• No network errors - seamless user experience</p>
@@ -105,7 +105,7 @@ export default function MockAPIDemo() {
         <div className="bg-gray-100 border border-gray-300 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-3">To use real backend API:</h3>
           <div className="space-y-2 text-gray-700">
-            <p>1. Start your backend server on <code>http://localhost:8080</code></p>
+            <p>1. Ensure your backend server is running and accessible</p>
             <p>2. Open <code>src/api/publicApi.js</code></p>
             <p>3. Change <code>USE_MOCK_API = false</code></p>
             <p>4. Restart the React development server</p>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
-import publicApi from '../api/publicApi';
+import { authApi } from '../api/authApi';
 import { backgrounds } from '../assets/images';
+import LoadingWithTimeout from '../components/common/LoadingWithTimeout';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -127,9 +128,8 @@ export default function Register() {
 
       console.log('Sending registration data:', registerData);
       console.log('API endpoint:', '/register');
-      console.log('Full URL:', 'http://localhost:8080/api/register');
 
-      const response = await publicApi.post('/register', registerData);
+      const response = await authApi.register(registerData);
       console.log('Registration response:', response);
       
       // Success - redirect to login
@@ -150,7 +150,10 @@ export default function Register() {
       let errorMessage = 'Registration failed. Please try again.';
       let fieldErrors = {};
       
-      if (err.response?.data) {
+      // Handle timeout errors specifically
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        errorMessage = 'Registration is taking longer than expected. The server might be starting up. Please wait a moment and try again.';
+      } else if (err.response?.data) {
         const errorData = err.response.data;
         
         // Handle validation errors (field-specific)

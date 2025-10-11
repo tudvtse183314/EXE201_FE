@@ -1,14 +1,11 @@
 import axios from 'axios';
 import mockAxios from './mockApi';
-
-// Check if backend is available
-const BACKEND_URL = 'http://localhost:8080/api';
-const USE_MOCK_API = true; // Set to false when backend is available
+import API_CONFIG from '../config/api';
 
 // Axios instance for public endpoints (no authentication required)
 const publicApi = axios.create({
-  baseURL: BACKEND_URL,
-  timeout: 10000 // 10 second timeout
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT
 });
 
 // Request interceptor to handle errors
@@ -33,7 +30,7 @@ publicApi.interceptors.response.use(
     console.error('API Response Error:', error);
     
     // If network error and mock API is enabled, use mock API
-    if (USE_MOCK_API && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+    if (API_CONFIG.USE_MOCK_API && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
       console.log('Backend unavailable, using mock API...');
       return handleWithMockApi(error.config);
     }
@@ -46,7 +43,7 @@ publicApi.interceptors.response.use(
 async function handleWithMockApi(config) {
   try {
     const { method, url, data } = config;
-    const endpoint = url.replace(BACKEND_URL, '');
+    const endpoint = url.replace(API_CONFIG.BASE_URL, '');
     
     console.log('Using Mock API for:', method?.toUpperCase(), endpoint);
     
@@ -68,7 +65,7 @@ export const fetchUserAccount = async (token) => {
   try {
     console.log('Fetching user account data with token:', token ? `${token.substring(0, 10)}...` : 'null');
     
-    const response = await publicApi.get('/account', {
+    const response = await publicApi.get(API_CONFIG.ENDPOINTS.ACCOUNT, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -80,7 +77,7 @@ export const fetchUserAccount = async (token) => {
     console.error('Error fetching user account:', error);
     
     // If using mock API, return mock user data
-    if (USE_MOCK_API && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+    if (API_CONFIG.USE_MOCK_API && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
       console.log('Backend unavailable, returning mock user data...');
       return {
         id: 1,

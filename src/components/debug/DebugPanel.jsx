@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import AuthTest from '../test/AuthTest';
 import AuthDebugger from './AuthDebugger';
 import AuthFlowTest from '../test/AuthFlowTest';
+import ApiDebugger from './ApiDebugger';
+import LogoTest from './LogoTest';
 
 /**
  * Debug Panel - Only shows in development mode
@@ -12,6 +14,8 @@ export default function DebugPanel() {
   const [showAuthTest, setShowAuthTest] = useState(false);
   const [showAuthDebugger, setShowAuthDebugger] = useState(false);
   const [showAuthFlowTest, setShowAuthFlowTest] = useState(false);
+  const [showApiDebugger, setShowApiDebugger] = useState(true); // Show by default for debugging
+  const [showLogoTest, setShowLogoTest] = useState(false);
 
   // Only show in development
   if (process.env.NODE_ENV === 'production') {
@@ -65,6 +69,26 @@ export default function DebugPanel() {
               />
               <span className="text-sm">Auth Flow Test</span>
             </label>
+            
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showApiDebugger}
+                onChange={(e) => setShowApiDebugger(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm">API Debugger</span>
+            </label>
+            
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showLogoTest}
+                onChange={(e) => setShowLogoTest(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-sm">Logo Test</span>
+            </label>
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-200">
@@ -73,6 +97,7 @@ export default function DebugPanel() {
                 setShowAuthTest(false);
                 setShowAuthDebugger(false);
                 setShowAuthFlowTest(false);
+                setShowApiDebugger(false);
               }}
               className="w-full bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
             >
@@ -86,6 +111,8 @@ export default function DebugPanel() {
       {showAuthTest && <AuthTest />}
       {showAuthDebugger && <AuthDebugger />}
       {showAuthFlowTest && <AuthFlowTest />}
+      {showApiDebugger && <ApiDebugger />}
+      {showLogoTest && <LogoTest />}
     </>
   );
 }

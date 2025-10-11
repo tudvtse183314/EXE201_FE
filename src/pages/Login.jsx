@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import publicApi, { fetchUserAccount } from '../api/publicApi';
+import { authApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import { backgrounds } from '../assets/images';
 
@@ -58,22 +58,31 @@ export default function Login() {
     try {
       console.log('Sending login data:', formData);
       console.log('API endpoint:', '/login');
-      console.log('Full URL:', 'http://localhost:8080/api/login');
 
-      const response = await publicApi.post('/login', formData);
+      const response = await authApi.login(formData.phone, formData.password);
       console.log('Login response:', response);
       
       // Get token from response
-      const { token } = response.data;
+      const token = response.token;
       if (!token) {
         setErrors({ general: 'Login failed: no token returned' });
         return;
       }
       
-      // Fetch user data using the token
-      console.log('Fetching user account data...');
-      const userData = await fetchUserAccount(token);
-      console.log('User account data:', userData);
+      // User data is already in the login response, no need to fetch separately
+      const userData = {
+        id: response.id,
+        fullName: response.fullName,
+        email: response.email,
+        phone: response.phone,
+        role: response.role,
+        petName: response.petName,
+        petAge: response.petAge,
+        petType: response.petType,
+        petSize: response.petSize
+      };
+      
+      console.log('User data from login response:', userData);
       
       // Login with both token and user data
       login(userData, token);

@@ -21,7 +21,8 @@ export const banners = {
 export const logos = {
   main: '/logo192.png',
   white: '/logo512.png',
-  favicon: '/favicon.ico'
+  favicon: '/favicon.ico',
+  petvibe: require('./LOGO_PETVIBE.jpg').default
 };
 
 // Icon Images (for custom icons not available in Lucide)

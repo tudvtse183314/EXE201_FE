@@ -1,0 +1,190 @@
+/* AI Analysis Component Styles */
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+/* Analysis progress animation */
+@keyframes analysis-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.analysis-pulse {
+  animation: analysis-pulse 2s ease-in-out infinite;
+}
+
+/* Match score glow effect */
+@keyframes match-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+  }
+}
+
+.match-glow {
+  animation: match-glow 2s ease-in-out infinite;
+}
+
+/* Upload area hover effect */
+.upload-area {
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Product card hover effect */
+.product-card {
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+/* Analysis result cards */
+.analysis-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.analysis-card p {
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* Loading spinner */
+.ai-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Confidence indicator */
+.confidence-excellent {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.confidence-good {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.confidence-fair {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.confidence-low {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+/* Trait tags */
+.trait-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0.125rem;
+}
+
+/* Recommendation match score */
+.match-score {
+  position: relative;
+  overflow: hidden;
+}
+
+.match-score::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .analysis-card {
+    padding: 1rem;
+  }
+  
+  .trait-tag {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .analysis-card {
+    background: linear-gradient(135deg, #1f2937, #374151);
+  }
+  
+  .trait-tag {
+    background: linear-gradient(135deg, #374151, #4b5563);
+    color: #e5e7eb;
+  }
+}
+
