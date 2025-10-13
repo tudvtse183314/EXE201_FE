@@ -3,8 +3,8 @@ const API_CONFIG = {
   // Production API URL
   BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://exe201-be-uhno.onrender.com/api',
   
-  // Timeout settings - Increased for backend cold start
-  TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 30000, // 30 seconds
+  // Timeout settings - Optimized for faster auth
+  TIMEOUT: parseInt(process.env.REACT_APP_API_TIMEOUT) || 8000, // 8 seconds
   
   // Environment
   ENV: process.env.REACT_APP_ENV || 'production',

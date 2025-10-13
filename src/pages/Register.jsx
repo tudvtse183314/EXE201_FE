@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { authApi } from '../api/authApi';
 import { backgrounds } from '../assets/images';
-import LoadingWithTimeout from '../components/common/LoadingWithTimeout';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -106,43 +105,21 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     
     try {
-      // Prepare data according to Swagger API specification
-      const registerData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-        role: formData.role,
-        petName: formData.petName,
-        petAge: formData.petAge,
-        petType: formData.petType,
-        petSize: formData.petSize
-      };
-
-      console.log('Sending registration data:', registerData);
-      console.log('API endpoint:', '/register');
-
-      const response = await authApi.register(registerData);
-      console.log('Registration response:', response);
+      await authApi.register(formData);
       
-      // Success - redirect to login
       setErrors({});
       setSuccessMessage('Account created successfully! Redirecting to login...');
       
-      // Delay redirect to show success message
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 1500);
       
     } catch (err) {
-      console.error('Registration error:', err);
       console.error('Error response:', err.response);
       console.error('Error data:', err.response?.data);
       

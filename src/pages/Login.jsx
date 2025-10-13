@@ -48,28 +48,20 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      console.log('Sending login data:', formData);
-      console.log('API endpoint:', '/login');
-
       const response = await authApi.login(formData.phone, formData.password);
-      console.log('Login response:', response);
       
-      // Get token from response
-      const token = response.token;
-      if (!token) {
+      if (!response.token) {
         setErrors({ general: 'Login failed: no token returned' });
         return;
       }
       
-      // User data is already in the login response, no need to fetch separately
+      // Extract user data from response
       const userData = {
         id: response.id,
         fullName: response.fullName,
@@ -82,24 +74,12 @@ export default function Login() {
         petSize: response.petSize
       };
       
-      console.log('User data from login response:', userData);
-      
-      // Login with both token and user data
-      login(userData, token);
+      // Login and redirect
+      login(userData, response.token);
       navigate(from, { replace: true });
     } catch (err) {
-      console.error('Login error:', err);
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setErrors({ 
-        general: errorMessage 
-      });
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed. Please try again.';
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }

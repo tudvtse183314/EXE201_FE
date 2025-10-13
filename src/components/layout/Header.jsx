@@ -61,7 +61,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="fixed top-0 w-full bg-white shadow-sm z-50">
+    <nav className="fixed top-0 w-full bg-white shadow-old-copper-card z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -70,10 +70,13 @@ export default function Header() {
               size="medium"
               variant="default"
               onClick={() => handleNavigation('/')}
-              className="hover:scale-110"
+              className="hover:scale-110 transition-transform duration-300"
             />
             <span 
-              className="text-xl font-bold text-gray-900 cursor-pointer"
+              className="text-xl font-bold cursor-pointer transition-colors duration-300"
+              style={{ color: '#34140e' }}
+              onMouseEnter={(e) => e.target.style.color = '#c47256'}
+              onMouseLeave={(e) => e.target.style.color = '#34140e'}
               onClick={() => handleNavigation('/')}
             >
               Pawfect Match
@@ -85,9 +88,22 @@ export default function Header() {
                 <button
                   key={index}
                   onClick={() => handleNavigation(item.path)}
-                  className={`text-gray-700 hover:text-indigo-600 transition-colors ${
-                    location.pathname === item.path ? 'text-indigo-600 font-medium' : ''
+                  className={`transition-colors duration-300 ${
+                    location.pathname === item.path ? 'font-medium' : ''
                   }`}
+                  style={{ 
+                    color: location.pathname === item.path ? '#c47256' : '#34140e' 
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.target.style.color = '#c47256';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.target.style.color = '#34140e';
+                    }
+                  }}
                 >
                   {item.label}
                 </button>
@@ -102,7 +118,10 @@ export default function Header() {
               return (
                 <IconComponent 
                   key={index}
-                  className="w-5 h-5 text-gray-600 cursor-pointer hover:text-indigo-600" 
+                  className="w-5 h-5 cursor-pointer transition-colors duration-300" 
+                  style={{ color: '#34140e' }}
+                  onMouseEnter={(e) => e.target.style.color = '#c47256'}
+                  onMouseLeave={(e) => e.target.style.color = '#34140e'}
                   onClick={button.action}
                 />
               );
@@ -119,10 +138,10 @@ export default function Header() {
                   Dashboard
                 </Button>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
                     <User className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-sm text-gray-700">{user.name || user.email}</span>
+                  <span className="text-sm" style={{ color: '#34140e' }}>{user.name || user.email}</span>
                 </div>
                 <Button 
                   variant="secondary" 
@@ -153,7 +172,10 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button 
-            className="md:hidden"
+            className="md:hidden transition-colors duration-300"
+            style={{ color: '#34140e' }}
+            onMouseEnter={(e) => e.target.style.color = '#c47256'}
+            onMouseLeave={(e) => e.target.style.color = '#34140e'}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -162,22 +184,35 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="md:hidden bg-white border-t border-oldCopper-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navigationItems.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => handleNavigation(item.path)}
-                  className={`block w-full text-left px-3 py-2 text-gray-700 hover:text-indigo-600 transition-colors ${
-                    location.pathname === item.path ? 'text-indigo-600 font-medium' : ''
+                  className={`block w-full text-left px-3 py-2 transition-colors duration-300 ${
+                    location.pathname === item.path ? 'font-medium' : ''
                   }`}
+                  style={{ 
+                    color: location.pathname === item.path ? '#c47256' : '#34140e' 
+                  }}
+                  onMouseEnter={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.target.style.color = '#c47256';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (location.pathname !== item.path) {
+                      e.target.style.color = '#34140e';
+                    }
+                  }}
                 >
                   {item.label}
                 </button>
               ))}
               
               {/* Mobile Auth Buttons */}
-              <div className="px-3 py-2 border-t border-gray-200 mt-2">
+              <div className="px-3 py-2 border-t border-oldCopper-200 mt-2">
                 {user ? (
                   <div className="space-y-2">
                     <Button 

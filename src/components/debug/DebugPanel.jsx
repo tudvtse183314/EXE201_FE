@@ -1,8 +1,4 @@
 import React, { useState } from 'react';
-import AuthTest from '../test/AuthTest';
-import AuthDebugger from './AuthDebugger';
-import AuthFlowTest from '../test/AuthFlowTest';
-import ApiDebugger from './ApiDebugger';
 import LogoTest from './LogoTest';
 
 /**
@@ -11,10 +7,6 @@ import LogoTest from './LogoTest';
  */
 export default function DebugPanel() {
   const [showDebug, setShowDebug] = useState(false);
-  const [showAuthTest, setShowAuthTest] = useState(false);
-  const [showAuthDebugger, setShowAuthDebugger] = useState(false);
-  const [showAuthFlowTest, setShowAuthFlowTest] = useState(false);
-  const [showApiDebugger, setShowApiDebugger] = useState(true); // Show by default for debugging
   const [showLogoTest, setShowLogoTest] = useState(false);
 
   // Only show in development
@@ -43,46 +35,6 @@ export default function DebugPanel() {
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={showAuthTest}
-                onChange={(e) => setShowAuthTest(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">Auth Test Panel</span>
-            </label>
-            
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showAuthDebugger}
-                onChange={(e) => setShowAuthDebugger(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">Auth Debugger</span>
-            </label>
-            
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showAuthFlowTest}
-                onChange={(e) => setShowAuthFlowTest(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">Auth Flow Test</span>
-            </label>
-            
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showApiDebugger}
-                onChange={(e) => setShowApiDebugger(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">API Debugger</span>
-            </label>
-            
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
                 checked={showLogoTest}
                 onChange={(e) => setShowLogoTest(e.target.checked)}
                 className="rounded"
@@ -94,10 +46,7 @@ export default function DebugPanel() {
           <div className="mt-4 pt-3 border-t border-gray-200">
             <button
               onClick={() => {
-                setShowAuthTest(false);
-                setShowAuthDebugger(false);
-                setShowAuthFlowTest(false);
-                setShowApiDebugger(false);
+                setShowLogoTest(false);
               }}
               className="w-full bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
             >
@@ -108,10 +57,6 @@ export default function DebugPanel() {
       )}
 
       {/* Debug Components */}
-      {showAuthTest && <AuthTest />}
-      {showAuthDebugger && <AuthDebugger />}
-      {showAuthFlowTest && <AuthFlowTest />}
-      {showApiDebugger && <ApiDebugger />}
       {showLogoTest && <LogoTest />}
     </>
   );

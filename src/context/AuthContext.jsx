@@ -1,5 +1,4 @@
-import { createContext, useState, useContext, useEffect } from 'react';
-import { fetchUserAccount } from '../api/publicApi';
+import { createContext, useState, useContext } from 'react';
 
 export const AuthContext = createContext(null);
 
@@ -34,28 +33,7 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // Auto-fetch user data if we have token but no user
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (token && !user) {
-        console.log('🔑 AuthContext: Token exists but no user data, fetching user account...');
-        try {
-          const userData = await fetchUserAccount(token);
-          console.log('🔑 AuthContext: User data fetched successfully:', userData);
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-        } catch (error) {
-          console.error('🔑 AuthContext: Failed to fetch user data:', error);
-          // If we can't fetch user data, clear the token
-          setToken(null);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-        }
-      }
-    };
-
-    fetchUserData();
-  }, [token, user]);
+  // Simplified - no auto-fetch to reduce API calls
 
   const login = (userData, tokenValue) => {
     console.log('🔑 AuthContext: Login called with:', {

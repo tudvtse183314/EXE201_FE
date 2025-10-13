@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from '../../assets/images/LOGO_PETVIBE.jpg';
 
 const SvgLogo = ({ 
   size = 'medium', 
