@@ -33,8 +33,12 @@ import Unauthorized from "../pages/Unauthorized";
 // Staff Pages
 import StaffDashboard from "../pages/staff/Dashboard";
 
-// Admin Pages
-import AdminDashboard from "../pages/admin/Dashboard";
+// Manager Pages
+import ManagerDashboard from "../pages/manager/ManagerDashboard";
+
+// Doctor Pages
+import DoctorDashboard from "../pages/doctor/DoctorDashboard";
+
 
 // Private Route Component
 const PrivateRoute = ({ children, roles = [] }) => {
@@ -97,6 +101,18 @@ export default function AppRoutes() {
         {/* Customer Routes */}
         <Route
           path="/customer/dashboard"
+          element={
+            <PrivateRoute roles={['CUSTOMER']}>
+              <MainLayout>
+                <CustomerDashboard />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
+        
+        {/* User Routes (CUSTOMER) */}
+        <Route
+          path="/user/home"
           element={
             <PrivateRoute roles={['CUSTOMER']}>
               <MainLayout>
@@ -177,21 +193,32 @@ export default function AppRoutes() {
         <Route
           path="/staff/dashboard"
           element={
-            <PrivateRoute roles={['STAFF']}>
+            <PrivateRoute roles={['STAFF', 'MANAGER']}>
               <StaffDashboard />
             </PrivateRoute>
           }
         />
         
-        {/* Admin Routes */}
+        {/* Manager Routes */}
         <Route
-          path="/admin/dashboard"
+          path="/manager/dashboard"
           element={
-            <PrivateRoute roles={['ADMIN']}>
-              <AdminDashboard />
+            <PrivateRoute roles={['MANAGER']}>
+              <ManagerDashboard />
             </PrivateRoute>
           }
         />
+        
+        {/* Doctor Routes */}
+        <Route
+          path="/doctor/dashboard"
+          element={
+            <PrivateRoute roles={['DOCTOR']}>
+              <DoctorDashboard />
+            </PrivateRoute>
+          }
+        />
+        
         
         {/* Legacy Routes - Redirect to appropriate dashboard */}
         <Route

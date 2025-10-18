@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { dog3, dog4, cat3, cat4, pet3, pet4 } from '../../assets/images';
 
 export default function About() {
   return (
@@ -28,7 +29,7 @@ export default function About() {
 
       {/* Mission Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
@@ -42,16 +43,13 @@ export default function About() {
                 find exactly what your furry friend needs to live their happiest, healthiest life.
               </p>
             </div>
-            <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8">
-              <div className="text-center">
-                <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-4xl">🐾</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Matching</h3>
-                <p className="text-gray-600">
-                  Our advanced algorithm analyzes your pet's characteristics to recommend the perfect products.
-                </p>
-              </div>
+            <div className="relative">
+              <img 
+                src={dog3} 
+                alt="Happy dog" 
+                className="w-full h-80 object-cover rounded-2xl shadow-lg"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
             </div>
           </div>
         </div>
@@ -59,7 +57,7 @@ export default function About() {
 
       {/* Team Section */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
             <p className="text-lg text-gray-600">
@@ -69,8 +67,15 @@ export default function About() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">👨‍💻</span>
+              <div className="relative mb-4">
+                <img 
+                  src={cat3} 
+                  alt="Tech team" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl text-white">👨‍💻</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Tech Team</h3>
               <p className="text-gray-600">
@@ -79,8 +84,15 @@ export default function About() {
             </div>
             
             <div className="text-center">
-              <div className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🐕</span>
+              <div className="relative mb-4">
+                <img 
+                  src={dog4} 
+                  alt="Pet experts" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl text-white">🐕</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Pet Experts</h3>
               <p className="text-gray-600">
@@ -89,13 +101,78 @@ export default function About() {
             </div>
             
             <div className="text-center">
-              <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🛍️</span>
+              <div className="relative mb-4">
+                <img 
+                  src={cat4} 
+                  alt="Product team" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-green-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl text-white">🛍️</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Product Team</h3>
               <p className="text-gray-600">
                 Curating the best products from trusted brands worldwide.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pet Gallery Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Pet Community</h2>
+            <p className="text-lg text-gray-600">
+              Meet some of the amazing pets that inspire our product recommendations.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="relative group">
+              <img 
+                src={pet3} 
+                alt="Happy pet" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl flex items-end p-4">
+                <span className="text-white font-semibold">Luna</span>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <img 
+                src={pet4} 
+                alt="Happy pet" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl flex items-end p-4">
+                <span className="text-white font-semibold">Max</span>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <img 
+                src={dog3} 
+                alt="Happy pet" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl flex items-end p-4">
+                <span className="text-white font-semibold">Bella</span>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <img 
+                src={cat3} 
+                alt="Happy pet" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl flex items-end p-4">
+                <span className="text-white font-semibold">Whiskers</span>
+              </div>
             </div>
           </div>
         </div>

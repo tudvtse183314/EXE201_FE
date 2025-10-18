@@ -22,7 +22,7 @@ export const PrivateRoute = ({ children, roles = [] }) => {
 
   // Check role-based access
   if (roles.length > 0 && !roles.includes(user?.role)) {
-    return <Navigate to="/user/home" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;

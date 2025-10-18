@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { dog5, dog6, cat5, cat6, pet5, pet6 } from '../../assets/images';
 
 export default function Services() {
   const services = [
@@ -32,10 +33,18 @@ export default function Services() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-indigo-50 to-purple-50 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative py-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={dog5} 
+            alt="Happy dog" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 to-purple-900/70"></div>
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1 
-            className="text-4xl font-bold text-gray-900 mb-6"
+            className="text-4xl font-bold text-white mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -43,7 +52,7 @@ export default function Services() {
             Our Services
           </motion.h1>
           <motion.p 
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
+            className="text-xl text-gray-200 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -90,7 +99,7 @@ export default function Services() {
 
       {/* How It Works */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
             <p className="text-lg text-gray-600">
@@ -100,8 +109,15 @@ export default function Services() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-white">1</span>
+              <div className="relative mb-4">
+                <img 
+                  src={cat5} 
+                  alt="Create profile" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl font-bold text-white">1</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Pet Profile</h3>
               <p className="text-gray-600">
@@ -110,8 +126,15 @@ export default function Services() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-white">2</span>
+              <div className="relative mb-4">
+                <img 
+                  src={dog6} 
+                  alt="AI recommendations" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl font-bold text-white">2</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Get AI Recommendations</h3>
               <p className="text-gray-600">
@@ -120,13 +143,82 @@ export default function Services() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-white">3</span>
+              <div className="relative mb-4">
+                <img 
+                  src={cat6} 
+                  alt="Shop and enjoy" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto shadow-lg"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/80 to-transparent rounded-full flex items-end justify-center pb-4">
+                  <span className="text-2xl font-bold text-white">3</span>
+                </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Shop & Enjoy</h3>
               <p className="text-gray-600">
                 Purchase recommended products and watch your pet enjoy their new favorites.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pet Success Stories */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Success Stories</h2>
+            <p className="text-lg text-gray-600">
+              See how our AI recommendations have helped pets and their owners.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="relative group">
+              <img 
+                src={pet5} 
+                alt="Happy pet story" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl flex items-end p-6">
+                <div>
+                  <h3 className="text-white font-semibold text-lg mb-2">Bella's New Toy</h3>
+                  <p className="text-gray-200 text-sm">
+                    "The AI recommended the perfect chew toy for Bella's teething phase. She loves it!"
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <img 
+                src={pet6} 
+                alt="Happy pet story" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl flex items-end p-6">
+                <div>
+                  <h3 className="text-white font-semibold text-lg mb-2">Max's Health Journey</h3>
+                  <p className="text-gray-200 text-sm">
+                    "The nutrition recommendations helped Max maintain a healthy weight and energy level."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <img 
+                src={dog5} 
+                alt="Happy pet story" 
+                className="w-full h-64 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl flex items-end p-6">
+                <div>
+                  <h3 className="text-white font-semibold text-lg mb-2">Luna's Comfort</h3>
+                  <p className="text-gray-200 text-sm">
+                    "The perfect bed recommendation made Luna's sleep so much better. Thank you!"
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

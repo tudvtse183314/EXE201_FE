@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Check, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { register } from '../../api/auth';
-import { background } from '../../assets/images';
+import { RegisterBackground } from '../../components/common/BackgroundImage';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -141,15 +141,7 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Side - Image */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${background.register})`
-          }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        </div>
+      <RegisterBackground className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         
         <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-white">
           <div className="text-center mb-8">
@@ -164,7 +156,7 @@ export default function Register() {
             </p>
           </div>
         </div>
-      </div>
+      </RegisterBackground>
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { login } from '../../api/auth';
-import { background } from '../../assets/images';
+import { LoginBackground } from '../../components/common/BackgroundImage';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -76,9 +76,10 @@ export default function Login() {
       loginUser(userData, data.token);
 
       // Redirect based on user role
-      const redirectPath = userData.role === 'ADMIN' ? '/admin/dashboard' :
-                          userData.role === 'STAFF' ? '/staff/dashboard' :
-                          '/customer/dashboard';
+      const redirectPath = userData.role === 'STAFF' ? '/staff/dashboard' :
+                        userData.role === 'MANAGER' ? '/manager/dashboard' :
+                        userData.role === 'DOCTOR' ? '/doctor/dashboard' :
+                        '/customer/dashboard';
 
       setSuccessMessage('Đăng nhập thành công! Đang chuyển hướng...');
       setTimeout(() => navigate(redirectPath, { replace: true }), 800);
@@ -97,13 +98,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-black flex">
       {/* LEFT SIDE */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${background.login})` }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        </div>
+      <LoginBackground className="hidden lg:block lg:w-1/2 relative overflow-hidden">
 
         <div className="relative z-10 h-full flex flex-col items-center justify-center p-12 text-white">
           <div className="max-w-md text-center mb-auto pt-12">
@@ -135,7 +130,7 @@ export default function Login() {
             </div>
           </div>
         </div>
-      </div>
+      </LoginBackground>
 
       {/* RIGHT SIDE - LOGIN FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">

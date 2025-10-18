@@ -1,5 +1,5 @@
 import React from 'react';
-import { getBackgroundImage } from '../../assets/images';
+import { loginBanner, registerBanner, heroBanner, dog1, dog2, cat1, cat2, pet1, pet2 } from '../../assets/images';
 
 /**
  * Reusable Background Image Component
@@ -17,7 +17,10 @@ export default function BackgroundImage({
   children 
 }) {
   const backgroundStyle = {
-    ...getBackgroundImage(imagePath, overlay),
+    backgroundImage: `url(${imagePath})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
     ...style
   };
 
@@ -26,7 +29,13 @@ export default function BackgroundImage({
       className={`relative ${className}`}
       style={backgroundStyle}
     >
-      {children}
+      <div 
+        className="absolute inset-0"
+        style={{ backgroundColor: overlay }}
+      />
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 }
@@ -34,7 +43,7 @@ export default function BackgroundImage({
 // Predefined background components for common use cases
 export const LoginBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    imagePath={dog1}
     overlay="rgba(0,0,0,0.4)"
     className={`min-h-screen ${className}`}
   >
@@ -44,7 +53,7 @@ export const LoginBackground = ({ children, className = '' }) => (
 
 export const RegisterBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80"
+    imagePath={cat1}
     overlay="rgba(0,0,0,0.3)"
     className={`min-h-screen ${className}`}
   >
@@ -54,7 +63,38 @@ export const RegisterBackground = ({ children, className = '' }) => (
 
 export const HeroBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    imagePath={pet1}
+    overlay="rgba(0,0,0,0.2)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+// Additional pet background components
+export const DogBackground = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={dog2}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const CatBackground = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={cat2}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const PetBackground = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={pet2}
     overlay="rgba(0,0,0,0.2)"
     className={`min-h-screen ${className}`}
   >
