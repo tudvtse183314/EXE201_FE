@@ -1,21 +1,42 @@
 // src/assets/images/index.js
 
+// ✅ Import banner images for background object
+import loginBannerImg from './banners/pexels-bill-emrich-64742-230784.jpg';
+import registerBannerImg from './banners/pexels-burst-374898.jpg';
+import heroBannerImg from './banners/pexels-ellen-de-ruiter-249111-1718181.jpg';
+
 // ✅ Logo JPG
 export { default as logo } from './logo.jpg';
 
 // ✅ Backgrounds
 export { default as backgroundImage } from './backgrounds.jpg';
 
-// ✅ Banner các trang
-export const loginBanner = "https://cdn.pixabay.com/photo/2018/03/28/22/03/dog-3277416_1280.jpg";
-export const registerBanner = "https://cdn.pixabay.com/photo/2017/09/25/13/12/cat-2787251_1280.jpg";
-export const heroBanner = "https://cdn.pixabay.com/photo/2018/03/30/07/53/dog-3277415_1280.jpg";
+// ✅ Banner các trang - Local banners
+export { default as loginBanner } from './banners/pexels-bill-emrich-64742-230784.jpg';
+export { default as registerBanner } from './banners/pexels-burst-374898.jpg';
+export { default as heroBanner } from './banners/pexels-ellen-de-ruiter-249111-1718181.jpg';
+export { default as banner1 } from './banners/pexels-emhopper-1359036.jpg';
+export { default as banner2 } from './banners/pexels-goochie-poochie-3299906.jpg';
+export { default as banner3 } from './banners/pexels-itfeelslikefilm-1493109.jpg';
+export { default as banner4 } from './banners/pexels-nancy-guth-269359-850602.jpg';
+export { default as banner5 } from './banners/pexels-pixabay-257519.jpg';
+export { default as banner6 } from './banners/pexels-pixabay-59969.jpg';
+export { default as banner7 } from './banners/pexels-triplemdesignz-675903.jpg';
+
+// ✅ GIF animations for hero carousel
+export { default as gif1 } from './gif/1_EASL.gif';
+export { default as gif2 } from './gif/1690623035539-14-6349-1387597726.gif';
+export { default as gif3 } from './gif/2-8069b.webp';
+export { default as gif4 } from './gif/39lqxFX.gif';
+export { default as gif5 } from './gif/catndog-1506130062689.webp';
+export { default as gif6 } from './gif/f234473e9f9ccf0ebb74dc38fe905d0f.gif';
+export { default as gif7 } from './gif/GFlP.gif';
 
 // ✅ Background objects for pages
 export const background = {
-  login: loginBanner,
-  register: registerBanner,
-  hero: heroBanner
+  login: loginBannerImg,
+  register: registerBannerImg,
+  hero: heroBannerImg
 };
 
 // ✅ Ảnh chó/mèo - Local images

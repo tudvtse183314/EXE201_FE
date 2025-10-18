@@ -1,26 +1,30 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import HeroSection from '../components/sections/HeroSection';
+import HeroCarousel from '../components/common/HeroCarousel';
 import WhyChooseSection from '../components/sections/WhyChooseSection';
 import HowItWorksSection from '../components/sections/HowItWorksSection';
 import TestimonialsSection from '../components/sections/TestimonialsSection';
 import CTASection from '../components/sections/CTASection';
 import PartnersSection from '../components/sections/PartnersSection';
 import Footer from '../components/sections/Footer';
-import { HeroBackground } from '../components/common/BackgroundImage';
 
 export default function Home() {
   return (
-    <HeroBackground>
+    <div className="min-h-screen">
+      {/* Hero Carousel */}
+      <HeroCarousel 
+        autoPlay={true}
+        interval={6000}
+        showControls={true}
+        showDots={true}
+      />
+      
       <motion.div 
-        className="min-h-screen"
+        className="bg-white"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Hero Section */}
-        <HeroSection />
-        
         {/* Why Choose Section */}
         <WhyChooseSection />
         
@@ -39,6 +43,6 @@ export default function Home() {
         {/* Footer */}
         <Footer />
       </motion.div>
-    </HeroBackground>
+    </div>
   );
 }

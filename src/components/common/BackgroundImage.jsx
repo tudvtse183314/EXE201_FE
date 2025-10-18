@@ -1,5 +1,5 @@
 import React from 'react';
-import { loginBanner, registerBanner, heroBanner, dog1, dog2, cat1, cat2, pet1, pet2 } from '../../assets/images';
+import { loginBanner, registerBanner, heroBanner, banner1, banner2, banner3, banner4, banner5 } from '../../assets/images';
 
 /**
  * Reusable Background Image Component
@@ -43,7 +43,7 @@ export default function BackgroundImage({
 // Predefined background components for common use cases
 export const LoginBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={dog1}
+    imagePath={loginBanner}
     overlay="rgba(0,0,0,0.4)"
     className={`min-h-screen ${className}`}
   >
@@ -53,7 +53,7 @@ export const LoginBackground = ({ children, className = '' }) => (
 
 export const RegisterBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={cat1}
+    imagePath={registerBanner}
     overlay="rgba(0,0,0,0.3)"
     className={`min-h-screen ${className}`}
   >
@@ -63,7 +63,7 @@ export const RegisterBackground = ({ children, className = '' }) => (
 
 export const HeroBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={pet1}
+    imagePath={heroBanner}
     overlay="rgba(0,0,0,0.2)"
     className={`min-h-screen ${className}`}
   >
@@ -71,10 +71,10 @@ export const HeroBackground = ({ children, className = '' }) => (
   </BackgroundImage>
 );
 
-// Additional pet background components
-export const DogBackground = ({ children, className = '' }) => (
+// Additional banner background components
+export const Banner1Background = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={dog2}
+    imagePath={banner1}
     overlay="rgba(0,0,0,0.3)"
     className={`min-h-screen ${className}`}
   >
@@ -82,9 +82,9 @@ export const DogBackground = ({ children, className = '' }) => (
   </BackgroundImage>
 );
 
-export const CatBackground = ({ children, className = '' }) => (
+export const Banner2Background = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={cat2}
+    imagePath={banner2}
     overlay="rgba(0,0,0,0.3)"
     className={`min-h-screen ${className}`}
   >
@@ -92,9 +92,29 @@ export const CatBackground = ({ children, className = '' }) => (
   </BackgroundImage>
 );
 
-export const PetBackground = ({ children, className = '' }) => (
+export const Banner3Background = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath={pet2}
+    imagePath={banner3}
+    overlay="rgba(0,0,0,0.2)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner4Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner4}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner5Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner5}
     overlay="rgba(0,0,0,0.2)"
     className={`min-h-screen ${className}`}
   >

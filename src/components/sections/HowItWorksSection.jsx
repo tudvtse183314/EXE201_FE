@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { banner2 } from '../../assets/images';
+import { Heart, PawPrint, Gift } from 'lucide-react';
 
 const HowItWorksSection = () => {
   const ref = useRef(null);
@@ -13,21 +15,24 @@ const HowItWorksSection = () => {
       title: "Create Your Pet's Profile",
       description: "Tell us about your pet's breed, age, personality, and preferences. Our AI learns what makes your furry friend unique.",
       image: "/src/assets/home/step1-create-profile.png",
-      reverse: false
+      reverse: false,
+      icon: PawPrint
     },
     {
       number: "02", 
       title: "Receive Personalized Recommendations",
       description: "Get AI-powered suggestions for toys, food, and accessories that perfectly match your pet's needs and personality.",
       image: "/src/assets/home/step2-recommendations.png",
-      reverse: true
+      reverse: true,
+      icon: Heart
     },
     {
       number: "03",
       title: "Shop with Ease",
       description: "Browse curated collections and make purchases directly in the app. Track orders and manage your pet's wishlist.",
       image: "/src/assets/home/step3-shop.png",
-      reverse: false
+      reverse: false,
+      icon: Gift
     }
   ];
 
@@ -78,8 +83,18 @@ const HowItWorksSection = () => {
   };
 
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4">
+    <section className="py-20 relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img 
+          src={banner2} 
+          alt="How it works background" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-purple-800/70 to-pink-700/60"></div>
+      </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4">
         <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -87,10 +102,10 @@ const HowItWorksSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             How Pawfect Match Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
             Three simple steps to find the perfect products for your pet
           </p>
         </motion.div>
@@ -111,17 +126,22 @@ const HowItWorksSection = () => {
               {/* Content */}
               <div className="flex-1">
                 <motion.div
-                  className="text-6xl font-bold text-pink-200 mb-4"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-4 mb-4"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  {step.number}
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <step.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-6xl font-bold text-white">
+                    {step.number}
+                  </div>
                 </motion.div>
                 
                 <motion.h3 
-                  className="text-3xl md:text-4xl font-bold text-gray-900 mb-6"
+                  className="text-3xl md:text-4xl font-bold text-white mb-6"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -131,7 +151,7 @@ const HowItWorksSection = () => {
                 </motion.h3>
                 
                 <motion.p 
-                  className="text-lg text-gray-600 leading-relaxed"
+                  className="text-lg text-gray-200 leading-relaxed"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
