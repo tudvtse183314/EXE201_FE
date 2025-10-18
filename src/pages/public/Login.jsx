@@ -4,6 +4,7 @@ import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { login } from '../../api/auth';
 import { LoginBackground } from '../../components/common/BackgroundImage';
+import { AIGradient } from '../../components/effects/GradientText';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -102,7 +103,12 @@ export default function Login() {
 
         <div className="relative z-10 h-full flex flex-col items-center justify-center p-12 text-white">
           <div className="max-w-md text-center mb-auto pt-12">
-            <h1 className="text-6xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
+            <AIGradient 
+              className="text-8xl font-bold mb-4 drop-shadow-lg"
+              animationSpeed={2}
+            >
+              Pawfect Match
+            </AIGradient>
             <p className="text-xl drop-shadow-md">
               Finding the perfect accessories for your furry friend, powered by AI.
             </p>

@@ -83,7 +83,7 @@ const TestimonialsSection = () => {
   };
 
   return (
-    <section className="py-20" style={{ backgroundColor: '#F8F9FA' }}>
+    <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <motion.div 
           className="text-center mb-16"
@@ -92,10 +92,10 @@ const TestimonialsSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#2a1a10' }}>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
             What Our Customers Say
           </h2>
-          <p className="text-xl" style={{ color: '#553d2d' }}>
+          <p className="text-xl text-gray-600">
             Join thousands of happy pet owners who found their perfect matches
           </p>
         </motion.div>

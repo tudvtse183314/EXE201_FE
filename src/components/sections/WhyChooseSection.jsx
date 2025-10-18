@@ -78,7 +78,7 @@ const WhyChooseSection = () => {
   };
 
   return (
-    <section id="why-choose" className="py-20" style={{ backgroundColor: '#FDF3E7' }}>
+    <section id="why-choose" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <motion.div 
           className="text-center mb-16"
@@ -87,10 +87,10 @@ const WhyChooseSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#2a1a10' }}>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
             Why Choose Pawfect Match
           </h2>
-          <p className="text-xl max-w-3xl mx-auto" style={{ color: '#553d2d' }}>
+          <p className="text-xl max-w-3xl mx-auto text-gray-600">
             Experience the future of pet care with our innovative AI-powered platform
           </p>
         </motion.div>

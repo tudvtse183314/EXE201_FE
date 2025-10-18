@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Check, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { register } from '../../api/auth';
 import { RegisterBackground } from '../../components/common/BackgroundImage';
 
@@ -140,29 +140,29 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Side - Image */}
-      <RegisterBackground className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        
+      {/* Left Side - Image (1/3) */}
+      <RegisterBackground className="hidden lg:block lg:w-1/3 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent"></div>
         <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-white">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4 backdrop-blur-sm">
-              <span className="text-3xl">🐾</span>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-6 backdrop-blur-sm">
+              <span className="text-4xl">🐾</span>
             </div>
-            <h1 className="text-3xl font-bold mb-2 drop-shadow-lg">
+            <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">
               Pawfect Match
             </h1>
-            <p className="text-sm drop-shadow-md text-center">
+            <p className="text-lg drop-shadow-md text-center">
               Join our community of pet lovers
             </p>
           </div>
         </div>
       </RegisterBackground>
 
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+      {/* Right Side - Form (2/3) */}
+      <div className="w-full lg:w-2/3 flex items-center justify-center p-8 bg-gray-50">
+        <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-2">Create Account</h2>
             <p className="text-gray-600">Join Pawfect Match today!</p>
           </div>
 
@@ -187,195 +187,217 @@ export default function Register() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={(e) => handleInputChange('fullName', e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.fullName ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
-              />
-              {errors.fullName && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.fullName}
-                </p>
-              )}
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Pet's Parent Section */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="text-2xl mr-2">🐾</span>
+                Pet's Parent
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.fullName ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.fullName}
+                    </p>
+                  )}
+                </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="your@example.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.email}
-                </p>
-              )}
-              {!errors.email && formData.email && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Email sẽ được dùng để đăng nhập
-                </p>
-              )}
-            </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="your@example.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.email ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.email}
+                    </p>
+                  )}
+                  {!errors.email && formData.email && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Email sẽ được dùng để đăng nhập
+                    </p>
+                  )}
+                </div>
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                placeholder="0123456789"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
-              />
-              {errors.phone && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.phone}
-                </p>
-              )}
-            </div>
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="0123456789"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.phone ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.phone}
+                    </p>
+                  )}
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`w-full px-4 py-3 pr-12 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                {/* Password */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      className={`w-full px-4 py-3 pr-12 border ${
+                        errors.password ? 'border-red-500' : 'border-gray-300'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.password}
+                    </p>
+                  )}
+                </div>
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.password}
-                </p>
-              )}
             </div>
 
-            {/* Pet Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Pet's Name
-              </label>
-              <input
-                type="text"
-                placeholder="Buddy"
-                value={formData.petName}
-                onChange={(e) => handleInputChange('petName', e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.petName ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
-              />
-              {errors.petName && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.petName}
-                </p>
-              )}
-            </div>
+            {/* Pet Section */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="text-2xl mr-2">🐶</span>
+                Pet
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Pet Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Pet's Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Buddy"
+                    value={formData.petName}
+                    onChange={(e) => handleInputChange('petName', e.target.value)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.petName ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                  />
+                  {errors.petName && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.petName}
+                    </p>
+                  )}
+                </div>
 
-            {/* Pet Type */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Pet Type
-              </label>
-              <select
-                value={formData.petType}
-                onChange={(e) => handleInputChange('petType', e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.petType ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white`}
-              >
-                <option value="">Select type</option>
-                <option value="dog">Dog</option>
-                <option value="cat">Cat</option>
-                <option value="bird">Bird</option>
-                <option value="rabbit">Rabbit</option>
-                <option value="other">Other</option>
-              </select>
-              {errors.petType && (
-                <p className="text-sm text-red-500 mt-1 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.petType}
-                </p>
-              )}
-            </div>
+                {/* Pet Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Pet Type
+                  </label>
+                  <select
+                    value={formData.petType}
+                    onChange={(e) => handleInputChange('petType', e.target.value)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.petType ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white`}
+                  >
+                    <option value="">Select type</option>
+                    <option value="dog">Dog</option>
+                    <option value="cat">Cat</option>
+                    <option value="bird">Bird</option>
+                    <option value="rabbit">Rabbit</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {errors.petType && (
+                    <p className="text-sm text-red-500 mt-1 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.petType}
+                    </p>
+                  )}
+                </div>
 
-            {/* Pet Age */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Pet Age
-              </label>
-              <input
-                type="text"
-                placeholder="3 years"
-                value={formData.petAge}
-                onChange={(e) => handleInputChange('petAge', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              />
-            </div>
+                {/* Pet Age */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Pet Age
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="3 years"
+                    value={formData.petAge}
+                    onChange={(e) => handleInputChange('petAge', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
 
-            {/* Pet Size */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Pet Size
-              </label>
-              <select
-                value={formData.petSize}
-                onChange={(e) => handleInputChange('petSize', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
-              >
-                <option value="">Select size</option>
-                <option value="small">Small</option>
-                <option value="medium">Medium</option>
-                <option value="large">Large</option>
-                <option value="extra_large">Extra Large</option>
-              </select>
+                {/* Pet Size */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Pet Size
+                  </label>
+                  <select
+                    value={formData.petSize}
+                    onChange={(e) => handleInputChange('petSize', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
+                  >
+                    <option value="">Select size</option>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                    <option value="extra_large">Extra Large</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Creating Account...' : 'Sign Up'}
-            </button>
+            <div className="text-center">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="bg-indigo-600 text-white py-4 px-8 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed text-lg min-w-[200px]"
+              >
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
+              </button>
+            </div>
 
             {/* Login Link */}
-            <p className="text-center text-sm text-gray-600 mt-4">
+            <p className="text-center text-sm text-gray-600">
               Already have an account?{' '}
               <button
                 type="button"
