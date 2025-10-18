@@ -1,61 +1,71 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import { getProfile, verifyToken } from "../api/auth";
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
-        return JSON.parse(storedUser);
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing user from localStorage:', error);
-      localStorage.removeItem('user');
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [token, setToken] = useState(() => {
-    try {
-      const storedToken = localStorage.getItem('authToken');
-      if (storedToken && storedToken !== 'undefined' && storedToken !== 'null') {
-        return storedToken;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error getting token from localStorage:', error);
-      localStorage.removeItem('authToken');
-      return null;
-    }
-  });
-
-  const login = (userData, tokenValue) => {
+  const login = (userData, token) => {
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("role", userData.role); // Lưu role riêng biệt
     setUser(userData);
-    setToken(tokenValue);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('authToken', tokenValue);
   };
 
   const logout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role"); // Xóa role khi logout
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    // optional: redirect to login handled by components
   };
 
-  const hasRole = (role) => {
-    if (!user) return false;
-    if (Array.isArray(role)) {
-      return role.includes(user.role);
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        await verifyToken(token);
+        const data = await getProfile();
+        setUser(data);
+        // Cập nhật localStorage với data mới từ server
+        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("role", data.role); // Cập nhật role từ server
+      }
+    } catch {
+      logout();
+    } finally {
+      setIsLoading(false);
     }
-    return user.role === role;
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const storedUser = localStorage.getItem("user");
+    const storedRole = localStorage.getItem("role");
+    
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        // Đảm bảo role được khôi phục từ localStorage
+        if (storedRole && !userData.role) {
+          userData.role = storedRole;
+        }
+        setUser(userData);
+        fetchProfile();
+      } catch {
+        logout();
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isAuthenticated = () => !!user;
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, hasRole }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

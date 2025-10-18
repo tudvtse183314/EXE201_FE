@@ -1,13 +1,86 @@
+/* PetVibe Theme Variables */
+:root {
+  --pv-primary: #eda274;
+  --pv-secondary: #d5956d;
+  --pv-dark: #362319;
+  --pv-light: #ffeadd;
+  --pv-accent: #ffb07c;
+  --pv-text-heading: #2a1a10;
+  --pv-text-body: #553d2d;
+  --pv-text-link: #d5956d;
+  --pv-text-muted: #7e5c48;
+  --pv-text-on-light: #2a1a10;
+  --pv-text-on-dark: #ffeadd;
+  --pv-text-on-primary: #FFFFFF;
+  --pv-text-on-secondary: #FFFFFF;
+}
+
+/* Import Poppins font for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--pv-light, #ffeadd);
+  color: var(--pv-text-body, #553d2d);
+  line-height: 1.6;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Global PetVibe styles */
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--pv-text-heading, #2a1a10);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--pv-text-link, #d5956d);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--pv-primary, #eda274);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--pv-light, #ffeadd);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pv-primary, #eda274);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pv-primary-dark, #a6775b);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--pv-primary, #eda274);
+  color: var(--pv-text-white, #FFFFFF);
+}
+
+::-moz-selection {
+  background: var(--pv-primary, #eda274);
+  color: var(--pv-text-white, #FFFFFF);
 }

@@ -1,14 +1,17 @@
-import React from 'react';
-import Header from './Header';
-import Footer from './Footer';
+// src/components/layout/MainLayout.jsx
+import React from "react";
+import Header from "./Header";
+import Footer from "./Footer";
 
-export default function MainLayout({ children, className = '' }) {
+export default function MainLayout({ children }) {
   return (
-    <div className={`min-h-screen bg-white ${className}`}>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="pt-16">
+      
+      <main className="flex-grow bg-gray-50">
         {children}
       </main>
+
       <Footer />
     </div>
   );

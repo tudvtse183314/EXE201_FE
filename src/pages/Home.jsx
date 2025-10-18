@@ -1,16 +1,48 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
+import HeroCarousel from '../components/common/HeroCarousel';
+import WhyChooseSection from '../components/sections/WhyChooseSection';
+import HowItWorksSection from '../components/sections/HowItWorksSection';
+import TestimonialsSection from '../components/sections/TestimonialsSection';
+import CTASection from '../components/sections/CTASection';
+import PartnersSection from '../components/sections/PartnersSection';
+import Footer from '../components/sections/Footer';
 
 export default function Home() {
-  const { user, logout } = useAuth();
-
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Welcome {user?.name || user?.email || 'Guest'}</h1>
-      <p className="mt-4">This is the home page of your Pawfect Match app.</p>
-      <div className="mt-6">
-        <button onClick={logout} className="px-3 py-2 bg-red-600 text-white rounded">Logout</button>
-      </div>
+    <div className="min-h-screen">
+      {/* Hero Carousel */}
+      <HeroCarousel 
+        autoPlay={true}
+        interval={6000}
+        showControls={true}
+        showDots={true}
+      />
+      
+      <motion.div 
+        className="bg-white"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Why Choose Section */}
+        <WhyChooseSection />
+        
+        {/* How It Works Section */}
+        <HowItWorksSection />
+        
+        {/* Testimonials Section */}
+        <TestimonialsSection />
+        
+        {/* CTA Section */}
+        <CTASection />
+        
+        {/* Partners Section */}
+        <PartnersSection />
+        
+        {/* Footer */}
+        <Footer />
+      </motion.div>
     </div>
   );
 }

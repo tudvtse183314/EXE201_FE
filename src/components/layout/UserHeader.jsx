@@ -4,6 +4,7 @@ import { Search, Heart, ShoppingCart, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Shuffle from '../effects/Shuffle';
 import { motion } from 'framer-motion';
+import SvgLogo from '../common/SvgLogo';
 
 export default function UserHeader() {
   const navigate = useNavigate();
@@ -57,7 +58,19 @@ export default function UserHeader() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center h-16">
               {/* Logo and Welcome */}
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
+                <motion.div 
+                  className="flex items-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <SvgLogo 
+                    size="medium"
+                    variant="white"
+                    onClick={() => handleNavigation('/user/home')}
+                    className="hover:scale-110"
+                  />
+                </motion.div>
                 <motion.div 
                   className="flex items-center"
                   whileHover={{ scale: 1.05 }}

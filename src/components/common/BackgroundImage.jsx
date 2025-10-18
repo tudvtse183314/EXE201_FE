@@ -1,5 +1,5 @@
 import React from 'react';
-import { getBackgroundImage } from '../../assets/images';
+import { loginBanner, registerBanner, heroBanner, banner1, banner2, banner3, banner4, banner5 } from '../../assets/images';
 
 /**
  * Reusable Background Image Component
@@ -17,7 +17,10 @@ export default function BackgroundImage({
   children 
 }) {
   const backgroundStyle = {
-    ...getBackgroundImage(imagePath, overlay),
+    backgroundImage: `url(${imagePath})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
     ...style
   };
 
@@ -26,7 +29,13 @@ export default function BackgroundImage({
       className={`relative ${className}`}
       style={backgroundStyle}
     >
-      {children}
+      <div 
+        className="absolute inset-0"
+        style={{ backgroundColor: overlay }}
+      />
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 }
@@ -34,7 +43,7 @@ export default function BackgroundImage({
 // Predefined background components for common use cases
 export const LoginBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    imagePath={loginBanner}
     overlay="rgba(0,0,0,0.4)"
     className={`min-h-screen ${className}`}
   >
@@ -44,7 +53,7 @@ export const LoginBackground = ({ children, className = '' }) => (
 
 export const RegisterBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80"
+    imagePath={registerBanner}
     overlay="rgba(0,0,0,0.3)"
     className={`min-h-screen ${className}`}
   >
@@ -54,7 +63,58 @@ export const RegisterBackground = ({ children, className = '' }) => (
 
 export const HeroBackground = ({ children, className = '' }) => (
   <BackgroundImage 
-    imagePath="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    imagePath={heroBanner}
+    overlay="rgba(0,0,0,0.2)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+// Additional banner background components
+export const Banner1Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner1}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner2Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner2}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner3Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner3}
+    overlay="rgba(0,0,0,0.2)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner4Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner4}
+    overlay="rgba(0,0,0,0.3)"
+    className={`min-h-screen ${className}`}
+  >
+    {children}
+  </BackgroundImage>
+);
+
+export const Banner5Background = ({ children, className = '' }) => (
+  <BackgroundImage 
+    imagePath={banner5}
     overlay="rgba(0,0,0,0.2)"
     className={`min-h-screen ${className}`}
   >
