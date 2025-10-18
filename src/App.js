@@ -1,17 +1,11 @@
-import { BrowserRouter } from 'react-router-dom';
+import React from 'react';
 import { AuthProvider } from './context/AuthContext';
-import { AppRoutes } from './routes';
-import DebugPanel from './components/debug/DebugPanel';
+import AppRoutes from './routes/AppRoutes';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        
-        {/* Debug Panel - Only shows in development */}
-        <DebugPanel />
-      </BrowserRouter>
+      <AppRoutes />
     </AuthProvider>
   );
 }

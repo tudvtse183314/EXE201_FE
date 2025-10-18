@@ -1,165 +1,113 @@
-# 🖼️ Image Management System
+# 📁 Images Directory Structure
 
-## 📁 Cấu trúc thư mục
+## 📂 Cấu trúc thư mục
 
 ```
 src/assets/images/
-├── index.js          # Centralized image exports
-├── README.md         # Documentation
-└── components/       # Reusable image components
-    ├── BackgroundImage.jsx
-    └── Image.jsx
+├── logo.jpg                    # Logo chính của ứng dụng (JPG)
+├── logo.svg                    # Logo SVG (backup)
+├── pets/                       # Ảnh thú cưng
+│   ├── dog1.jpg
+│   ├── dog2.jpg
+│   ├── cat1.jpg
+│   └── cat2.jpg
+├── products/                   # Ảnh sản phẩm
+│   ├── dog_collar.jpg
+│   ├── cat_toy.jpg
+│   ├── dog_food.jpg
+│   └── pet_bed.jpg
+├── banners/                    # Ảnh banner, background
+│   ├── hero_banner.jpg
+│   ├── login_banner.jpg
+│   └── register_banner.jpg
+├── icons/                      # Icon, avatar
+│   ├── user_avatar.png
+│   ├── pet_icon.png
+│   └── shopping_cart.png
+├── index.js                    # Export tất cả ảnh
+└── README.md                   # Hướng dẫn này
 ```
 
-## 🎯 Cách sử dụng
+## 🎯 Quy tắc đặt tên
 
-### 1. Import images từ centralized system
+### ✅ Định dạng file:
+- **Logo, icon**: `.png` hoặc `.svg` (trong suốt, rõ nét)
+- **Ảnh sản phẩm**: `.jpg` (nhẹ, dễ nén)
+- **Ảnh nền, banner**: `.jpg` (chất lượng cao)
 
+### ✅ Quy tắc đặt tên:
+- Không dấu, không khoảng trắng
+- Chỉ dùng `_` hoặc `-`
+- Ví dụ: `dog_food.jpg`, `user_avatar.png`
+
+## 🚀 Cách sử dụng
+
+### 1. Import trực tiếp:
 ```javascript
-import { backgrounds, banners, logos, pets } from '../assets/images';
+import logo from '../../assets/images/logo.jpg';
+import dog1 from '../../assets/images/pets/dog1.jpg';
 
-// Sử dụng
-<div style={{ backgroundImage: `url(${backgrounds.login})` }}>
+function Component() {
+  return (
+    <div>
+      <img src={logo} alt="Logo" />
+      <img src={dog1} alt="Dog" />
+    </div>
+  );
+}
 ```
 
-### 2. Sử dụng BackgroundImage component
-
+### 2. Import từ index.js (Khuyến nghị):
 ```javascript
-import { LoginBackground, HeroBackground } from '../components/common/BackgroundImage';
+import { logo, dog1, cat1 } from '../../assets/images';
 
-// Login page
-<LoginBackground>
-  <div className="content">Your content here</div>
-</LoginBackground>
-
-// Custom background
-<BackgroundImage 
-  imagePath={backgrounds.home}
-  overlay="rgba(0,0,0,0.3)"
-  className="min-h-screen"
->
-  <div>Content</div>
-</BackgroundImage>
+function Component() {
+  return (
+    <div>
+      <img src={logo} alt="Logo" />
+      <img src={dog1} alt="Dog" />
+      <img src={cat1} alt="Cat" />
+    </div>
+  );
+}
 ```
 
-### 3. Sử dụng Image component
-
+### 3. Import collections:
 ```javascript
-import { Image, Avatar, ProductImage, PetImage } from '../components/common/Image';
+import { petImages, productImages, backgrounds } from '../../assets/images';
 
-// Basic image
-<Image 
-  src={pets.dog1} 
-  alt="Cute dog" 
-  className="w-full h-64"
-/>
-
-// Avatar
-<Avatar 
-  src={user.avatar} 
-  alt="User avatar" 
-  size="lg"
-/>
-
-// Product image
-<ProductImage 
-  src={products.collar} 
-  alt="Dog collar"
-/>
+function Component() {
+  return (
+    <div>
+      {/* Pet images */}
+      {petImages.dogs.map((dog, index) => (
+        <img key={index} src={dog} alt={`Dog ${index + 1}`} />
+      ))}
+      
+      {/* Background */}
+      <div style={{ backgroundImage: `url(${backgrounds.login})` }}>
+        Login Form
+      </div>
+    </div>
+  );
+}
 ```
 
-## 🎨 Image Categories
+## 📝 Lưu ý
 
-### Backgrounds
-- `backgrounds.login` - Login page background
-- `backgrounds.register` - Register page background  
-- `backgrounds.home` - Home page background
-- `backgrounds.dashboard` - Dashboard background
+1. **Tối ưu ảnh**: Nén ảnh trước khi thêm vào project
+2. **Alt text**: Luôn thêm alt text cho accessibility
+3. **Responsive**: Sử dụng CSS để responsive images
+4. **Lazy loading**: Cân nhắc lazy loading cho ảnh lớn
 
-### Banners
-- `banners.hero` - Hero section banner
-- `banners.about` - About page banner
-- `banners.services` - Services page banner
-- `banners.contact` - Contact page banner
+## 🔄 Thêm ảnh mới
 
-### Logos
-- `logos.main` - Main logo
-- `logos.white` - White version logo
-- `logos.favicon` - Favicon
-
-### Pets
-- `pets.dog1`, `pets.dog2` - Dog images
-- `pets.cat1`, `pets.cat2` - Cat images
-
-### Products
-- `products.collar` - Dog collar
-- `products.leash` - Dog leash
-- `products.toy` - Pet toys
-- `products.food` - Pet food
-
-## 🔧 Helper Functions
-
-### getImage()
-```javascript
-import { getImage } from '../assets/images';
-
-const imageUrl = getImage(user.avatar, 'default-avatar.png');
-```
-
-### getBackgroundImage()
-```javascript
-import { getBackgroundImage } from '../assets/images';
-
-const style = getBackgroundImage(backgrounds.login, 'rgba(0,0,0,0.4)');
-```
-
-## 📱 Responsive Images
-
-```javascript
-// Use different images for different screen sizes
-const responsiveImage = {
-  mobile: pets.dog1,
-  tablet: pets.dog2,
-  desktop: pets.cat1
-};
-
-<Image 
-  src={responsiveImage.mobile}
-  alt="Pet"
-  className="md:hidden"
-/>
-<Image 
-  src={responsiveImage.tablet}
-  alt="Pet"
-  className="hidden md:block lg:hidden"
-/>
-<Image 
-  src={responsiveImage.desktop}
-  alt="Pet"
-  className="hidden lg:block"
-/>
-```
-
-## 🚀 Best Practices
-
-1. **Always use centralized imports** - Don't hardcode image URLs
-2. **Provide alt text** - For accessibility
-3. **Use fallback images** - Handle loading errors gracefully
-4. **Optimize images** - Use appropriate formats and sizes
-5. **Lazy load** - For better performance
-6. **Consistent naming** - Use descriptive, consistent names
-
-## 🔄 Adding New Images
-
-1. Add image URL to appropriate category in `src/assets/images/index.js`
-2. Export from the category object
-3. Use in components with centralized import
-4. Update this README if adding new categories
-
-## 🎨 Image Optimization
-
-- Use WebP format when possible
-- Provide multiple sizes for responsive design
-- Compress images for web use
-- Use CDN for better performance
-- Consider using Next.js Image component for advanced optimization
+1. Thêm file ảnh vào thư mục phù hợp
+2. Export trong `index.js`:
+   ```javascript
+   export { default as newImage } from './folder/new_image.jpg';
+   ```
+3. Sử dụng trong component:
+   ```javascript
+   import { newImage } from '../../assets/images';
+   ```

@@ -1,382 +1,202 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import ProductCard from '../../components/common/ProductCard';
-import { mockProducts, getProductsByCategory, getFeaturedProduct } from '../../data/products';
-import Shuffle from '../../components/effects/Shuffle';
-import ShinyText from '../../components/effects/ShinyText';
-import { HotGradient, DiscountGradient, AIGradient } from '../../components/effects/GradientText';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Filter, Star, ShoppingCart } from 'lucide-react';
 
-export default function PublicShop() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
+export default function Shop() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Get products by category
-  const clothingProducts = getProductsByCategory('Dog Clothing');
-  const toyProducts = getProductsByCategory('Toys');
-  const foodProducts = getProductsByCategory('Food & Treats');
-  const accessories = getProductsByCategory('Accessories');
-  const recentProducts = mockProducts.slice(-4); // Last 4 products
-  const featuredProduct = getFeaturedProduct();
+  const categories = [
+    { id: 'all', name: 'All Products', icon: '🛍️' },
+    { id: 'toys', name: 'Toys', icon: '🎾' },
+    { id: 'food', name: 'Food', icon: '🍖' },
+    { id: 'accessories', name: 'Accessories', icon: '🎀' },
+    { id: 'health', name: 'Health', icon: '💊' }
+  ];
 
-  // Filter products based on search
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = mockProducts.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts(mockProducts);
+  const products = [
+    {
+      id: 1,
+      name: 'Interactive Puzzle Toy',
+      category: 'toys',
+      price: 29.99,
+      rating: 4.8,
+      image: 'https://cdn.pixabay.com/photo/2016/11/21/16/19/dog-collar-1845868_1280.jpg',
+      description: 'Mental stimulation toy for dogs'
+    },
+    {
+      id: 2,
+      name: 'Premium Dog Food',
+      category: 'food',
+      price: 49.99,
+      rating: 4.9,
+      image: 'https://cdn.pixabay.com/photo/2017/02/04/12/37/dog-2035709_1280.jpg',
+      description: 'High-quality nutrition for adult dogs'
+    },
+    {
+      id: 3,
+      name: 'Designer Dog Collar',
+      category: 'accessories',
+      price: 24.99,
+      rating: 4.7,
+      image: 'https://cdn.pixabay.com/photo/2016/11/21/16/19/dog-collar-1845868_1280.jpg',
+      description: 'Stylish and comfortable collar'
+    },
+    {
+      id: 4,
+      name: 'Cat Scratching Post',
+      category: 'toys',
+      price: 39.99,
+      rating: 4.6,
+      image: 'https://cdn.pixabay.com/photo/2017/02/20/20/52/cat-2083492_1280.jpg',
+      description: 'Multi-level scratching and climbing post'
+    },
+    {
+      id: 5,
+      name: 'Pet Health Supplements',
+      category: 'health',
+      price: 19.99,
+      rating: 4.5,
+      image: 'https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_1280.jpg',
+      description: 'Essential vitamins and minerals'
+    },
+    {
+      id: 6,
+      name: 'Luxury Pet Bed',
+      category: 'accessories',
+      price: 79.99,
+      rating: 4.9,
+      image: 'https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_1280.jpg',
+      description: 'Orthopedic bed for ultimate comfort'
     }
-  }, [searchTerm]);
+  ];
 
-  const handleAddToCart = (product) => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: '/services' } } });
-      return;
-    }
-    console.log('Adding to cart:', product.name);
-    // TODO: Implement cart functionality
-  };
-
-  const handleAddToWishlist = (product) => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: '/services' } } });
-      return;
-    }
-    console.log('Adding to wishlist:', product.name);
-    // TODO: Implement wishlist functionality
-  };
-
-  const handleLogin = () => {
-    navigate('/login', { state: { from: { pathname: '/services' } } });
-  };
-
-  const handleRegister = () => {
-    navigate('/register');
-  };
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-8">
-              <h1 
-                className="text-xl font-bold text-gray-900 cursor-pointer"
-                onClick={() => navigate('/')}
-              >
-                Pawfect Match
-              </h1>
-              <nav className="hidden md:flex gap-6">
-                <button 
-                  onClick={() => navigate('/')}
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  Home
-                </button>
-                <button 
-                  onClick={() => navigate('/about')}
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  About
-                </button>
-                <span className="text-indigo-600 font-medium">Shop</span>
-                <button 
-                  onClick={() => navigate('/contact')}
-                  className="text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                  Contact
-                </button>
-              </nav>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Search Bar */}
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-64"
-                />
-              </div>
-              
-              <Heart className="w-5 h-5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors" />
-              <ShoppingCart className="w-5 h-5 text-gray-600 cursor-pointer hover:text-indigo-600 transition-colors" />
-              
-              {user ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-700">{user.fullName?.split(' ')[0] || 'User'}</span>
-                  <button 
-                    onClick={() => navigate('/user/home')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                  >
-                    Dashboard
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handleLogin}
-                    className="text-sm text-gray-700 hover:text-gray-900 font-medium"
-                  >
-                    Login
-                  </button>
-                  <button 
-                    onClick={handleRegister}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
-                  >
-                    Register
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-gray-700 to-gray-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="max-w-xl">
-            <h2 className="text-4xl font-bold mb-4">
-              <Shuffle
-                text={featuredProduct.name}
-                shuffleDirection="up"
-                duration={0.6}
-                ease="power3.out"
-                stagger={0.05}
-                glowColor="#ffffff"
-              />
-            </h2>
-            <p className="text-gray-200 mb-2">
-              {featuredProduct.description}
-            </p>
-            <p className="text-gray-200 mb-6">
-              Keep your pet healthy and happy with our premium products.
-            </p>
-            <p className="text-3xl font-bold mb-6">${featuredProduct.price.toFixed(2)}</p>
-            <button 
-              onClick={() => handleAddToCart(featuredProduct)}
-              className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-            >
-              {user ? 'Add to Cart' : 'Login to Buy'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Search Results */}
-        {searchTerm && (
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Search Results for "{searchTerm}" ({filteredProducts.length} products)
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              {filteredProducts.map(product => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                  onAddToWishlist={handleAddToWishlist}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Clothing Recommendations */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Shuffle
-              text="Clothing Recommendations"
-              shuffleDirection="left"
-              duration={0.5}
-              ease="power3.out"
-              stagger={0.03}
-              glowColor="#6366f1"
-            />
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {clothingProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleAddToWishlist}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Toy Recommendations */}
-        <section className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              <Shuffle
-                text="Toy Recommendations"
-                shuffleDirection="right"
-                duration={0.5}
-                ease="power3.out"
-                stagger={0.03}
-                glowColor="#ec4899"
-              />
-            </h2>
-            <HotGradient size="text-lg" weight="font-bold">
-              🔥 HOT DEALS
-            </HotGradient>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {toyProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleAddToWishlist}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Food & Treat Recommendations */}
-        <section className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              <Shuffle
-                text="Food & Treat Recommendations"
-                shuffleDirection="up"
-                duration={0.5}
-                ease="power3.out"
-                stagger={0.03}
-                glowColor="#f59e0b"
-              />
-            </h2>
-            <DiscountGradient size="text-lg" weight="font-bold">
-              💰 BEST PRICES
-            </DiscountGradient>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {foodProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleAddToWishlist}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Trending Accessories */}
-        <section className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              <Shuffle
-                text="Trending Accessories"
-                shuffleDirection="down"
-                duration={0.5}
-                ease="power3.out"
-                stagger={0.03}
-                glowColor="#10b981"
-              />
-            </h2>
-            <AIGradient size="text-lg" weight="font-bold">
-              🤖 AI RECOMMENDED
-            </AIGradient>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {accessories.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleAddToWishlist}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Recently Viewed Products */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            <Shuffle
-              text="Recently Viewed Products"
-              shuffleDirection="left"
-              duration={0.5}
-              ease="power3.out"
-              stagger={0.03}
-              glowColor="#8b5cf6"
-            />
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recentProducts.map(product => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleAddToWishlist}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-center gap-2 mb-12">
-          <button className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button className="px-3 py-2 bg-indigo-600 text-white rounded">1</button>
-          <button className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">2</button>
-          <button className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">3</button>
-          <span className="px-3 py-2 text-gray-400">...</span>
-          <button className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Pawfect Match</h3>
-            <p className="text-gray-600 mb-4">Stay up-to-date with our latest products and offers!</p>
-            <div className="flex justify-center gap-2 max-w-md mx-auto">
+      <section className="bg-gradient-to-br from-indigo-50 to-purple-50 py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h1 
+            className="text-4xl font-bold text-gray-900 mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            Pet Shop
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-gray-600 max-w-2xl mx-auto mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Discover the perfect products for your beloved pets, curated by our AI and pet experts.
+          </motion.p>
+          
+          {/* Search Bar */}
+          <motion.div 
+            className="max-w-md mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
-              <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                Subscribe
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-8 bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap justify-center gap-4">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-colors duration-300 ${
+                  selectedCategory === category.id
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <span className="text-lg">{category.icon}</span>
+                <span className="font-medium">{category.name}</span>
               </button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-8 border-t text-sm text-gray-600">
-            <div>English</div>
-            <div>© 2025 Pawfect Match</div>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
-              <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
-            </div>
+            ))}
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* Products Grid */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <div className="aspect-w-16 aspect-h-12">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-indigo-600 font-medium capitalize">
+                      {product.category}
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600">{product.rating}</span>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                  <p className="text-gray-600 mb-4">{product.description}</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold text-indigo-600">
+                      ${product.price}
+                    </span>
+                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center space-x-2">
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Add to Cart</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

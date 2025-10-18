@@ -1,83 +1,30 @@
-// Centralized image management
-// Import all images here for easy management and reusability
+// src/assets/images/index.js
 
-// Background Images
-export const backgrounds = {
-  login: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  register: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-  home: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  dashboard: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80'
-};
+// ✅ Logo JPG
+export { default as logo } from './logo.jpg';
 
-// Banner Images
-export const banners = {
-  hero: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  about: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-  services: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  contact: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80'
-};
+// ✅ Backgrounds
+export { default as background } from './backgrounds.jpg';
 
-// Logo Images
-export const logos = {
-  main: '/logo192.png',
-  white: '/logo512.png',
-  favicon: '/favicon.ico',
-  petvibe: require('./LOGO_PETVIBE.jpg').default
-};
+// ✅ Banner các trang
+export const loginBanner = "https://cdn.pixabay.com/photo/2018/03/28/22/03/dog-3277416_1280.jpg";
+export const registerBanner = "https://cdn.pixabay.com/photo/2017/09/25/13/12/cat-2787251_1280.jpg";
+export const heroBanner = "https://cdn.pixabay.com/photo/2018/03/30/07/53/dog-3277415_1280.jpg";
 
-// Icon Images (for custom icons not available in Lucide)
-export const icons = {
-  paw: 'https://cdn-icons-png.flaticon.com/512/1076/1076333.png',
-  dog: 'https://cdn-icons-png.flaticon.com/512/1076/1076333.png',
-  cat: 'https://cdn-icons-png.flaticon.com/512/1076/1076333.png',
-  heart: 'https://cdn-icons-png.flaticon.com/512/1076/1076333.png'
-};
+// ✅ Ảnh chó/mèo
+export const dog1 = "https://cdn.pixabay.com/photo/2016/02/19/10/00/dog-1209621_1280.jpg";
+export const dog2 = "https://cdn.pixabay.com/photo/2015/03/26/09/54/dog-690176_1280.jpg";
+export const cat1 = "https://cdn.pixabay.com/photo/2016/01/19/17/45/cat-114782_1280.jpg";
+export const cat2 = "https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_1280.jpg";
 
-// Pet Images
-export const pets = {
-  dog1: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2062&q=80',
-  dog2: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-  cat1: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2043&q=80',
-  cat2: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80'
-};
+// ✅ Sản phẩm mẫu
+export const dogCollar = "https://cdn.pixabay.com/photo/2016/11/21/16/19/dog-collar-1845868_1280.jpg";
+export const catToy = "https://cdn.pixabay.com/photo/2017/02/20/20/52/cat-2083492_1280.jpg";
+export const dogFood = "https://cdn.pixabay.com/photo/2017/02/04/12/37/dog-2035709_1280.jpg";
+export const petBed = "https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_1280.jpg";
 
-// Pet GIFs for Carousel
-export const petGifs = {
-  dog1: 'https://www.google.com.vn/url?sa=i&url=https%3A%2F%2Fkenh14.vn%2Fcho-hay-meo-yeu-con-nguoi-hon-da-co-ket-luan-chinh-thuc-tu-khoa-hoc-20170923083140602.chn&psig=AOvVaw0YhW0dGe2FFh4CRKnb-ccz&ust=1759865986120000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCNjbt-mpkJADFQAAAAAdAAAAABAE',
-  dog2: 'https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif',
-  dog3: 'https://media.giphy.com/media/3o7abAhoaUdjVObpxO/giphy.gif',
-  cat1: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif',
-  cat2: 'https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif',
-  cat3: 'https://media.giphy.com/media/3o7abAhoaUdjVObpxO/giphy.gif',
-  // Fallback to static images if GIFs don't load
-  dog1Static: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2062&q=80',
-  dog2Static: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-  cat1Static: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2043&q=80',
-  cat2Static: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80'
-};
+// ✅ Icon / avatar tạm
+export const userAvatar = "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png";
+export const petIcon = "https://cdn.pixabay.com/photo/2013/07/13/12/35/dog-159219_1280.png";
+export const shoppingCart = "https://cdn-icons-png.flaticon.com/512/1170/1170678.png";
 
-// Product Images
-export const products = {
-  collar: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  leash: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-  toy: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-  food: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80'
-};
-
-// Default fallback image
-export const defaultImage = 'https://via.placeholder.com/400x300/f3f4f6/9ca3af?text=No+Image';
-
-// Helper function to get image with fallback
-export const getImage = (imagePath, fallback = defaultImage) => {
-  return imagePath || fallback;
-};
-
-// Helper function to get background image with overlay
-export const getBackgroundImage = (imagePath, overlay = 'rgba(0,0,0,0.4)') => {
-  return {
-    backgroundImage: `linear-gradient(${overlay}, ${overlay}), url(${imagePath})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat'
-  };
-};

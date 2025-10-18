@@ -1,5 +1,19 @@
-/* Import PetVibe Theme */
-@import './styles/petvibe.css';
+/* PetVibe Theme Variables */
+:root {
+  --pv-primary: #eda274;
+  --pv-secondary: #d5956d;
+  --pv-dark: #362319;
+  --pv-light: #ffeadd;
+  --pv-accent: #ffb07c;
+  --pv-text-heading: #2a1a10;
+  --pv-text-body: #553d2d;
+  --pv-text-link: #d5956d;
+  --pv-text-muted: #7e5c48;
+  --pv-text-on-light: #2a1a10;
+  --pv-text-on-dark: #ffeadd;
+  --pv-text-on-primary: #FFFFFF;
+  --pv-text-on-secondary: #FFFFFF;
+}
 
 /* Import Poppins font for better typography */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');

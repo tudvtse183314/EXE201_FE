@@ -63,7 +63,7 @@ export default function Header() {
   return (
     <nav className="fixed top-0 w-full bg-white shadow-old-copper-card z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <SvgLogo 
@@ -73,7 +73,7 @@ export default function Header() {
               className="hover:scale-110 transition-transform duration-300"
             />
             <span 
-              className="text-xl font-bold cursor-pointer transition-colors duration-300"
+              className="text-2xl font-bold cursor-pointer transition-colors duration-300"
               style={{ color: '#34140e' }}
               onMouseEnter={(e) => e.target.style.color = '#c47256'}
               onMouseLeave={(e) => e.target.style.color = '#34140e'}
@@ -88,8 +88,8 @@ export default function Header() {
                 <button
                   key={index}
                   onClick={() => handleNavigation(item.path)}
-                  className={`transition-colors duration-300 ${
-                    location.pathname === item.path ? 'font-medium' : ''
+                  className={`text-lg transition-colors duration-300 ${
+                    location.pathname === item.path ? 'font-semibold' : 'font-medium'
                   }`}
                   style={{ 
                     color: location.pathname === item.path ? '#c47256' : '#34140e' 
@@ -141,7 +141,9 @@ export default function Header() {
                   <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
                     <User className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-sm" style={{ color: '#34140e' }}>{user.name || user.email}</span>
+                  <span className="text-base font-medium" style={{ color: '#34140e' }}>
+                    {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
+                  </span>
                 </div>
                 <Button 
                   variant="secondary" 
@@ -190,8 +192,8 @@ export default function Header() {
                 <button
                   key={index}
                   onClick={() => handleNavigation(item.path)}
-                  className={`block w-full text-left px-3 py-2 transition-colors duration-300 ${
-                    location.pathname === item.path ? 'font-medium' : ''
+                  className={`block w-full text-left px-3 py-2 text-lg transition-colors duration-300 ${
+                    location.pathname === item.path ? 'font-semibold' : 'font-medium'
                   }`}
                   style={{ 
                     color: location.pathname === item.path ? '#c47256' : '#34140e' 
@@ -214,7 +216,17 @@ export default function Header() {
               {/* Mobile Auth Buttons */}
               <div className="px-3 py-2 border-t border-oldCopper-200 mt-2">
                 {user ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    {/* User Info */}
+                    <div className="flex items-center space-x-3 px-2 py-2">
+                      <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-sm font-medium" style={{ color: '#34140e' }}>
+                        {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
+                      </span>
+                    </div>
+                    
                     <Button 
                       variant="secondary" 
                       size="sm"
