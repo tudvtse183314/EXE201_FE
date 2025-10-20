@@ -6,12 +6,15 @@ const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: { 
     "Content-Type": "application/json",
-    "Accept": "application/json"
+    "Accept": "application/json",
+  
   },
-  timeout: 15000, // Tăng timeout lên 15 giây
+  timeout: 0,
   withCredentials: false // Tắt credentials để tránh CORS issues
 });
 
+console.log('Axios baseURL =', axiosInstance.defaults.baseURL);
+console.log('Axios timeout =', axiosInstance.defaults.timeout);
 // Auto attach token
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
