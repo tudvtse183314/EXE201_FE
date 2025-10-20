@@ -4,8 +4,12 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uh
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-  timeout: 8000
+  headers: { 
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  timeout: 15000, // Tăng timeout lên 15 giây
+  withCredentials: false // Tắt credentials để tránh CORS issues
 });
 
 // Auto attach token

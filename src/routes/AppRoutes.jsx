@@ -18,6 +18,8 @@ import Shop from "../pages/public/Shop";
 import CustomerDashboard from "../pages/customer/Dashboard";
 import CustomerProfile from "../pages/customer/Profile";
 import CustomerOrders from "../pages/customer/Orders";
+import PetProfilePage from "../pages/customer/PetProfilePage";
+import AccountProfilePage from "../pages/customer/AccountProfilePage";
 
 // User Pages
 import CreatePetProfile from "../pages/user/CreatePetProfile";
@@ -35,6 +37,7 @@ import StaffDashboard from "../pages/staff/Dashboard";
 
 // Manager Pages
 import ManagerDashboard from "../pages/manager/ManagerDashboard";
+import AccountListPage from "../pages/manager/AccountListPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
@@ -141,6 +144,26 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/customer/pet-profiles"
+          element={
+            <PrivateRoute roles={['CUSTOMER']}>
+              <MainLayout>
+                <PetProfilePage />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/customer/account-profile"
+          element={
+            <PrivateRoute roles={['CUSTOMER']}>
+              <MainLayout>
+                <AccountProfilePage />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
         
         {/* User Routes */}
         <Route
@@ -205,6 +228,16 @@ export default function AppRoutes() {
           element={
             <PrivateRoute roles={['MANAGER']}>
               <ManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/manager/accounts"
+          element={
+            <PrivateRoute roles={['MANAGER']}>
+              <MainLayout>
+                <AccountListPage />
+              </MainLayout>
             </PrivateRoute>
           }
         />

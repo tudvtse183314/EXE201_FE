@@ -1,18 +1,21 @@
 // src/assets/images/index.js
 
 // ✅ Import banner images for background object
-import loginBannerImg from './banners/pexels-bill-emrich-64742-230784.jpg';
+import loginBannerImg from './pets/login.jpg';
 import registerBannerImg from './banners/pexels-burst-374898.jpg';
 import heroBannerImg from './banners/pexels-ellen-de-ruiter-249111-1718181.jpg';
 
 // ✅ Logo JPG
 export { default as logo } from './logo.jpg';
 
+// ✅ Login background
+export { default as loginBg } from './pets/login.jpg';
+
 // ✅ Backgrounds
 export { default as backgroundImage } from './backgrounds.jpg';
 
 // ✅ Banner các trang - Local banners
-export { default as loginBanner } from './banners/pexels-bill-emrich-64742-230784.jpg';
+export { default as loginBanner } from './pets/login.jpg';
 export { default as registerBanner } from './banners/pexels-burst-374898.jpg';
 export { default as heroBanner } from './banners/pexels-ellen-de-ruiter-249111-1718181.jpg';
 export { default as banner1 } from './banners/pexels-emhopper-1359036.jpg';
@@ -67,7 +70,7 @@ export { default as pet2 } from './pets/pexels-pixabay-532310.jpg';
 export { default as pet3 } from './pets/pexels-roman-odintsov-4555468.jpg';
 export { default as pet4 } from './pets/pexels-roth-pics-2797318.jpg';
 export { default as pet5 } from './pets/pexels-tdcat-59523.jpg';
-export { default as pet6 } from './pets/pexels-vanserline-vandenberg-759843-1619690.jpg';
+export { default as pet6 } from './pets/pexels-aloismoubax-1562983.jpg';
 export { default as pet7 } from './pets/pexels-aloismoubax-1562983.jpg';
 export { default as pet8 } from './pets/pexels-binyaminmellish-544269.jpg';
 
