@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "../components/layout/MainLayout";
+import { ROLES, getDashboardPathByRole } from "../constants/roles";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 // Pages
 import Home from "../pages/Home";
@@ -46,7 +48,7 @@ import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 // Private Route Component
 const PrivateRoute = ({ children, roles = [] }) => {
   const { user, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -54,17 +56,29 @@ const PrivateRoute = ({ children, roles = [] }) => {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
-  if (roles.length > 0 && !roles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+
+  // Chuẩn hoá role về UPPERCASE
+  const userRole = (user.role || "").toUpperCase();
+
+  // Nếu route yêu cầu role cụ thể và user không thuộc role đó
+  if (roles.length > 0 && !roles.map(r => r.toUpperCase()).includes(userRole)) {
+    const fallback = getDashboardPathByRole(userRole) || "/unauthorized";
+    return <Navigate to={fallback} replace />;
   }
-  
+
   return children;
 };
+
+// Dashboard Redirect Component
+function DashboardRedirect() {
+  const { user } = useAuth();
+  const to = getDashboardPathByRole(user?.role) || "/";
+  return <Navigate to={to} replace />;
+}
 
 export default function AppRoutes() {
   return (
@@ -105,7 +119,7 @@ export default function AppRoutes() {
         <Route
           path="/customer/dashboard"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <CustomerDashboard />
               </MainLayout>
@@ -117,7 +131,7 @@ export default function AppRoutes() {
         <Route
           path="/user/home"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <CustomerDashboard />
               </MainLayout>
@@ -127,7 +141,7 @@ export default function AppRoutes() {
         <Route
           path="/customer/profile"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <CustomerProfile />
               </MainLayout>
@@ -137,7 +151,7 @@ export default function AppRoutes() {
         <Route
           path="/customer/orders"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <CustomerOrders />
               </MainLayout>
@@ -169,7 +183,7 @@ export default function AppRoutes() {
         <Route
           path="/create-pet-profile"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <CreatePetProfile />
               </MainLayout>
@@ -179,7 +193,7 @@ export default function AppRoutes() {
         <Route
           path="/ai-analysis"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <AIAnalysis />
               </MainLayout>
@@ -191,7 +205,7 @@ export default function AppRoutes() {
         <Route
           path="/ai/analysis"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <AIAnalysisNew />
               </MainLayout>
@@ -201,10 +215,20 @@ export default function AppRoutes() {
         <Route
           path="/ai/seasonal-outfits"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <SeasonalOutfits />
               </MainLayout>
+            </PrivateRoute>
+          }
+        />
+        
+        {/* Admin Routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <PrivateRoute roles={[ROLES.ADMIN]}>
+              <AdminDashboard />
             </PrivateRoute>
           }
         />
@@ -216,7 +240,7 @@ export default function AppRoutes() {
         <Route
           path="/staff/dashboard"
           element={
-            <PrivateRoute roles={['STAFF', 'MANAGER']}>
+            <PrivateRoute roles={[ROLES.STAFF, ROLES.MANAGER]}>
               <StaffDashboard />
             </PrivateRoute>
           }
@@ -226,7 +250,7 @@ export default function AppRoutes() {
         <Route
           path="/manager/dashboard"
           element={
-            <PrivateRoute roles={['MANAGER']}>
+            <PrivateRoute roles={[ROLES.MANAGER]}>
               <ManagerDashboard />
             </PrivateRoute>
           }
@@ -246,7 +270,7 @@ export default function AppRoutes() {
         <Route
           path="/doctor/dashboard"
           element={
-            <PrivateRoute roles={['DOCTOR']}>
+            <PrivateRoute roles={[ROLES.DOCTOR]}>
               <DoctorDashboard />
             </PrivateRoute>
           }
@@ -254,10 +278,7 @@ export default function AppRoutes() {
         
         
         {/* Legacy Routes - Redirect to appropriate dashboard */}
-        <Route
-          path="/dashboard"
-          element={<Navigate to="/customer/dashboard" replace />}
-        />
+        <Route path="/dashboard" element={<DashboardRedirect />} />
         
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />

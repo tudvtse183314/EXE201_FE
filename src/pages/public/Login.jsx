@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { login } from '../../api/auth';
 import { LoginBackground } from '../../components/common/BackgroundImage';
 import { AIGradient } from '../../components/effects/GradientText';
+import { getDashboardPathByRole } from '../../constants/roles';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,27 +23,43 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const from = location.state?.from?.pathname || '/customer/dashboard';
+  const from = location.state?.from?.pathname || getDashboardPathByRole(user?.role) || '/';
 
   // Nếu đã đăng nhập thì tự động chuyển hướng
   useEffect(() => {
     if (user) {
-      console.log('🔐 User authenticated, redirecting to:', from);
-      navigate(from, { replace: true });
+      const redirectPath = from || getDashboardPathByRole(user.role) || '/';
+      console.log('🔐 User authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
     }
   }, [user, navigate, from]);
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
+    // Clear field-specific error when user starts typing
     if (errors[field]) setErrors({ ...errors, [field]: '' });
+    // Clear general error when user starts typing
     if (generalError) setGeneralError(null);
     if (successMessage) setSuccessMessage('');
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.phone.trim()) newErrors.phone = 'Vui lòng nhập số điện thoại';
-    if (!formData.password.trim()) newErrors.password = 'Vui lòng nhập mật khẩu';
+    
+    // Validate phone number
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Vui lòng nhập số điện thoại';
+    } else if (!/^[0-9]{10,11}$/.test(formData.phone.trim())) {
+      newErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
+    }
+    
+    // Validate password
+    if (!formData.password.trim()) {
+      newErrors.password = 'Vui lòng nhập mật khẩu';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -76,17 +93,32 @@ export default function Login() {
       // Gọi context login
       loginUser(userData, data.token);
 
-      // Redirect based on user role
-      const redirectPath = userData.role === 'STAFF' ? '/staff/dashboard' :
-                        userData.role === 'MANAGER' ? '/manager/dashboard' :
-                        userData.role === 'DOCTOR' ? '/doctor/dashboard' :
-                        '/customer/dashboard';
+      // Redirect based on user role using helper function
+      const redirectPath = getDashboardPathByRole(userData.role);
 
       setSuccessMessage('Đăng nhập thành công! Đang chuyển hướng...');
       setTimeout(() => navigate(redirectPath, { replace: true }), 800);
     } catch (err) {
       console.error('❌ Login error:', err);
-      setGeneralError(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      
+      // Xử lý các loại lỗi cụ thể
+      let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Username or password invalid!';
+      } else if (err.response?.status === 400) {
+        errorMessage = 'Thông tin đăng nhập không hợp lệ.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'Tài khoản đã bị khóa. Vui lòng liên hệ admin.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Không tìm thấy tài khoản.';
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setGeneralError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -154,8 +186,8 @@ export default function Login() {
           )}
 
           {generalError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center animate-pulse">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
               <p className="text-sm text-red-600 font-medium">{generalError}</p>
             </div>
           )}
@@ -174,8 +206,8 @@ export default function Login() {
                 } rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none`}
               />
               {errors.phone && (
-                <p className="text-sm text-red-500 mt-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.phone}
+                <p className="text-sm text-red-500 mt-2 flex items-center animate-pulse">
+                  <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" /> {errors.phone}
                 </p>
               )}
             </div>
@@ -201,8 +233,8 @@ export default function Login() {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-500 mt-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" /> {errors.password}
+                <p className="text-sm text-red-500 mt-2 flex items-center animate-pulse">
+                  <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" /> {errors.password}
                 </p>
               )}
             </div>
