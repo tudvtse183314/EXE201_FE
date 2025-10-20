@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { login } from '../../api/auth';
 import { LoginBackground } from '../../components/common/BackgroundImage';
 import { AIGradient } from '../../components/effects/GradientText';
+import { getDashboardPathByRole } from '../../constants/roles';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,13 +23,14 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const from = location.state?.from?.pathname || '/customer/dashboard';
+  const from = location.state?.from?.pathname || getDashboardPathByRole(user?.role) || '/';
 
   // Nếu đã đăng nhập thì tự động chuyển hướng
   useEffect(() => {
     if (user) {
-      console.log('🔐 User authenticated, redirecting to:', from);
-      navigate(from, { replace: true });
+      const redirectPath = from || getDashboardPathByRole(user.role) || '/';
+      console.log('🔐 User authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
     }
   }, [user, navigate, from]);
 
@@ -76,11 +78,8 @@ export default function Login() {
       // Gọi context login
       loginUser(userData, data.token);
 
-      // Redirect based on user role
-      const redirectPath = userData.role === 'STAFF' ? '/staff/dashboard' :
-                        userData.role === 'MANAGER' ? '/manager/dashboard' :
-                        userData.role === 'DOCTOR' ? '/doctor/dashboard' :
-                        '/customer/dashboard';
+      // Redirect based on user role using helper function
+      const redirectPath = getDashboardPathByRole(userData.role);
 
       setSuccessMessage('Đăng nhập thành công! Đang chuyển hướng...');
       setTimeout(() => navigate(redirectPath, { replace: true }), 800);
