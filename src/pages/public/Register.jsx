@@ -340,9 +340,6 @@ export default function Register() {
                     <option value="">Select type</option>
                     <option value="dog">Dog</option>
                     <option value="cat">Cat</option>
-                    <option value="bird">Bird</option>
-                    <option value="rabbit">Rabbit</option>
-                    <option value="other">Other</option>
                   </select>
                   {errors.petType && (
                     <p className="text-sm text-red-500 mt-1 flex items-center">

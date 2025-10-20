@@ -98,7 +98,7 @@ export default function Header() {
               <div className="hidden md:flex items-center space-x-2 text-sm">
                 <Phone className="w-4 h-4" style={{ color: '#c47256' }} />
                 <span className="font-medium" style={{ color: '#34140e' }}>
-                  086 767 7891
+                0778 041 723
                 </span>
               </div>
 
