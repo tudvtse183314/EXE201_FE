@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [apiLoading, setApiLoading] = useState(false);
 
   const login = (userData, token) => {
     localStorage.setItem("authToken", token);
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
+      setApiLoading(true);
       const token = localStorage.getItem("authToken");
       if (token) {
         await verifyToken(token);
@@ -35,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     } catch {
       logout();
     } finally {
+      setApiLoading(false);
       setIsLoading(false);
     }
   };
@@ -65,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = () => !!user;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, apiLoading, setApiLoading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
