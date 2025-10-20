@@ -26,6 +26,8 @@ export default function Header() {
   const userNavigationItems = [
     { label: 'Home', path: '/' },
     { label: 'Shop', path: '/shop' },
+    { label: 'Pet Profiles', path: '/customer/pet-profiles' },
+    { label: 'My Profile', path: '/customer/account-profile' },
     { label: 'AI Analysis', path: '/ai-analysis' },
     { label: 'Premium', path: '/services' },
     { label: 'About', path: '/about' },
