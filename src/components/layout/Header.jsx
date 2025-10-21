@@ -20,7 +20,8 @@ export default function Header() {
     { label: 'AI Analysis', path: '/ai-analysis' },
     { label: 'Premium', path: '/services' },
     { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' }
+    { label: 'Contact', path: '/contact' },
+    { label: 'Demo AI', path: '/demo' }
   ];
 
   const userNavigationItems = [

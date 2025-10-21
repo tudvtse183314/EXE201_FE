@@ -43,6 +43,7 @@ import AccountListPage from "../pages/manager/AccountListPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
+import PetAIAssistant from "../pages/ai/demo.jsx";
 
 
 // Private Route Component
@@ -107,6 +108,11 @@ export default function AppRoutes() {
         <Route path="/contact" element={
           <MainLayout>
             <Contact />
+          </MainLayout>
+        } />
+        <Route path="/demo" element={
+          <MainLayout>
+            <PetAIAssistant/>
           </MainLayout>
         } />
         <Route path="/shop" element={
