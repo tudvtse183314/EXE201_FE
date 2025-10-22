@@ -98,12 +98,22 @@ export default function APITestSummary() {
                   }}
                 />
               </Col>
+              <Col xs={24} sm={8}>
+                <Statistic
+                  title="Orders API"
+                  value={testResults.orders?.getAll?.success ? 'Working' : 'Failed'}
+                  valueStyle={{ 
+                    color: getStatusColor(testResults.orders?.getAll?.success),
+                    fontSize: '18px'
+                  }}
+                />
+              </Col>
             </Row>
           </Card>
 
           {/* Detailed Results */}
           <Row gutter={[24, 24]}>
-            <Col xs={24} lg={12}>
+            <Col xs={24} lg={8}>
               <Card title="📂 Categories API Details" size="small">
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <div>
@@ -136,7 +146,7 @@ export default function APITestSummary() {
               </Card>
             </Col>
 
-            <Col xs={24} lg={12}>
+            <Col xs={24} lg={8}>
               <Card title="📦 Products API Details" size="small">
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <div>
@@ -168,6 +178,62 @@ export default function APITestSummary() {
                 </Space>
               </Card>
             </Col>
+
+            <Col xs={24} lg={8}>
+              <Card title="📋 Orders API Details" size="small">
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div>
+                    <Text strong>GET /orders/all: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.getAll?.success) }}>
+                      {getStatusIcon(testResults.orders?.getAll?.success)} 
+                      {testResults.orders?.getAll?.count || 0} items
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>POST /orders: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.create?.success) }}>
+                      {getStatusIcon(testResults.orders?.create?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>GET /orders/&#123;id&#125;: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.getById?.success) }}>
+                      {getStatusIcon(testResults.orders?.getById?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>GET /orders/account/&#123;id&#125;: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.getByAccount?.success) }}>
+                      {getStatusIcon(testResults.orders?.getByAccount?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>GET /orders/status/&#123;status&#125;: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.getByStatus?.success) }}>
+                      {getStatusIcon(testResults.orders?.getByStatus?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>GET /orders/&#123;id&#125;/payment-qr: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.getPaymentQR?.success) }}>
+                      {getStatusIcon(testResults.orders?.getPaymentQR?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>PATCH /orders/&#123;id&#125;/cancel: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.cancel?.success) }}>
+                      {getStatusIcon(testResults.orders?.cancel?.success)}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text strong>PATCH /orders/&#123;id&#125;/status: </Text>
+                    <Text style={{ color: getStatusColor(testResults.orders?.updateStatus?.success) }}>
+                      {getStatusIcon(testResults.orders?.updateStatus?.success)}
+                    </Text>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
           </Row>
 
           {/* Recommendations */}
@@ -182,16 +248,16 @@ export default function APITestSummary() {
                 />
               )}
               
-              {testResults.categories?.getAll?.success && testResults.products?.getAll?.success && (
+              {testResults.categories?.getAll?.success && testResults.products?.getAll?.success && testResults.orders?.getAll?.success && (
                 <Alert
-                  message="APIs Working Well"
-                  description="Both Categories and Products APIs are functioning correctly. You can proceed with CRUD operations."
+                  message="All APIs Working Well"
+                  description="Categories, Products, and Orders APIs are functioning correctly. You can proceed with CRUD operations."
                   type="success"
                   showIcon
                 />
               )}
 
-              {(!testResults.categories?.getAll?.success || !testResults.products?.getAll?.success) && (
+              {(!testResults.categories?.getAll?.success || !testResults.products?.getAll?.success || !testResults.orders?.getAll?.success) && (
                 <Alert
                   message="API Issues Detected"
                   description="Some APIs are not working properly. Check console logs for detailed error messages and contact backend team if needed."

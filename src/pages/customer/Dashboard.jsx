@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getMyOrders, getOrdersByAccount } from "../../services/orders";
+import { getOrdersByAccount } from "../../services/orders";
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -14,14 +14,9 @@ export default function CustomerDashboard() {
       try {
         setLoading(true);
         let data = [];
-        // Ưu tiên endpoint /orders/my nếu BE có:
-        try {
-          data = await getMyOrders();
-        } catch {
-          // fallback nếu BE không có /orders/my
-          if (user?.accountId) {
-            data = await getOrdersByAccount(user.accountId);
-          }
+        // Lấy đơn hàng theo account ID
+        if (user?.accountId) {
+          data = await getOrdersByAccount(user.accountId);
         }
         if (!ignore) setOrders(Array.isArray(data) ? data : []);
       } catch (e) {

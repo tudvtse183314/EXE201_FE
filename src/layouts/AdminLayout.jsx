@@ -70,6 +70,12 @@ export default function AdminLayout() {
       path: '/admin/api-summary', 
       icon: <UserOutlined /> 
     },
+    { 
+      key: 'test-orders', 
+      label: '🧪 Test Orders', 
+      path: '/admin/test-orders', 
+      icon: <UserOutlined /> 
+    },
   ];
 
   const getCurrentPageInfo = () => {

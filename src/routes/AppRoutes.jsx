@@ -45,13 +45,15 @@ import ProductsPage from "../pages/admin/products/ProductsPage";
 import CategoryTest from "../components/admin/CategoryTest";
 import ProductTest from "../components/admin/ProductTest";
 import APITestSummary from "../components/admin/APITestSummary";
+import OrdersTest from "../components/admin/OrdersTest";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import PetAIAssistant from "../pages/ai/demo.jsx";
 
 import Shop from "../pages/public/Shop.jsx";
-import ProductDetail from "../pages/public/ProductDetail.jsx";
+import ProductDetail from "../pages/public/ProductDetail";
+import Wishlist from "../pages/public/Wishlist";
 import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
@@ -136,11 +138,16 @@ export default function AppRoutes() {
             <ProductDetail/>
           </MainLayout>
         } />
-        <Route path="/cart" element={
-          <MainLayout>
-            <Cart/>
-          </MainLayout>
-        } />
+               <Route path="/cart" element={
+                 <MainLayout>
+                   <Cart/>
+                 </MainLayout>
+               } />
+               <Route path="/wishlist" element={
+                 <MainLayout>
+                   <Wishlist/>
+                 </MainLayout>
+               } />
         <Route path="/checkout" element={
           <MainLayout>
             <Checkout/>
@@ -311,6 +318,7 @@ export default function AppRoutes() {
           <Route path="test" element={<CategoryTest />} />
           <Route path="test-products" element={<ProductTest />} />
           <Route path="api-summary" element={<APITestSummary />} />
+          <Route path="test-orders" element={<OrdersTest />} />
         </Route>
         
         {/* Doctor Routes */}
