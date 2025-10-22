@@ -1,9 +1,9 @@
 // src/pages/public/ProductDetail.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Button, Tag, Spin, Alert, InputNumber, message, Image } from 'antd';
+import { Card, Row, Col, Button, Tag, Spin, Alert, InputNumber, message } from 'antd';
 import { ShoppingCartOutlined, HeartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { getProductById, getAllProducts } from '../../services/products';
+import { getProductById } from '../../services/products';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
@@ -14,13 +14,15 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [product, setProduct] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     const loadProduct = async () => {
+      if (!id) return;
+      
       try {
         setLoading(true);
         setError(null);
@@ -29,49 +31,53 @@ export default function ProductDetail() {
         const data = await getProductById(id);
         console.log("📦 ProductDetail: Product loaded", data);
         
-        setProduct(data);
-        
-        // Load related products
-        const allProducts = await getAllProducts();
-        const related = allProducts
-          .filter(p => p.category?.id === data.category?.id && p.id !== data.id)
-          .slice(0, 4);
-        setRelatedProducts(related);
+        // Chỉ set state nếu component vẫn mounted
+        if (isMountedRef.current) {
+          setProduct(data);
+        }
       } catch (e) {
         console.error("📦 ProductDetail: Error loading product", e);
-        setError(e?.message || "Không thể tải thông tin sản phẩm.");
+        if (isMountedRef.current) {
+          setError(e?.message || "Không thể tải thông tin sản phẩm.");
+        }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
-    if (id) {
-      loadProduct();
-    }
+    loadProduct();
+
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [id]);
 
-  const handleAddToCart = async () => {
-    if (product) {
-      try {
-        await addToCart(product, quantity);
-        message.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
-      } catch (error) {
-        message.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại!');
-      }
+  const handleAddToCart = useCallback(async () => {
+    if (!product) return;
+    
+    try {
+      await addToCart(product, quantity);
+      message.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      message.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại!');
     }
-  };
+  }, [product, quantity, addToCart]);
 
-  const handleWishlist = () => {
-    if (product) {
-      toggleWishlist(product);
-      const isAdded = isInWishlist(product.id);
-      if (isAdded) {
-        message.success("Đã thêm vào danh sách yêu thích!");
-      } else {
-        message.info("Đã xóa khỏi danh sách yêu thích!");
-      }
+  const handleWishlist = useCallback(() => {
+    if (!product) return;
+    
+    toggleWishlist(product);
+    const isAdded = isInWishlist(product.id);
+    if (isAdded) {
+      message.success("Đã thêm vào danh sách yêu thích!");
+    } else {
+      message.info("Đã xóa khỏi danh sách yêu thích!");
     }
-  };
+  }, [product, toggleWishlist, isInWishlist]);
 
   if (loading) {
     return (
@@ -351,90 +357,25 @@ export default function ProductDetail() {
           </Col>
         </Row>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div style={{ marginTop: '80px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              color: '#362319',
-              marginBottom: '32px',
-              textAlign: 'center',
-              fontFamily: 'Poppins, Arial, sans-serif'
-            }}>
-              Sản phẩm liên quan
-            </h2>
-            <Row gutter={[24, 24]}>
-              {relatedProducts.map((relatedProduct) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={relatedProduct.id}>
-                  <Card
-                    hoverable
-                    style={{
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                      border: 'none',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer'
-                    }}
-                    bodyStyle={{ padding: '16px' }}
-                    cover={
-                      <div 
-                        style={{ 
-                          height: '200px', 
-                          overflow: 'hidden'
-                        }}
-                        onClick={() => navigate(`/product/${relatedProduct.id}`)}
-                      >
-                        <img
-                          alt={relatedProduct.name}
-                          src={relatedProduct.image || getFallbackImageByIndex(relatedProduct.id)}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transition: 'transform 0.3s ease'
-                          }}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.src = getFallbackImageByIndex(relatedProduct.id);
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = 'scale(1.05)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = 'scale(1)';
-                          }}
-                        />
-                      </div>
-                    }
-                    onClick={() => navigate(`/product/${relatedProduct.id}`)}
-                  >
-                    <div style={{ textAlign: 'center' }}>
-                      <h4 style={{ 
-                        fontSize: '16px', 
-                        fontWeight: '700',
-                        color: '#362319',
-                        margin: '0 0 8px 0',
-                        fontFamily: 'Poppins, Arial, sans-serif'
-                      }}>
-                        {relatedProduct.name}
-                      </h4>
-                      <div style={{ 
-                        fontSize: '18px', 
-                        fontWeight: '800', 
-                        color: '#eda274',
-                        fontFamily: 'Poppins, Arial, sans-serif'
-                      }}>
-                        {relatedProduct.price ? `${relatedProduct.price.toLocaleString()}đ` : 'Liên hệ'}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        )}
+        {/* Back to Shop */}
+        <div style={{ marginTop: '60px', textAlign: 'center' }}>
+          <Button 
+            type="primary" 
+            size="large"
+            onClick={() => navigate('/shop')}
+            style={{
+              background: '#eda274',
+              borderColor: '#eda274',
+              borderRadius: '12px',
+              fontWeight: '600',
+              height: '48px',
+              paddingLeft: '32px',
+              paddingRight: '32px'
+            }}
+          >
+            Tiếp tục mua sắm
+          </Button>
+        </div>
       </div>
     </div>
   );
