@@ -1,3 +1,4 @@
+// src/constants/roles.js
 export const ROLES = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
@@ -6,12 +7,13 @@ export const ROLES = {
   DOCTOR: "DOCTOR",
 };
 
+// Chỉ role quản lý mới vào dashboard; CUSTOMER về trang chủ "/"
 export const dashboardPathByRole = {
-  ADMIN: "/admin/dashboard",
-  MANAGER: "/manager/dashboard",
+  ADMIN: "/admin", // 👈 ADMIN và MANAGER vào admin panel
+  MANAGER: "/admin", // 👈 ADMIN và MANAGER vào admin panel
   STAFF: "/staff/dashboard",
-  CUSTOMER: "/customer/dashboard",
   DOCTOR: "/doctor/dashboard",
+  CUSTOMER: "/", // 👈 khách quay về Home
 };
 
 export function getDashboardPathByRole(role) {

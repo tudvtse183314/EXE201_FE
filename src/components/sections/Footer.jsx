@@ -165,9 +165,9 @@ const Footer = () => {
           </div>
           
           <div className="flex space-x-6 text-sm text-gray-400">
-            <a href="#" className="hover:text-pink-400 transition-colors duration-300">Privacy Policy</a>
-            <a href="#" className="hover:text-pink-400 transition-colors duration-300">Terms of Service</a>
-            <a href="#" className="hover:text-pink-400 transition-colors duration-300">Support</a>
+            <button className="hover:text-pink-400 transition-colors duration-300">Privacy Policy</button>
+            <button className="hover:text-pink-400 transition-colors duration-300">Terms of Service</button>
+            <button className="hover:text-pink-400 transition-colors duration-300">Support</button>
           </div>
         </motion.div>
       </div>

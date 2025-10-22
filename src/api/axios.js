@@ -1,78 +1,51 @@
+// src/api/axios.js
 import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+// ===== Global Loading Registry (đúng với App.js đang dùng) =====
+let globalLoadingSetter = null;
+export function setGlobalLoadingState(setter) {
+  globalLoadingSetter = typeof setter === "function" ? setter : null;
+}
+// ===============================================================
 
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { 
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-  },
-  timeout: 150000,
-  withCredentials: false // Tắt credentials để tránh CORS issues
+  baseURL: process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api",
+  timeout: 60000,
+  withCredentials: false,
 });
 
-console.log('API base =', axiosInstance.defaults.baseURL);
-console.log('Axios timeout =', axiosInstance.defaults.timeout);
+let activeRequests = 0;
+function onReqStart() {
+  activeRequests += 1;
+  if (globalLoadingSetter && activeRequests === 1) globalLoadingSetter(true);
+}
+function onReqEnd() {
+  activeRequests = Math.max(0, activeRequests - 1);
+  if (globalLoadingSetter && activeRequests === 0) globalLoadingSetter(false);
+}
 
-// Loading state management
-let loadingCount = 0;
-const setGlobalLoading = (show) => {
-  // This will be set by the app when axios instance is created
-  if (window.setGlobalLoading) {
-    window.setGlobalLoading(show);
-  }
-};
-
-// Auto attach token and manage loading
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  
-  // Show loading for non-health check requests
-  if (!config.url?.includes('/health')) {
-    loadingCount++;
-    if (loadingCount === 1) {
-      setGlobalLoading(true);
-    }
-  }
-  
-  return config;
-});
-
-// Global error handler and loading management
-axiosInstance.interceptors.response.use(
-  (res) => {
-    // Hide loading for non-health check requests
-    if (!res.config.url?.includes('/health')) {
-      loadingCount--;
-      if (loadingCount === 0) {
-        setGlobalLoading(false);
-      }
-    }
-    return res;
+axiosInstance.interceptors.request.use(
+  (config) => {
+    onReqStart();
+    const token = localStorage.getItem("accessToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
   },
-  (err) => {
-    // Hide loading on error
-    if (!err.config?.url?.includes('/health')) {
-      loadingCount--;
-      if (loadingCount === 0) {
-        setGlobalLoading(false);
-      }
-    }
-    
-    if (err.response?.status === 401) {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
-    return Promise.reject(err);
+  (error) => {
+    onReqEnd();
+    return Promise.reject(error);
   }
 );
 
-// Export function to set global loading state
-export const setGlobalLoadingState = (setLoading) => {
-  window.setGlobalLoading = setLoading;
-};
+axiosInstance.interceptors.response.use(
+  (res) => {
+    onReqEnd();
+    return res;
+  },
+  (error) => {
+    onReqEnd();
+    return Promise.reject(error);
+  }
+);
 
 export default axiosInstance;

@@ -1,3 +1,4 @@
+// src/components/layout/UserHeader.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, Heart, ShoppingCart, User, MessageCircle } from 'lucide-react';
@@ -12,15 +13,24 @@ export default function UserHeader() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Navigation items for logged-in users
+  /**
+   * Navigation items
+   * - requiresAuth: nếu true thì bắt buộc đăng nhập mới cho vào
+   * - Bạn có thể sửa path cho đúng router hiện có
+   */
   const userNavigationItems = [
-    { label: 'Home', path: '/user/home' },
-    { label: 'Profile', path: '/user/profile' },
-    { label: 'Shop', path: '/user/shop' },
-    { label: 'Order', path: '/user/orders' },
-    { label: 'AI Analysis', path: '/user/ai-analysis' },
-    { label: 'Premium', path: '/user/premium' },
-    { label: 'Chat', path: '/user/chat' }
+    { label: 'Home', path: '/', requiresAuth: false },
+    { label: 'Shop', path: '/shop', requiresAuth: false },
+
+    // 👇 Thêm theo yêu cầu
+    { label: 'My Pets', path: '/my-pets', requiresAuth: true },
+    { label: 'Profile', path: '/customer/profile', requiresAuth: true },
+
+    // Các mục còn lại (tuỳ dự án)
+    { label: 'Orders', path: '/customer/orders', requiresAuth: true },
+    { label: 'AI Analysis', path: '/ai-analysis', requiresAuth: true }, // đổi thành /user/ai-analysis nếu bạn đang dùng path đó
+    { label: 'Premium', path: '/user/premium', requiresAuth: true },
+    { label: 'Chat', path: '/user/chat', requiresAuth: true },
   ];
 
   const iconButtons = [
@@ -30,8 +40,18 @@ export default function UserHeader() {
     { icon: MessageCircle, label: 'Chat', action: () => console.log('Chat clicked') }
   ];
 
-  const handleNavigation = (path) => {
-    navigate(path);
+  const handleNavigation = (itemOrPath) => {
+    const item = typeof itemOrPath === 'string'
+      ? userNavigationItems.find(i => i.path === itemOrPath) || { path: itemOrPath, requiresAuth: false }
+      : itemOrPath;
+
+    if (item.requiresAuth && !user) {
+      // Chuyển tới login và nhớ from để quay lại sau khi đăng nhập
+      navigate('/login', { state: { from: location } });
+      setMobileMenuOpen(false);
+      return;
+    }
+    navigate(item.path);
     setMobileMenuOpen(false);
   };
 
@@ -40,7 +60,10 @@ export default function UserHeader() {
     navigate('/');
   };
 
-  // Removed unused handleDashboard function
+  const isActive = (path) => {
+    // Active khi path khớp chính xác hoặc đang ở nhánh con
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   return (
     <header className="w-full bg-black text-white shadow-lg relative overflow-hidden">
@@ -67,7 +90,7 @@ export default function UserHeader() {
                   <SvgLogo 
                     size="medium"
                     variant="white"
-                    onClick={() => handleNavigation('/user/home')}
+                    onClick={() => handleNavigation('/')}
                     className="hover:scale-110"
                   />
                 </motion.div>
@@ -78,7 +101,7 @@ export default function UserHeader() {
                 >
                   <span 
                     className="text-xl font-bold text-cyan-400 cursor-pointer"
-                    onClick={() => handleNavigation('/user/home')}
+                    onClick={() => handleNavigation('/')}
                   >
                     Pawfect Match
                   </span>
@@ -93,7 +116,7 @@ export default function UserHeader() {
                 >
                   <div className="text-sm">
                     <Shuffle
-                      text={`Hi, ${(user?.fullName || user?.email || 'Pet Parent').split(' ')[0]}`}
+                      text={`Hi, ${(user?.fullName || user?.name || user?.email || 'Pet Parent').split(' ')[0]}`}
                       shuffleDirection="left"
                       duration={0.4}
                       ease="power3.out"
@@ -115,12 +138,13 @@ export default function UserHeader() {
                       y: -2
                     }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleNavigation(item.path)}
+                    onClick={() => handleNavigation(item)}
                     className={`text-sm font-medium px-3 py-2 transition-all duration-300 rounded-lg ${
-                      location.pathname === item.path
-                        ? 'text-cyan-400 bg-cyan-400 bg-opacity-20 border border-cyan-400'
+                      isActive(item.path)
+                        ? 'text-cyan-400 bg-cyan-400/20 border border-cyan-400'
                         : 'text-gray-300 hover:text-white hover:bg-gray-700'
                     }`}
+                    title={item.requiresAuth && !user ? 'Bạn cần đăng nhập để truy cập' : undefined}
                   >
                     {item.label}
                   </motion.button>
@@ -154,7 +178,7 @@ export default function UserHeader() {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm text-gray-300">
-                    {user?.fullName || user?.email || 'User'}
+                    {user?.fullName || user?.name || user?.email || 'User'}
                   </span>
                 </motion.div>
 
@@ -213,12 +237,13 @@ export default function UserHeader() {
                 key={index}
                 whileHover={{ x: 10, backgroundColor: "#1e40af" }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleNavigation(item.path)}
+                onClick={() => handleNavigation(item)}
                 className={`block w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
-                  location.pathname === item.path
-                    ? 'text-cyan-400 bg-cyan-400 bg-opacity-20'
+                  isActive(item.path)
+                    ? 'text-cyan-400 bg-cyan-400/20'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
+                title={item.requiresAuth && !user ? 'Bạn cần đăng nhập để truy cập' : undefined}
               >
                 {item.label}
               </motion.button>
@@ -232,7 +257,7 @@ export default function UserHeader() {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <span className="text-sm text-gray-300">
-                    {user?.fullName || user?.email || 'User'}
+                    {user?.fullName || user?.name || user?.email || 'User'}
                   </span>
                 </div>
                 <motion.button
@@ -272,12 +297,9 @@ export default function UserHeader() {
 }
 
 /**
- * UserHeader.jsx
- * Enhanced header for logged-in users with:
- * - Animated "WELCOME! USERNAME" text with shuffle effect and cyan glow
- * - Smooth navigation with hover effects and active states
- * - Animated background particles
- * - Mobile-responsive design with animated hamburger menu
- * - Maintains original navigation logic and routing
- * - Uses Framer Motion for smooth animations
+ * UserHeader.jsx (patched)
+ * - Thêm "My Pets" & "Profile" trên header
+ * - AI Analysis, Profile, Orders, My Pets, Premium, Chat: yêu cầu đăng nhập
+ * - Nếu chưa đăng nhập khi bấm -> chuyển đến /login và lưu from để quay lại
+ * - Home -> "/", Shop -> "/shop" (đổi được tuỳ router)
  */

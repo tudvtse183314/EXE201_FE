@@ -31,7 +31,7 @@ export const createProduct = async (productData) => {
  */
 export const getAllProducts = async () => {
   try {
-    const response = await axiosInstance.get("/products");
+    const response = await axiosInstance.get("/products/getAll");
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {

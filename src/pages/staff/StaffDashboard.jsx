@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getAllProducts, createProduct } from '../../api/product';
+import { getAllProducts, createProduct } from '../../api/products';
 import { getAllCategories, createCategory } from '../../api/category';
-import { getAllOrders, getOrderById, updateOrderStatus } from '../../api/order';
+import { getAllOrders, updateOrderStatus } from '../../api/order';
 import { Plus, Package, Tag, AlertCircle, ShoppingCart, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 export default function StaffDashboard() {
@@ -15,6 +15,9 @@ export default function StaffDashboard() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+
+  // Guard against double-fetching
+  const fetchedRef = useRef(false);
 
   // Form states
   const [productForm, setProductForm] = useState({
@@ -30,6 +33,8 @@ export default function StaffDashboard() {
   });
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     loadData();
   }, []);
 
