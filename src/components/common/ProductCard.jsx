@@ -2,42 +2,40 @@ import React from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import ShinyText from '../effects/ShinyText';
 import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const handleViewDetail = () => {
     // Navigate to product detail page
-    console.log('View detail for product:', product.id);
+    navigate(`/product/${product.id}`);
   };
 
-  const handleAddToCart = () => {
-    if (!user) {
-      // Redirect to login if not authenticated
-      navigate('/login', { state: { from: { pathname: '/services' } } });
-      return;
-    }
-    
-    if (onAddToCart) {
-      onAddToCart(product);
-    } else {
-      console.log('Add to cart:', product.id);
+  const handleAddToCart = async () => {
+    try {
+      if (onAddToCart) {
+        onAddToCart(product);
+      } else {
+        await addToCart(product, 1);
+        console.log('Add to cart:', product.id);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
     }
   };
 
   const handleAddToWishlist = () => {
-    if (!user) {
-      // Redirect to login if not authenticated
-      navigate('/login', { state: { from: { pathname: '/services' } } });
-      return;
-    }
-    
     if (onAddToWishlist) {
       onAddToWishlist(product);
     } else {
+      toggleWishlist(product);
       console.log('Add to wishlist:', product.id);
     }
   };
@@ -118,10 +116,14 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           </button>
           <button 
             onClick={handleAddToWishlist}
-            className="px-3 border border-indigo-600 text-indigo-600 text-sm py-2 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center"
-            title="Add to wishlist"
+            className={`px-3 border text-sm py-2 rounded transition-colors flex items-center justify-center ${
+              isInWishlist(product.id) 
+                ? 'border-red-500 text-red-500 bg-red-50' 
+                : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+            }`}
+            title={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
           </button>
         </div>
         
@@ -131,7 +133,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           className="w-full mt-2 bg-green-600 text-white text-sm py-2 rounded hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
         >
           <ShoppingCart className="w-4 h-4" />
-          {user ? 'Add to Cart' : 'Login to Buy'}
+          Add to Cart
         </button>
       </div>
     </div>
