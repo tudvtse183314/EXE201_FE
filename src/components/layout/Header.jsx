@@ -9,6 +9,7 @@ import Button from '../common/Button';
 import SvgLogo from '../common/SvgLogo';
 import SearchBar from './SearchBar';
 import Breadcrumb from './Breadcrumb';
+import NavAIButton from '../common/NavAIButton';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -20,46 +21,24 @@ export default function Header() {
 
   // --- MENU LOGIC ---------------------------------------------------------
 
-  // Menu cơ bản của UI cũ (giữ nguyên thứ tự & styling)
+  // Menu theo thứ tự yêu cầu
   const baseMenu = [
     { label: 'Home', path: '/' },
     { label: 'Shop', path: '/shop' },
-    { label: 'AI Analysis', path: '/customer/ai-analysis' }, // sẽ yêu cầu login
-    { label: 'Premium', path: '/services' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Demo AI', path: '/demo-ai' },
+    { label: 'Premium', path: '/premium' },
+    { label: 'My Pets', path: '/my-pets', requiresAuth: true },
+    { label: 'AI Analysis', path: '/ai-analysis', isSpecial: true }, // Nút đặc biệt
   ];
 
-  // Các mục riêng cho customer khi đã đăng nhập
-  const customerExtras = [
-    { label: 'Orders', path: '/customer/orders' },
-    { label: 'My Pets', path: '/customer/my-pets' },
-    { label: 'Profile', path: '/customer/account-profile' },
-  ];
-
-  // Chèn extras vào ngay SAU "AI Analysis" để giữ cảm giác UI cũ
-  const buildMenu = () => {
-    if (!user) return baseMenu;
-    const aiIdx = baseMenu.findIndex((i) =>
-      i.label.toLowerCase().includes('ai analysis')
-    );
-    if (aiIdx === -1) return [...baseMenu, ...customerExtras];
-    return [
-      ...baseMenu.slice(0, aiIdx + 1),
-      ...customerExtras,
-      ...baseMenu.slice(aiIdx + 1),
-    ];
-  };
-
-  const navigationItems = buildMenu();
+  // Menu items không cần thay đổi theo user
+  const navigationItems = baseMenu;
 
   // Những đường dẫn bắt buộc đăng nhập
   const authRequired = new Set([
-    '/customer/orders',
-    '/customer/ai-analysis',
-    '/customer/my-pets',
-    '/customer/account-profile',
+    '/my-pets',
+    '/ai-analysis',
   ]);
 
   const handleNavigation = (path) => {
@@ -204,35 +183,42 @@ export default function Header() {
       <div className="fixed top-16 w-full bg-gray-50 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center">
-            <nav className="hidden md:flex space-x-8 py-3">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  className={`text-base font-medium transition-all duration-300 px-4 py-2 rounded-lg ${
-                    isActive(item.path)
-                      ? 'text-white shadow-md'
-                      : 'text-gray-700 hover:text-c47256'
-                  }`}
-                  style={{
-                    backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
-                    color: isActive(item.path) ? '#ffffff' : undefined,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive(item.path)) e.target.style.color = '#c47256';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive(item.path)) e.target.style.color = '#374151';
-                  }}
-                  title={
-                    authRequired.has(item.path) && !user
-                      ? 'Bạn cần đăng nhập để truy cập'
-                      : undefined
-                  }
-                >
-                  {item.label}
-                </button>
-              ))}
+            <nav className="hidden md:flex items-center space-x-8 py-3">
+              {navigationItems.map((item) => {
+                if (item.isSpecial) {
+                  return (
+                    <NavAIButton key={item.path} size="desktop" />
+                  );
+                }
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`text-base font-medium transition-all duration-300 px-4 py-2 rounded-lg ${
+                      isActive(item.path)
+                        ? 'text-white shadow-md'
+                        : 'text-gray-700 hover:text-c47256'
+                    }`}
+                    style={{
+                      backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
+                      color: isActive(item.path) ? '#ffffff' : undefined,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive(item.path)) e.target.style.color = '#c47256';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive(item.path)) e.target.style.color = '#374151';
+                    }}
+                    title={
+                      authRequired.has(item.path) && !user
+                        ? 'Bạn cần đăng nhập để truy cập'
+                        : undefined
+                    }
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
           </div>
         </div>
@@ -253,28 +239,37 @@ export default function Header() {
             </div>
 
             {/* Mobile Navigation */}
-            {navigationItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleNavigation(item.path)}
-                className={`block w-full text-left px-4 py-3 text-lg transition-all duration-300 rounded-lg ${
-                  isActive(item.path)
-                    ? 'font-semibold text-white shadow-md'
-                    : 'font-medium hover:bg-gray-50'
-                }`}
-                style={{
-                  backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
-                  color: isActive(item.path) ? '#ffffff' : '#34140e',
-                }}
-                title={
-                  authRequired.has(item.path) && !user
-                    ? 'Bạn cần đăng nhập để truy cập'
-                    : undefined
-                }
-              >
-                {item.label}
-              </button>
-            ))}
+            {navigationItems.map((item) => {
+              if (item.isSpecial) {
+                return (
+                  <div key={item.path} className="flex justify-center py-3">
+                    <NavAIButton size="mobile" />
+                  </div>
+                );
+              }
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className={`block w-full text-left px-4 py-3 text-lg transition-all duration-300 rounded-lg ${
+                    isActive(item.path)
+                      ? 'font-semibold text-white shadow-md'
+                      : 'font-medium hover:bg-gray-50'
+                  }`}
+                  style={{
+                    backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
+                    color: isActive(item.path) ? '#ffffff' : '#34140e',
+                  }}
+                  title={
+                    authRequired.has(item.path) && !user
+                      ? 'Bạn cần đăng nhập để truy cập'
+                      : undefined
+                  }
+                >
+                  {item.label}
+                </button>
+              );
+            })}
 
             {/* Mobile Auth Section */}
             <div className="pt-4 border-t border-gray-200 mt-4">

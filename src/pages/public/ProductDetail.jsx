@@ -50,10 +50,14 @@ export default function ProductDetail() {
     }
   }, [id]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (product) {
-      addToCart(product, quantity);
-      message.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+      try {
+        await addToCart(product, quantity);
+        message.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+      } catch (error) {
+        message.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại!');
+      }
     }
   };
 

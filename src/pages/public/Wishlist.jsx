@@ -12,9 +12,13 @@ export default function Wishlist() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  const handleAddToCart = (product) => {
-    addToCart(product, 1);
-    message.success("Đã thêm vào giỏ hàng!");
+  const handleAddToCart = async (product) => {
+    try {
+      await addToCart(product, 1);
+      message.success("Đã thêm vào giỏ hàng!");
+    } catch (error) {
+      message.error("Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
+    }
   };
 
   const handleRemoveFromWishlist = (product) => {
