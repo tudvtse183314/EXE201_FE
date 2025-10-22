@@ -26,46 +26,31 @@ export default function Orders() {
     try {
       setLoading(true);
       setError(null);
-      console.log('📋 Orders: Loading orders for user', user?.id);
+      console.log('📋 Orders: Loading orders from localStorage (DEMO MODE)');
       
-      // TODO: Call API to get user orders
-      // const response = await getUserOrders(user.id);
+      // Load orders from localStorage (demo mode)
+      const savedOrders = localStorage.getItem('orders');
+      let ordersData = [];
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockOrders = [
-        {
-          id: 1,
-          orderNumber: 'ORD-001',
-          status: 'pending',
-          total: 250000,
-          createdAt: '2024-01-15T10:30:00Z',
-          items: [
-            { name: 'Thức ăn cho chó', quantity: 2, price: 125000 }
-          ]
-        },
-        {
-          id: 2,
-          orderNumber: 'ORD-002',
-          status: 'confirmed',
-          total: 180000,
-          createdAt: '2024-01-14T15:20:00Z',
-          items: [
-            { name: 'Đồ chơi cho mèo', quantity: 1, price: 180000 }
-          ]
+      if (savedOrders) {
+        try {
+          ordersData = JSON.parse(savedOrders);
+        } catch (error) {
+          console.error('Error parsing orders from localStorage:', error);
+          ordersData = [];
         }
-      ];
+      }
       
-      setOrders(mockOrders);
+      setOrders(ordersData);
+      console.log('📋 Orders: Loaded orders from localStorage', ordersData);
+      
     } catch (e) {
       console.error('📋 Orders: Error loading orders', e);
       setError(e?.message || 'Không thể tải danh sách đơn hàng.');
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
     if (user?.id) {

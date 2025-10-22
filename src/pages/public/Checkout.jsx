@@ -36,24 +36,67 @@ export default function Checkout() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      console.log('💳 Checkout: Submitting order', { values, cartItems });
+      console.log('💳 Checkout: Submitting order (DEMO MODE)', { values, cartItems });
       
-      // TODO: Call API to create order
-      // const response = await createOrder({
-      //   ...values,
-      //   items: cartItems,
-      //   total: getTotalPrice()
-      // });
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Mock QR code data for demo
+      const mockQrData = {
+        orderId: `ORD-${Date.now()}`,
+        totalAmount: getTotalPrice(),
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAYMENT-${Date.now()}`,
+        bankInfo: {
+          bankId: 'VCB',
+          accountNo: '1234567890',
+          accountName: 'PETVIBE STORE',
+          amount: getTotalPrice(),
+          description: `Thanh toan don hang ORD-${Date.now()}`
+        },
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+      };
       
-      // Simulate QR code response
-      setQrCode('https://example.com/payment/qr/12345');
+      setQrCode(mockQrData);
       setOrderSuccess(true);
       
+      // Save order to localStorage
+      const savedOrders = localStorage.getItem('orders');
+      let orders = [];
+      if (savedOrders) {
+        try {
+          orders = JSON.parse(savedOrders);
+        } catch (error) {
+          console.error('Error parsing orders from localStorage:', error);
+          orders = [];
+        }
+      }
+      
+      const newOrder = {
+        id: Date.now(),
+        orderId: mockQrData.orderId,
+        status: 'PENDING',
+        totalAmount: mockQrData.totalAmount,
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          name: item.product?.name || 'Sản phẩm',
+          quantity: item.quantity,
+          price: item.product?.price || 0,
+          total: item.total
+        })),
+        shippingInfo: values,
+        paymentInfo: mockQrData.bankInfo,
+        createdAt: mockQrData.createdAt,
+        qrCodeUrl: mockQrData.qrCodeUrl
+      };
+      
+      orders.unshift(newOrder); // Add to beginning
+      localStorage.setItem('orders', JSON.stringify(orders));
+      
       // Clear cart after successful order
-      clearCart();
+      await clearCart();
+      
+      console.log('💳 Checkout: Order created successfully (DEMO)', newOrder);
       
     } catch (error) {
       console.error('💳 Checkout: Error creating order', error);
@@ -95,15 +138,46 @@ export default function Checkout() {
             {qrCode && (
               <div style={{ marginTop: 32 }}>
                 <Title level={4}>Mã QR thanh toán</Title>
-                <QRCode
-                  value={qrCode}
-                  size={200}
-                  style={{ margin: '16px 0' }}
-                />
-                <div>
-                  <Text type="secondary">
-                    Quét mã QR bằng ứng dụng ngân hàng để thanh toán
-                  </Text>
+                <div style={{ 
+                  background: '#f9f9f9', 
+                  padding: '20px', 
+                  borderRadius: '12px',
+                  margin: '16px 0'
+                }}>
+                  <QRCode
+                    value={qrCode.qrCodeUrl}
+                    size={200}
+                    style={{ margin: '0 auto', display: 'block' }}
+                  />
+                  <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                    <Text strong style={{ display: 'block', marginBottom: '8px' }}>
+                      Mã đơn hàng: {qrCode.orderId}
+                    </Text>
+                    <Text strong style={{ display: 'block', marginBottom: '8px', color: '#eda274' }}>
+                      Số tiền: {qrCode.totalAmount.toLocaleString()}đ
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      Quét mã QR bằng ứng dụng ngân hàng để thanh toán
+                    </Text>
+                  </div>
+                </div>
+                
+                {/* Bank Info */}
+                <div style={{ 
+                  background: '#fff7e6', 
+                  padding: '16px', 
+                  borderRadius: '8px',
+                  marginTop: '16px',
+                  border: '1px solid #ffd591'
+                }}>
+                  <Title level={5} style={{ margin: '0 0 12px 0' }}>Thông tin chuyển khoản</Title>
+                  <div style={{ fontSize: '14px' }}>
+                    <div><Text strong>Ngân hàng:</Text> {qrCode.bankInfo.bankId}</div>
+                    <div><Text strong>Số tài khoản:</Text> {qrCode.bankInfo.accountNo}</div>
+                    <div><Text strong>Tên tài khoản:</Text> {qrCode.bankInfo.accountName}</div>
+                    <div><Text strong>Số tiền:</Text> {qrCode.bankInfo.amount.toLocaleString()}đ</div>
+                    <div><Text strong>Nội dung:</Text> {qrCode.bankInfo.description}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -220,13 +294,13 @@ export default function Checkout() {
                 <div key={item.id}>
                   <Row justify="space-between" align="middle">
                     <Col>
-                      <Text>{item.name}</Text>
+                      <Text>{item.product?.name || 'Sản phẩm'}</Text>
                       <br />
                       <Text type="secondary">x{item.quantity}</Text>
                     </Col>
                     <Col>
                       <Text strong>
-                        {(item.price * item.quantity).toLocaleString()}đ
+                        {item.total ? item.total.toLocaleString() : ((item.product?.price || 0) * item.quantity).toLocaleString()}đ
                       </Text>
                     </Col>
                   </Row>

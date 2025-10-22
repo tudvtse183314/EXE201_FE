@@ -60,6 +60,7 @@ import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
 import Premium from "../pages/public/Premium";
 import MyPets from "../pages/customer/MyPets";
+import ProductCardDemo from "../pages/public/ProductCardDemo";
 
 
 
@@ -154,6 +155,11 @@ export default function AppRoutes() {
                <Route path="/premium" element={
                  <MainLayout>
                    <Premium/>
+                 </MainLayout>
+               } />
+               <Route path="/product-card-demo" element={
+                 <MainLayout>
+                   <ProductCardDemo/>
                  </MainLayout>
                } />
         <Route path="/checkout" element={

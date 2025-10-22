@@ -473,20 +473,14 @@ export default function Shop() {
                           }}
                         />
                         {/* Action buttons overlay */}
-                        <div style={{
+                        <div                         style={{
                           position: 'absolute',
                           top: '12px',
                           right: '12px',
                           display: 'flex',
                           gap: '8px',
-                          opacity: 0,
+                          opacity: 1,
                           transition: 'opacity 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.opacity = '1';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.opacity = '0';
                         }}
                         >
                           <Button
@@ -578,12 +572,54 @@ export default function Shop() {
                             fontSize: '12px',
                             fontWeight: '600',
                             padding: '4px 12px',
-                            borderRadius: '12px'
+                            borderRadius: '12px',
+                            marginBottom: '12px'
                           }}
                         >
                           {product.stock > 0 ? `Còn ${product.stock}` : 'Hết hàng'}
                         </Tag>
                       )}
+                      
+                      {/* Add to Cart Button */}
+                      <Button
+                        type="primary"
+                        icon={<ShoppingCartOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
+                        disabled={product.stock === 0}
+                        style={{
+                          width: '100%',
+                          height: '40px',
+                          background: product.stock > 0 ? '#eda274' : '#ccc',
+                          borderColor: product.stock > 0 ? '#eda274' : '#ccc',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (product.stock > 0) {
+                            e.target.style.background = '#d5956d';
+                            e.target.style.borderColor = '#d5956d';
+                            e.target.style.transform = 'translateY(-1px)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (product.stock > 0) {
+                            e.target.style.background = '#eda274';
+                            e.target.style.borderColor = '#eda274';
+                            e.target.style.transform = 'translateY(0)';
+                          }
+                        }}
+                      >
+                        {product.stock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
+                      </Button>
                     </div>
                   </Card>
                 </Col>
