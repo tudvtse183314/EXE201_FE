@@ -29,8 +29,8 @@ export default function UserHeader() {
     // Các mục còn lại (tuỳ dự án)
     { label: 'Orders', path: '/customer/orders', requiresAuth: true },
     { label: 'AI Analysis', path: '/ai-analysis', requiresAuth: true }, // đổi thành /user/ai-analysis nếu bạn đang dùng path đó
-    { label: 'Premium', path: '/user/premium', requiresAuth: true },
-    { label: 'Chat', path: '/user/chat', requiresAuth: true },
+    { label: 'Premium', path: '/cusomer/premium', requiresAuth: true },
+    { label: 'Chat', path: '/customer/chat', requiresAuth: true },
   ];
 
   const iconButtons = [

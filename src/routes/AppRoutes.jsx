@@ -42,19 +42,24 @@ import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
+import CartsPage from "../pages/admin/carts/CartsPage";
 import CategoryTest from "../components/admin/CategoryTest";
 import ProductTest from "../components/admin/ProductTest";
 import APITestSummary from "../components/admin/APITestSummary";
+import OrdersTest from "../components/admin/OrdersTest";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import PetAIAssistant from "../pages/ai/demo.jsx";
 
 import Shop from "../pages/public/Shop.jsx";
-import ProductDetail from "../pages/public/ProductDetail.jsx";
+import ProductDetail from "../pages/public/ProductDetail";
+import Wishlist from "../pages/public/Wishlist";
 import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
+import Premium from "../pages/public/Premium";
+import MyPets from "../pages/customer/MyPets";
 
 
 
@@ -136,11 +141,21 @@ export default function AppRoutes() {
             <ProductDetail/>
           </MainLayout>
         } />
-        <Route path="/cart" element={
-          <MainLayout>
-            <Cart/>
-          </MainLayout>
-        } />
+               <Route path="/cart" element={
+                 <MainLayout>
+                   <Cart/>
+                 </MainLayout>
+               } />
+               <Route path="/wishlist" element={
+                 <MainLayout>
+                   <Wishlist/>
+                 </MainLayout>
+               } />
+               <Route path="/premium" element={
+                 <MainLayout>
+                   <Premium/>
+                 </MainLayout>
+               } />
         <Route path="/checkout" element={
           <MainLayout>
             <Checkout/>
@@ -199,16 +214,26 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/customer/pet-profiles"
-          element={
-            <PrivateRoute roles={['CUSTOMER']}>
-              <MainLayout>
-                <PetProfilePage />
-              </MainLayout>
-            </PrivateRoute>
-          }
-        />
+         <Route
+           path="/customer/pet-profiles"
+           element={
+             <PrivateRoute roles={['CUSTOMER']}>
+               <MainLayout>
+                 <PetProfilePage />
+               </MainLayout>
+             </PrivateRoute>
+           }
+         />
+         <Route
+           path="/my-pets"
+           element={
+             <PrivateRoute roles={['CUSTOMER']}>
+               <MainLayout>
+                 <MyPets />
+               </MainLayout>
+             </PrivateRoute>
+           }
+         />
         <Route
           path="/customer/account-profile"
           element={
@@ -300,10 +325,11 @@ export default function AppRoutes() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="products" element={<ProductsPage />} />
-          <Route path="orders" element={<div style={{padding: '40px', textAlign: 'center'}}>
-            <h1>📋 Orders Management</h1>
-            <p>Coming soon...</p>
-          </div>} />
+                 <Route path="orders" element={<div style={{padding: '40px', textAlign: 'center'}}>
+                   <h1>📋 Orders Management</h1>
+                   <p>Coming soon...</p>
+                 </div>} />
+                 <Route path="carts" element={<CartsPage />} />
           <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
             <h1>👥 Accounts Management</h1>
             <p>Coming soon...</p>
@@ -311,6 +337,7 @@ export default function AppRoutes() {
           <Route path="test" element={<CategoryTest />} />
           <Route path="test-products" element={<ProductTest />} />
           <Route path="api-summary" element={<APITestSummary />} />
+          <Route path="test-orders" element={<OrdersTest />} />
         </Route>
         
         {/* Doctor Routes */}

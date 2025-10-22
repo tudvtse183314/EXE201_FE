@@ -19,6 +19,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { useCart } from '../../context/CartContext';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 const { Title, Text } = Typography;
 
@@ -30,7 +31,9 @@ export default function Cart() {
     updateQuantity, 
     clearCart,
     getTotalItems,
-    getTotalPrice 
+    getTotalPrice,
+    loading,
+    error
   } = useCart();
 
   const handleCheckout = () => {
@@ -78,26 +81,29 @@ export default function Cart() {
                   <Row gutter={[16, 16]} align="middle">
                     <Col xs={24} sm={6}>
                       <Image
-                        alt={item.name}
-                        src={item.image || '/api/placeholder/100/100'}
+                        alt={item.product?.name || 'Product'}
+                        src={item.product?.image || getFallbackImageByIndex(item.productId)}
                         style={{ width: '100%', maxWidth: 100 }}
-                        fallback="https://via.placeholder.com/100x100?text=No+Image"
+                        fallback={getFallbackImageByIndex(item.productId)}
+                        onError={(e) => {
+                          e.target.src = getFallbackImageByIndex(item.productId);
+                        }}
                       />
                     </Col>
                     <Col xs={24} sm={12}>
                       <div>
                         <Title level={5} style={{ margin: 0 }}>
-                          {item.name}
+                          {item.product?.name || 'Unknown Product'}
                         </Title>
-                        {item.category && (
-                          <Text type="secondary">{item.category.name}</Text>
+                        {item.product?.category && (
+                          <Text type="secondary">{item.product.category.name}</Text>
                         )}
                       </div>
                     </Col>
                     <Col xs={12} sm={3}>
                       <div style={{ textAlign: 'center' }}>
                         <Text strong>
-                          {item.price ? `${item.price.toLocaleString()}đ` : 'Liên hệ'}
+                          {item.product?.price ? `${item.product.price.toLocaleString()}đ` : 'Liên hệ'}
                         </Text>
                       </div>
                     </Col>
@@ -108,6 +114,7 @@ export default function Cart() {
                         value={item.quantity}
                         onChange={(value) => updateQuantity(item.id, value)}
                         style={{ width: '100%' }}
+                        loading={loading}
                       />
                     </Col>
                     <Col xs={4} sm={1}>
@@ -117,6 +124,7 @@ export default function Cart() {
                         icon={<DeleteOutlined />}
                         onClick={() => removeFromCart(item.id)}
                         title="Xóa"
+                        loading={loading}
                       />
                     </Col>
                   </Row>

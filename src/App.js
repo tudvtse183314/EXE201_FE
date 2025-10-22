@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoadingProvider, useLoading } from "./context/LoadingContext";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import AppRoutes from "./routes/AppRoutes";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { setGlobalLoadingState } from "./api/axios";
@@ -44,7 +45,9 @@ export default function App() {
     <LoadingProvider>
       <AuthProvider>
         <CartProvider>
-          <AppContent />
+          <WishlistProvider>
+            <AppContent />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </LoadingProvider>

@@ -47,6 +47,12 @@ export default function AdminLayout() {
       icon: <FileTextOutlined /> 
     },
     { 
+      key: 'carts', 
+      label: 'Giỏ hàng', 
+      path: '/admin/carts', 
+      icon: <ShoppingOutlined /> 
+    },
+    { 
       key: 'accounts', 
       label: 'Tài khoản', 
       path: '/admin/accounts', 
@@ -68,6 +74,12 @@ export default function AdminLayout() {
       key: 'api-summary', 
       label: '📊 API Summary', 
       path: '/admin/api-summary', 
+      icon: <UserOutlined /> 
+    },
+    { 
+      key: 'test-orders', 
+      label: '🧪 Test Orders', 
+      path: '/admin/test-orders', 
       icon: <UserOutlined /> 
     },
   ];

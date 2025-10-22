@@ -180,15 +180,140 @@ export const testProductsAPI = async () => {
   return results;
 };
 
+export const testOrdersAPI = async () => {
+  console.log('🧪 Testing Orders API...');
+  
+  const results = {
+    getAll: null,
+    create: null,
+    getById: null,
+    getByAccount: null,
+    getByStatus: null,
+    getPaymentQR: null,
+    cancel: null,
+    updateStatus: null
+  };
+
+  try {
+    // Test GET /orders/all (Admin)
+    console.log('1. Testing GET /orders/all');
+    const getAllRes = await axiosInstance.get('/orders/all');
+    results.getAll = { success: true, data: getAllRes.data, count: getAllRes.data?.length || 0 };
+    console.log('✅ GET /orders/all success:', getAllRes.data);
+  } catch (error) {
+    results.getAll = { success: false, error: error.message };
+    console.error('❌ GET /orders/all failed:', error);
+  }
+
+  try {
+    // Test POST /orders (User)
+    console.log('2. Testing POST /orders');
+    const testOrder = {
+      accountId: 1, // Assuming account ID 1 exists
+      shippingAddress: "123 Test Street, Ho Chi Minh City",
+      phoneContact: "0123456789",
+      note: "Test order for API debugging",
+      items: [
+        { productId: 1, quantity: 2 }, // Assuming product ID 1 exists
+        { productId: 2, quantity: 1 }  // Assuming product ID 2 exists
+      ]
+    };
+    const createRes = await axiosInstance.post('/orders', testOrder);
+    results.create = { success: true, data: createRes.data };
+    console.log('✅ POST /orders success:', createRes.data);
+    
+    // Store created order ID for other tests
+    const createdOrderId = createRes.data?.orderId;
+    
+    if (createdOrderId) {
+      // Test GET /orders/{id}
+      try {
+        console.log('3. Testing GET /orders/{id}');
+        const getByIdRes = await axiosInstance.get(`/orders/${createdOrderId}`);
+        results.getById = { success: true, data: getByIdRes.data };
+        console.log('✅ GET /orders/{id} success:', getByIdRes.data);
+      } catch (error) {
+        results.getById = { success: false, error: error.message };
+        console.error('❌ GET /orders/{id} failed:', error);
+      }
+      
+      // Test GET /orders/account/{id}
+      try {
+        console.log('4. Testing GET /orders/account/{id}');
+        const getByAccountRes = await axiosInstance.get(`/orders/account/${testOrder.accountId}`);
+        results.getByAccount = { success: true, data: getByAccountRes.data };
+        console.log('✅ GET /orders/account/{id} success:', getByAccountRes.data);
+      } catch (error) {
+        results.getByAccount = { success: false, error: error.message };
+        console.error('❌ GET /orders/account/{id} failed:', error);
+      }
+      
+      // Test GET /orders/status/{status}
+      try {
+        console.log('5. Testing GET /orders/status/{status}');
+        const getByStatusRes = await axiosInstance.get('/orders/status/PENDING');
+        results.getByStatus = { success: true, data: getByStatusRes.data };
+        console.log('✅ GET /orders/status/{status} success:', getByStatusRes.data);
+      } catch (error) {
+        results.getByStatus = { success: false, error: error.message };
+        console.error('❌ GET /orders/status/{status} failed:', error);
+      }
+      
+      // Test GET /orders/{id}/payment-qr
+      try {
+        console.log('6. Testing GET /orders/{id}/payment-qr');
+        const getPaymentQRRes = await axiosInstance.get(`/orders/${createdOrderId}/payment-qr`);
+        results.getPaymentQR = { success: true, data: getPaymentQRRes.data };
+        console.log('✅ GET /orders/{id}/payment-qr success:', getPaymentQRRes.data);
+      } catch (error) {
+        results.getPaymentQR = { success: false, error: error.message };
+        console.error('❌ GET /orders/{id}/payment-qr failed:', error);
+      }
+      
+      // Test PATCH /orders/{id}/cancel (only if status is PENDING)
+      try {
+        console.log('7. Testing PATCH /orders/{id}/cancel');
+        const cancelRes = await axiosInstance.patch(`/orders/${createdOrderId}/cancel`);
+        results.cancel = { success: true, data: cancelRes.data };
+        console.log('✅ PATCH /orders/{id}/cancel success:', cancelRes.data);
+      } catch (error) {
+        results.cancel = { success: false, error: error.message };
+        console.error('❌ PATCH /orders/{id}/cancel failed:', error);
+      }
+      
+      // Test PATCH /orders/{id}/status (Admin)
+      try {
+        console.log('8. Testing PATCH /orders/{id}/status');
+        const updateStatusRes = await axiosInstance.patch(`/orders/${createdOrderId}/status`, { 
+          status: 'PROCESSING' 
+        });
+        results.updateStatus = { success: true, data: updateStatusRes.data };
+        console.log('✅ PATCH /orders/{id}/status success:', updateStatusRes.data);
+      } catch (error) {
+        results.updateStatus = { success: false, error: error.message };
+        console.error('❌ PATCH /orders/{id}/status failed:', error);
+      }
+    }
+  } catch (error) {
+    results.create = { success: false, error: error.message };
+    console.error('❌ POST /orders failed:', error);
+  }
+  
+  console.log('🧪 Orders API Test Results:', results);
+  return results;
+};
+
 export const runAllAPITests = async () => {
   console.log('🚀 Running all API tests...');
   
   const categoriesResults = await testCategoriesAPI();
   const productsResults = await testProductsAPI();
+  const ordersResults = await testOrdersAPI();
   
   const summary = {
     categories: categoriesResults,
     products: productsResults,
+    orders: ordersResults,
     timestamp: new Date().toISOString()
   };
   
