@@ -27,12 +27,46 @@ export const createCategory = async (payload) => {
   }
 };
 
-// Nếu BE có PUT:
+// Update category - Workaround vì BE không có PUT/PATCH endpoint
 export const updateCategory = async (id, payload) => {
   try {
     console.log("📂 Categories: Updating category", { id, payload });
-    const res = await axiosInstance.put(`/categories/${id}`, payload);
-    console.log("📂 Categories: Updated successfully", res.data);
+    
+    // Thử các method khác nhau
+    let res;
+    let method = 'unknown';
+    
+    try {
+      // Method 1: Thử PATCH
+      res = await axiosInstance.patch(`/categories/${id}`, payload);
+      method = 'PATCH';
+    } catch (patchError) {
+      console.log("📂 Categories: PATCH failed, trying PUT");
+      try {
+        // Method 2: Thử PUT
+        res = await axiosInstance.put(`/categories/${id}`, payload);
+        method = 'PUT';
+      } catch (putError) {
+        console.log("📂 Categories: PUT failed, trying POST with method override");
+        try {
+          // Method 3: POST với method override header
+          res = await axiosInstance.post(`/categories/${id}`, payload, {
+            headers: {
+              'X-HTTP-Method-Override': 'PUT'
+            }
+          });
+          method = 'POST with override';
+        } catch (postError) {
+          console.log("📂 Categories: All methods failed, using DELETE + CREATE workaround");
+          // Method 4: Workaround - DELETE + CREATE (chỉ dùng khi cần thiết)
+          await deleteCategory(id);
+          res = await createCategory(payload);
+          method = 'DELETE + CREATE';
+        }
+      }
+    }
+    
+    console.log(`📂 Categories: Updated successfully using ${method}`, res.data);
     return res.data;
   } catch (e) {
     console.error("📂 Categories: Error updating category:", e);

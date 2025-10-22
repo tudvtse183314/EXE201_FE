@@ -1,165 +1,29 @@
-// // src/pages/public/Shop.jsx
-// import React, { useEffect, useMemo, useRef, useState } from 'react';
-// import { Spin, Alert } from 'antd';
-// import { getAllCategories } from '../../services/categories';
-// import { getAllProducts } from '../../services/products';
-
-// export default function Shop() {
-//   const [categories, setCategories] = useState([]);
-//   const [activeCatId, setActiveCatId] = useState('all'); // 'all' | number
-//   const [allProducts, setAllProducts] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [err, setErr] = useState(null);
-
-//   // ✅ Chặn double-call do React 18 StrictMode (mount -> unmount -> mount)
-//   const fetchedRef = useRef(false);
-//   const aliveRef = useRef(true);
-
-//   useEffect(() => {
-//     aliveRef.current = true;
-
-//     if (fetchedRef.current) return; // đã fetch rồi thì thôi
-//     fetchedRef.current = true;
-
-//     (async () => {
-//       try {
-//         setLoading(true);
-//         setErr(null);
-
-//         // gọi song song
-//         const [cats, prods] = await Promise.all([
-//           getAllCategories(), // GET /categories/getAll (đã sửa trong services)
-//           getAllProducts(),   // GET /products/getAll
-//         ]);
-
-//         if (!aliveRef.current) return;
-//         setCategories(Array.isArray(cats) ? cats : []);
-//         setAllProducts(Array.isArray(prods) ? prods : []);
-//       } catch (e) {
-//         if (!aliveRef.current) return;
-//         setErr(e?.message || 'Không thể tải dữ liệu. Vui lòng thử lại.');
-//       } finally {
-//         if (aliveRef.current) setLoading(false);
-//       }
-//     })();
-
-//     return () => {
-//       aliveRef.current = false;
-//     };
-//   }, []);
-
-//   // ✅ Lọc theo danh mục
-//   const visibleProducts = useMemo(() => {
-//     if (activeCatId === 'all') return allProducts;
-//     const idNum = Number(activeCatId); // đề phòng so sánh string/number
-//     return allProducts.filter((p) => p?.category?.id === idNum);
-//   }, [activeCatId, allProducts]);
-
-//   if (loading) {
-//     return (
-//       <div className="min-h-[50vh] flex items-center justify-center">
-//         <Spin size="large" />
-//       </div>
-//     );
-//   }
-
-//   if (err) {
-//     return (
-//       <div className="max-w-5xl mx-auto p-4">
-//         <Alert
-//           type="error"
-//           message="Lỗi tải dữ liệu"
-//           description={err}
-//           showIcon
-//         />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="max-w-7xl mx-auto p-4">
-//       <div className="grid grid-cols-12 gap-6">
-//         {/* Sidebar categories */}
-//         <aside className="col-span-12 md:col-span-3">
-//           <div className="bg-white rounded-xl shadow p-3">
-//             <button
-//               onClick={() => setActiveCatId('all')}
-//               className={`w-full text-left px-3 py-2 rounded-md mb-1 transition ${
-//                 activeCatId === 'all'
-//                   ? 'bg-amber-200 font-semibold'
-//                   : 'hover:bg-gray-50'
-//               }`}
-//             >
-//               Tất cả
-//             </button>
-
-//             {categories.map((cat) => (
-//               <button
-//                 key={cat.id}
-//                 onClick={() => setActiveCatId(cat.id)}
-//                 className={`w-full text-left px-3 py-2 rounded-md mb-1 transition ${
-//                   activeCatId === cat.id
-//                     ? 'bg-amber-200 font-semibold'
-//                     : 'hover:bg-gray-50'
-//                 }`}
-//                 title={cat.description || cat.name}
-//               >
-//                 {cat.name}
-//               </button>
-//             ))}
-//           </div>
-//         </aside>
-
-//         {/* Products grid */}
-//         <main className="col-span-12 md:col-span-9">
-//           {visibleProducts.length === 0 ? (
-//             <div className="text-gray-500">Không có sản phẩm trong danh mục này.</div>
-//           ) : (
-//             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-//               {visibleProducts.map((p) => (
-//                 <div key={p.id} className="bg-white rounded-xl shadow p-3">
-//                   <div className="aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
-//                     <img
-//                       src={p.imageUrl || '/placeholder.png'}
-//                       alt={p.name}
-//                       className="w-full h-full object-cover"
-//                       loading="lazy"
-//                     />
-//                   </div>
-//                   <div className="mt-2">
-//                     <div className="font-medium line-clamp-2" title={p.name}>
-//                       {p.name}
-//                     </div>
-//                     <div className="text-amber-700 font-semibold mt-1">
-//                       {Number(p.price || 0).toLocaleString('vi-VN')}₫
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
 // src/pages/public/Shop.jsx
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Card, Row, Col, Button, Tag, Input, Select, Spin, Alert, Empty } from "antd";
+import { SearchOutlined, ShoppingCartOutlined, EyeOutlined } from "@ant-design/icons";
 import { getAllCategories } from "../../services/categories";
 import { getAllProducts } from "../../services/products";
-import { Spin, Alert } from "antd";
 import { dataManager } from "../../utils/dataManager";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { getFallbackImageByIndex } from "../../utils/imageUtils";
+
+const { Search } = Input;
+const { Option } = Select;
 
 export default function Shop() {
-  const [activeCatId, setActiveCatId] = useState("all");
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [categories, setCategories] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeCatId, setActiveCatId] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("name");
 
+  // Load data
   useEffect(() => {
     let isMounted = true;
 
@@ -199,43 +63,56 @@ export default function Shop() {
     };
   }, []);
 
+  // Filter and sort products
   const visibleProducts = useMemo(() => {
-    console.log("🛒 Shop: visibleProducts useMemo triggered", { 
-      activeCatId, 
-      allProductsLength: allProducts.length,
-      allProducts: allProducts 
-    });
-    
-    if (activeCatId === "all") {
-      console.log("🛒 Shop: Showing all products", { count: allProducts.length });
-      return allProducts;
+    let filtered = allProducts;
+
+    // Filter by category
+    if (activeCatId !== "all") {
+      const categoryId = Number(activeCatId);
+      filtered = filtered.filter((p) => p?.category?.id === categoryId);
     }
-    // Convert activeCatId to number for comparison since category.id is a number
-    const categoryId = Number(activeCatId);
-    const filtered = allProducts.filter((p) => p?.category?.id === categoryId);
-    console.log("🛒 Shop: Filtering by category", { 
-      categoryId, 
-      totalProducts: allProducts.length, 
-      filteredCount: filtered.length 
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter((p) =>
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort products
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name?.localeCompare(b.name) || 0;
+        case "price-low":
+          return (a.price || 0) - (b.price || 0);
+        case "price-high":
+          return (b.price || 0) - (a.price || 0);
+        default:
+          return 0;
+      }
     });
+
     return filtered;
-  }, [activeCatId, allProducts]);
+  }, [allProducts, activeCatId, searchTerm, sortBy]);
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1);
+    console.log("🛒 Add to cart:", product);
+  };
+
+  const handleViewProduct = (product) => {
+    navigate(`/product/${product.id}`);
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md mx-4">
-          <div className="flex flex-col items-center space-y-4">
-            <Spin size="large" />
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Đang tải sản phẩm...
-              </h3>
-              <p className="text-sm text-gray-500">
-                Vui lòng đợi trong giây lát
-              </p>
-            </div>
-          </div>
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+        <div style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+          Đang tải sản phẩm...
         </div>
       </div>
     );
@@ -243,106 +120,163 @@ export default function Shop() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto p-4">
-        <Alert type="error" message="Lỗi" description={error} />
-      </div>
+      <Alert
+        message="Lỗi tải dữ liệu"
+        description={error}
+        type="error"
+        showIcon
+        style={{ margin: 20 }}
+      />
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar categories */}
-        <aside className="col-span-12 md:col-span-3">
-          <div className="bg-white rounded-xl shadow p-3">
-            <button
-              onClick={() => setActiveCatId("all")}
-              className={`w-full text-left px-3 py-2 rounded-md mb-1 ${
-                activeCatId === "all"
-                  ? "bg-amber-200 font-semibold"
-                  : "hover:bg-gray-50"
-              }`}
+    <div style={{ padding: '20px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 700 }}>
+          🛍️ Cửa hàng
+        </h1>
+        <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: 16 }}>
+          Khám phá các sản phẩm tuyệt vời cho thú cưng của bạn
+        </p>
+      </div>
+
+      {/* Filters */}
+      <Card style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={12} md={8}>
+            <Search
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '100%' }}
+              prefix={<SearchOutlined />}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Select
+              value={sortBy}
+              onChange={setSortBy}
+              style={{ width: '100%' }}
+              placeholder="Sắp xếp theo"
             >
-              Tất cả
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCatId(cat.id)}
-                className={`w-full text-left px-3 py-2 rounded-md mb-1 transition-colors ${
-                  activeCatId === cat.id
-                    ? "bg-amber-200 font-semibold"
-                    : "hover:bg-gray-50"
-                }`}
-                title={cat.description || cat.name}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </aside>
+              <Option value="name">Tên A-Z</Option>
+              <Option value="price-low">Giá thấp → cao</Option>
+              <Option value="price-high">Giá cao → thấp</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={24} md={8}>
+            <div style={{ textAlign: 'right' }}>
+              <Tag color="blue">
+                {visibleProducts.length} sản phẩm
+              </Tag>
+            </div>
+          </Col>
+        </Row>
+      </Card>
 
-        {/* Products */}
-        <main className="col-span-12 md:col-span-9">
-          {/* Filter Summary */}
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-800">
-                {activeCatId === "all" 
-                  ? `Tất cả sản phẩm (${visibleProducts.length})` 
-                  : `Danh mục: ${categories.find(c => c.id === Number(activeCatId))?.name || "Không xác định"} (${visibleProducts.length})`
-                }
-              </h3>
-              <button
+      <Row gutter={[24, 24]}>
+        {/* Categories Sidebar */}
+        <Col xs={24} lg={6}>
+          <Card title="📂 Danh mục" style={{ position: 'sticky', top: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Button
+                type={activeCatId === "all" ? "primary" : "text"}
                 onClick={() => setActiveCatId("all")}
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
               >
-                Xem tất cả
-              </button>
-            </div>
-          </div>
-
-          {visibleProducts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-500 text-lg mb-2">
-                Không có sản phẩm trong danh mục này
-              </div>
-              <div className="text-gray-400 text-sm">
-                Hãy thử chọn danh mục khác hoặc xem tất cả sản phẩm
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {visibleProducts.map((p) => (
-                <div key={p.id} className="bg-white rounded-xl shadow p-3 hover:shadow-lg transition-shadow">
-                  <div className="aspect-square w-full bg-gray-100 rounded-lg overflow-hidden">
-                    <img
-                      src={p.imageUrl || "/placeholder.png"}
-                      alt={p.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="mt-2">
-                    <div className="font-medium line-clamp-2" title={p.name}>
-                      {p.name}
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      {p.category?.name || "Không có danh mục"}
-                    </div>
-                    <div className="text-amber-700 font-semibold mt-1">
-                      {Number(p.price || 0).toLocaleString("vi-VN")}₫
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Còn lại: {p.stock || 0} sản phẩm
-                    </div>
-                  </div>
-                </div>
+                Tất cả ({allProducts.length})
+              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  type={activeCatId === String(category.id) ? "primary" : "text"}
+                  onClick={() => setActiveCatId(String(category.id))}
+                  style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                >
+                  {category.name} ({allProducts.filter(p => p?.category?.id === category.id).length})
+                </Button>
               ))}
             </div>
+          </Card>
+        </Col>
+
+        {/* Products Grid */}
+        <Col xs={24} lg={18}>
+          {visibleProducts.length === 0 ? (
+            <Card>
+              <Empty
+                description="Không tìm thấy sản phẩm nào"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            </Card>
+          ) : (
+            <Row gutter={[16, 16]}>
+              {visibleProducts.map((product) => (
+                <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+                  <Card
+                    hoverable
+                    cover={
+                      <div style={{ height: 200, overflow: 'hidden' }}>
+                        <img
+                          alt={product.name}
+                          src={product.image || getFallbackImageByIndex(product.id)}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.target.src = getFallbackImageByIndex(product.id);
+                          }}
+                        />
+                      </div>
+                    }
+                    actions={[
+                      <Button
+                        type="text"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewProduct(product)}
+                        title="Xem chi tiết"
+                      />,
+                      <Button
+                        type="text"
+                        icon={<ShoppingCartOutlined />}
+                        onClick={() => handleAddToCart(product)}
+                        title="Thêm vào giỏ"
+                      />
+                    ]}
+                  >
+                    <Card.Meta
+                      title={
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>
+                          {product.name}
+                        </div>
+                      }
+                      description={
+                        <div>
+                          <div style={{ color: '#666', fontSize: 12, marginBottom: 8 }}>
+                            {product.category?.name}
+                          </div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#1890ff' }}>
+                            {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
+                          </div>
+                          {product.stock !== undefined && (
+                            <div style={{ fontSize: 12, color: product.stock > 0 ? '#52c41a' : '#ff4d4f' }}>
+                              {product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng'}
+                            </div>
+                          )}
+                        </div>
+                      }
+                    />
+                  </Card>
+                </Col>
+              ))}
+            </Row>
           )}
-        </main>
-      </div>
+        </Col>
+      </Row>
     </div>
   );
 }

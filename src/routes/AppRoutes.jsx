@@ -2,11 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "../components/layout/MainLayout";
 import { ROLES, getDashboardPathByRole } from "../constants/roles";
-import RequireAuth from "../components/auth/RequireAuth";
-import AdminLayout from "../layouts/AdminLayout";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import CategoriesPage from "../pages/admin/categories/CategoriesPage";
-import ProductsPage from "../pages/admin/products/ProductsPage";
+
+//admin pages - will be created
 
 
 // Pages
@@ -23,7 +20,6 @@ import Contact from "../pages/public/Contact";
 // Customer Pages
 import CustomerDashboard from "../pages/customer/Dashboard";
 import CustomerProfile from "../pages/customer/Profile";
-import CustomerOrders from "../pages/customer/Orders";
 import PetProfilePage from "../pages/customer/PetProfilePage";
 import AccountProfilePage from "../pages/customer/AccountProfilePage";
 
@@ -41,15 +37,24 @@ import Unauthorized from "../pages/Unauthorized";
 // Staff Pages
 import StaffDashboard from "../pages/staff/Dashboard";
 
-// Manager Pages
-import ManagerDashboard from "../pages/manager/ManagerDashboard";
-import AccountListPage from "../pages/manager/AccountListPage";
+// Admin Pages
+import AdminLayout from "../layouts/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import CategoriesPage from "../pages/admin/categories/CategoriesPage";
+import ProductsPage from "../pages/admin/products/ProductsPage";
+import CategoryTest from "../components/admin/CategoryTest";
+import ProductTest from "../components/admin/ProductTest";
+import APITestSummary from "../components/admin/APITestSummary";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import PetAIAssistant from "../pages/ai/demo.jsx";
 
 import Shop from "../pages/public/Shop.jsx";
+import ProductDetail from "../pages/public/ProductDetail.jsx";
+import Cart from "../pages/public/Cart.jsx";
+import Checkout from "../pages/public/Checkout.jsx";
+import UserOrders from "../pages/customer/Orders.jsx";
 
 
 
@@ -126,6 +131,21 @@ export default function AppRoutes() {
             <Shop/>
           </MainLayout>
         } />
+        <Route path="/product/:id" element={
+          <MainLayout>
+            <ProductDetail/>
+          </MainLayout>
+        } />
+        <Route path="/cart" element={
+          <MainLayout>
+            <Cart/>
+          </MainLayout>
+        } />
+        <Route path="/checkout" element={
+          <MainLayout>
+            <Checkout/>
+          </MainLayout>
+        } />
   
         <Route
           path="/customer/dashboard"
@@ -164,7 +184,17 @@ export default function AppRoutes() {
           element={
             <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <CustomerOrders />
+                <UserOrders />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <UserOrders />
               </MainLayout>
             </PrivateRoute>
           }
@@ -257,25 +287,31 @@ export default function AppRoutes() {
           }
         />
         
-        {/* Manager Routes */}
+        {/* Admin Routes */}
         <Route
-          path="/manager/dashboard"
+          path="/admin"
           element={
-            <PrivateRoute roles={[ROLES.MANAGER]}>
-              <ManagerDashboard />
+            <PrivateRoute roles={[ROLES.ADMIN]}>
+              <AdminLayout />
             </PrivateRoute>
           }
-        />
-        <Route
-          path="/manager/accounts"
-          element={
-            <PrivateRoute roles={['MANAGER']}>
-              <MainLayout>
-                <AccountListPage />
-              </MainLayout>
-            </PrivateRoute>
-          }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="orders" element={<div style={{padding: '40px', textAlign: 'center'}}>
+            <h1>📋 Orders Management</h1>
+            <p>Coming soon...</p>
+          </div>} />
+          <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
+            <h1>👥 Accounts Management</h1>
+            <p>Coming soon...</p>
+          </div>} />
+          <Route path="test" element={<CategoryTest />} />
+          <Route path="test-products" element={<ProductTest />} />
+          <Route path="api-summary" element={<APITestSummary />} />
+        </Route>
         
         {/* Doctor Routes */}
         <Route
@@ -291,24 +327,7 @@ export default function AppRoutes() {
         {/* Legacy Routes - Redirect to appropriate dashboard */}
         <Route path="/dashboard" element={<DashboardRedirect />} />
         
-        {/* ADMIN (bảo vệ theo role) */}
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth roles={['ADMIN', 'MANAGER']}>
-              <AdminLayout />
-            </RequireAuth>
-          }
-        >
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          
-          {/* placeholders */}
-          <Route path="orders" element={<div>Orders (coming soon)</div>} />
-          <Route path="accounts" element={<div>Accounts (coming soon)</div>} />
-        </Route>
+
         
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
