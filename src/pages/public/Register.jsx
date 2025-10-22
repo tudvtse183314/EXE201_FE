@@ -1,12 +1,16 @@
+// src/pages/public/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
-import { register } from '../../api/auth';
+import { register as doRegister, login as doLogin } from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 import { RegisterBackground } from '../../components/common/BackgroundImage';
+import { getDashboardPathByRole } from '../../constants/roles';
 
 export default function Register() {
   const navigate = useNavigate();
-  
+  const { login: loginUser } = useAuth();
+
   // Form state
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -14,115 +18,96 @@ export default function Register() {
     email: '',
     phone: '',
     password: '',
-    role: 'CUSTOMER',
+    // Pet fields
     petName: '',
     petAge: '',
     petType: '',
-    petSize: ''
+    petSize: '' // select
   });
-  
-  // Error and validation state
+
+  // UI state
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-    
-    // Clear field error when user types
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: '' });
-    }
-    
-    // Clear general error when user types
-    if (generalError) {
-      setGeneralError(null);
-    }
-    
-    // Clear success message when user types
-    if (successMessage) {
-      setSuccessMessage('');
-    }
-    
-    // Real-time validation for email
-    if (field === 'email' && value.trim()) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setErrors({ ...errors, email: 'Email không đúng định dạng' });
-      } else {
-        setErrors({ ...errors, email: '' });
-      }
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    // Basic required field validation
+
+    // Parent
     if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
     if (!formData.email.trim()) newErrors.email = 'Vui lòng nhập email';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Email không đúng định dạng';
     if (!formData.phone.trim()) newErrors.phone = 'Vui lòng nhập số điện thoại';
-    if (!formData.password.trim()) newErrors.password = 'Vui lòng nhập mật khẩu';
+    if (!/^\d{10,11}$/.test(formData.phone.trim())) newErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
+    if (!formData.password || formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+
+    // Pet (bắt buộc theo form hiện tại)
     if (!formData.petName.trim()) newErrors.petName = 'Vui lòng nhập tên thú cưng';
     if (!formData.petType.trim()) newErrors.petType = 'Vui lòng chọn loại thú cưng';
-    
-    // Email format validation
-    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không đúng định dạng';
-    }
-    
-    // Phone format validation (Vietnamese phone numbers)
-    if (formData.phone.trim() && !/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
-    }
-    
-    // Password strength validation
-    if (formData.password.trim() && formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-    
+    if (!formData.petSize.trim()) newErrors.petSize = 'Vui lòng chọn kích cỡ';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors({});
     setGeneralError(null);
     setSuccessMessage('');
-    
+
     try {
-      console.log('🔐 Register: Attempting registration...');
-      
-      await register(formData);
-      
-      console.log('🔐 Register: Registration successful');
-      setSuccessMessage('Tạo tài khoản thành công! Đang chuyển hướng đến trang đăng nhập...');
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-      
+      // 1) Đăng ký
+      await doRegister(formData);
+
+      // 2) Auto-login: BE chỉ nhận { phone, password } và trả dữ liệu PHẲNG + token
+      const data = await doLogin(formData.phone, formData.password);
+
+      if (!data?.token) {
+        throw new Error('Đăng nhập tự động thất bại. Vui lòng đăng nhập lại.');
+      }
+
+      // 3) Map userData giống trang Login (đang hoạt động ổn)
+      const userData = {
+        id: data.id,
+        name: data.fullName || data.name,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        accountId: data.accountId || data.id,
+        petName: data.petName,
+        petAge: data.petAge,
+        petType: data.petType,
+        petSize: data.petSize
+      };
+
+      // 4) Lưu session & điều hướng
+      loginUser(userData, data.token);
+      setSuccessMessage('Tạo tài khoản & đăng nhập thành công! Đang chuyển hướng...');
+      const to = getDashboardPathByRole(userData.role);
+      navigate(to, { replace: true });
+
     } catch (error) {
       console.error('🔐 Register: Registration failed:', error);
-      
-      // Handle different types of errors
+
       if (error.response?.data?.message) {
         setGeneralError(error.response.data.message);
       } else if (error.response?.status === 400) {
-        // Check for specific error patterns
-        const errorText = error.response?.data?.toString() || '';
-        
+        const errorText = String(error.response?.data || '');
         if (errorText.includes('Duplicate entry') && errorText.includes('email')) {
-          setGeneralError('Email này đã được sử dụng. Vui lòng chọn email khác.');
+          setGeneralError('Email này đã được sử dụng.');
         } else if (errorText.includes('Duplicate entry') && errorText.includes('phone')) {
-          setGeneralError('Số điện thoại này đã được sử dụng. Vui lòng chọn số khác.');
+          setGeneralError('Số điện thoại này đã được sử dụng.');
         } else {
-          setGeneralError('Thông tin không hợp lệ. Vui lòng kiểm tra lại.');
+          setGeneralError('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
         }
       } else if (error.response?.status === 409) {
         setGeneralError('Email hoặc số điện thoại đã được sử dụng.');
@@ -148,25 +133,19 @@ export default function Register() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-6 backdrop-blur-sm">
               <span className="text-4xl">🐾</span>
             </div>
-            <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">
-              Pawfect Match
-            </h1>
-            <p className="text-lg drop-shadow-md text-center">
-              Join our community of pet lovers
-            </p>
+            <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
+            <p className="text-lg drop-shadow-md text-center">Join our community of pet lovers</p>
           </div>
         </div>
       </RegisterBackground>
 
       {/* Right Side - Form (2/3) */}
-      <div className="w-full lg:w-2/3 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-2xl">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-2">Create Account</h2>
-            <p className="text-gray-600">Join Pawfect Match today!</p>
-          </div>
+      <div className="w-full lg:w-2/3 flex items-center justify-center p-6 sm:p-8">
+        <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 sm:p-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Create your account</h2>
+          <p className="text-gray-500 mb-6">It only takes a minute to join us.</p>
 
-          {/* Success Message */}
+          {/* Success */}
           {successMessage && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
               <div className="flex items-center">
@@ -176,7 +155,7 @@ export default function Register() {
             </div>
           )}
 
-          {/* General Error */}
+          {/* Error */}
           {generalError && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
               <div className="flex items-center">
@@ -186,215 +165,159 @@ export default function Register() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Pet's Parent Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <span className="text-2xl mr-2">🐾</span>
-                Pet's Parent
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Full Name */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Full Name
-                  </label>
+            {/* Parent */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet&apos;s Parent</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Full name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
                   <input
+                    name="fullName"
+                    autoComplete="name"
                     type="text"
                     placeholder="John Doe"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
-                    className={`w-full px-4 py-3 border ${
-                      errors.fullName ? 'border-red-500' : 'border-gray-300'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                    className={`w-full px-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.fullName && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.fullName}
-                    </p>
-                  )}
+                  {errors.fullName && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.fullName}</p>}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
+                    name="email"
+                    autoComplete="email"
                     type="email"
-                    placeholder="your@example.com"
+                    placeholder="you@example.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full px-4 py-3 border ${
-                      errors.email ? 'border-red-500' : 'border-gray-300'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                    className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.email}
-                    </p>
-                  )}
-                  {!errors.email && formData.email && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Email sẽ được dùng để đăng nhập
-                    </p>
-                  )}
+                  {errors.email && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.email}</p>}
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Phone Number
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone (đăng nhập bằng SĐT)</label>
                   <input
+                    name="phone"
+                    autoComplete="tel"
                     type="tel"
-                    placeholder="0123456789"
+                    placeholder="09xxxxxxxx"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className={`w-full px-4 py-3 border ${
-                      errors.phone ? 'border-red-500' : 'border-gray-300'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                    className={`w-full px-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.phone && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.phone}
-                    </p>
-                  )}
+                  {errors.phone && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.phone}</p>}
                 </div>
 
                 {/* Password */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Password
-                  </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                   <div className="relative">
                     <input
+                      name="password"
+                      autoComplete="new-password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      className={`w-full px-4 py-3 pr-12 border ${
-                        errors.password ? 'border-red-500' : 'border-gray-300'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                      className={`w-full px-4 py-3 pr-10 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.password && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.password}
-                    </p>
-                  )}
+                  {errors.password && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.password}</p>}
                 </div>
               </div>
             </div>
 
-            {/* Pet Section */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <span className="text-2xl mr-2">🐶</span>
-                Pet
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Pet Name */}
+            {/* Pet */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Pet name */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Pet's Name
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pet&apos;s Name</label>
                   <input
+                    name="petName"
                     type="text"
-                    placeholder="Buddy"
+                    placeholder="Milo"
                     value={formData.petName}
                     onChange={(e) => handleInputChange('petName', e.target.value)}
-                    className={`w-full px-4 py-3 border ${
-                      errors.petName ? 'border-red-500' : 'border-gray-300'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all`}
+                    className={`w-full px-4 py-3 border ${errors.petName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.petName && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.petName}
-                    </p>
-                  )}
+                  {errors.petName && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petName}</p>}
                 </div>
 
-                {/* Pet Type */}
+                {/* Pet type */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Pet Type
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                   <select
+                    name="petType"
                     value={formData.petType}
                     onChange={(e) => handleInputChange('petType', e.target.value)}
-                    className={`w-full px-4 py-3 border ${
-                      errors.petType ? 'border-red-500' : 'border-gray-300'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white`}
+                    className={`w-full px-4 py-3 border ${errors.petType ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
                   >
                     <option value="">Select type</option>
-                    <option value="dog">Dog</option>
-                    <option value="cat">Cat</option>
+                    <option value="DOG">Dog</option>
+                    <option value="CAT">Cat</option>
+                    <option value="OTHER">Other</option>
                   </select>
-                  {errors.petType && (
-                    <p className="text-sm text-red-500 mt-1 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-1" /> {errors.petType}
-                    </p>
-                  )}
+                  {errors.petType && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petType}</p>}
                 </div>
 
-                {/* Pet Age */}
+                {/* Age */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Pet Age
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
                   <input
+                    name="petAge"
                     type="text"
-                    placeholder="3 years"
+                    placeholder="e.g. 2"
                     value={formData.petAge}
                     onChange={(e) => handleInputChange('petAge', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
 
-                {/* Pet Size */}
+                {/* Size (select) */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Pet Size
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
                   <select
+                    name="petSize"
                     value={formData.petSize}
                     onChange={(e) => handleInputChange('petSize', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none bg-white"
+                    className={`w-full px-4 py-3 border ${errors.petSize ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
                   >
                     <option value="">Select size</option>
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                    <option value="extra_large">Extra Large</option>
+                    <option value="SMALL">Small</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LARGE">Large</option>
                   </select>
+                  {errors.petSize && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petSize}</p>}
                 </div>
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="text-center">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="bg-indigo-600 text-white py-4 px-8 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed text-lg min-w-[200px]"
-              >
-                {isLoading ? 'Creating Account...' : 'Sign Up'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
+            >
+              {isLoading ? 'Đang xử lý...' : 'Create account'}
+            </button>
 
-            {/* Login Link */}
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-sm text-gray-600 text-center">
               Already have an account?{' '}
               <button
                 type="button"

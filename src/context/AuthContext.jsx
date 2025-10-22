@@ -1,74 +1,95 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
-import { getProfile, verifyToken } from "../api/auth";
+import { getProfile } from "../api/auth";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  // Đang khởi tạo từ localStorage / xác thực thụ động
   const [isLoading, setIsLoading] = useState(true);
+  // Cho phép trang khác hiển thị loading riêng (khi gọi API cục bộ)
   const [apiLoading, setApiLoading] = useState(false);
 
+  // Đăng nhập: lưu token + user vào localStorage và state
   const login = (userData, token) => {
-    localStorage.setItem("authToken", token);
+    localStorage.setItem("accessToken", token);
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("role", userData.role); // Lưu role riêng biệt
+    localStorage.setItem("role", userData?.role ?? "");
     setUser(userData);
   };
 
+  // Đăng xuất: xoá localStorage và đưa user về null
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role"); // Xóa role khi logout
+    ["accessToken", "user", "role"].forEach((k) => localStorage.removeItem(k));
     setUser(null);
   };
 
-  const fetchProfile = async () => {
-    try {
-      setApiLoading(true);
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        await verifyToken(token);
-        const data = await getProfile();
-        setUser(data);
-        // Cập nhật localStorage với data mới từ server
-        localStorage.setItem("user", JSON.stringify(data));
-        localStorage.setItem("role", data.role); // Cập nhật role từ server
-      }
-    } catch {
-      logout();
-    } finally {
-      setApiLoading(false);
-      setIsLoading(false);
-    }
-  };
-
+  // Khởi tạo: đọc localStorage; có token thì set tạm user,
+  // TUỲ CHỌN gọi getProfile() để đồng bộ thông tin (nếu BE có /profile)
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const storedUser = localStorage.getItem("user");
-    const storedRole = localStorage.getItem("role");
-    
-    if (token && storedUser) {
+    let isMounted = true;
+
+    const bootstrap = async () => {
       try {
-        const userData = JSON.parse(storedUser);
-        // Đảm bảo role được khôi phục từ localStorage
-        if (storedRole && !userData.role) {
-          userData.role = storedRole;
+        const token = localStorage.getItem("accessToken");
+        const rawUser = localStorage.getItem("user");
+
+        if (!token || !rawUser) {
+          if (isMounted) setIsLoading(false);
+          return;
         }
-        setUser(userData);
-        fetchProfile();
-      } catch {
-        logout();
-        setIsLoading(false);
+
+        // Set tạm từ localStorage để UI không giật
+        const parsed = JSON.parse(rawUser);
+        if (isMounted) setUser(parsed);
+
+        // Thử làm mới thông tin user (nếu endpoint tồn tại)
+        try {
+          const profile = await getProfile(); // Nếu BE chưa có /profile, chấp nhận fail
+          if (profile && isMounted) {
+            localStorage.setItem("user", JSON.stringify(profile));
+            localStorage.setItem("role", profile?.role ?? "");
+            setUser(profile);
+          }
+        } catch (e) {
+          // Nếu 401/403 hoặc lỗi khác → coi như session hết hạn
+          console.warn("[Auth] getProfile failed, clearing session:", e?.response?.status, e?.message);
+          ["accessToken", "user", "role"].forEach((k) => localStorage.removeItem(k));
+          if (isMounted) setUser(null);
+        }
+
+        if (isMounted) setIsLoading(false);
+      } catch (err) {
+        console.error("[Auth] bootstrap error:", err);
+        ["accessToken", "user", "role"].forEach((k) => localStorage.removeItem(k));
+        if (isMounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
       }
-    } else {
-      setIsLoading(false);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    };
+
+    bootstrap();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const isAuthenticated = () => !!user;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading, apiLoading, setApiLoading, isAuthenticated }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isLoading,
+        apiLoading,
+        setApiLoading,
+        isAuthenticated,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

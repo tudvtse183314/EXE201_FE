@@ -1,3 +1,4 @@
+// src/components/layout/Header.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, User, Heart, Menu, X, Phone } from 'lucide-react';
@@ -13,43 +14,62 @@ export default function Header() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // Different navigation items based on authentication status
-  const publicNavigationItems = [
+  // --- MENU LOGIC ---------------------------------------------------------
+
+  // Menu cơ bản của UI cũ (giữ nguyên thứ tự & styling)
+  const baseMenu = [
     { label: 'Home', path: '/' },
     { label: 'Shop', path: '/shop' },
-    { label: 'AI Analysis', path: '/ai-analysis' },
+    { label: 'AI Analysis', path: '/customer/ai-analysis' }, // sẽ yêu cầu login
     { label: 'Premium', path: '/services' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Demo AI', path: '/demo' }
+    { label: 'Demo AI', path: '/demo-ai' },
   ];
 
-  const userNavigationItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Shop', path: '/shop' },
-    { label: 'Pet Profiles', path: '/customer/pet-profiles' },
-    { label: 'My Profile', path: '/customer/account-profile' },
-    { label: 'AI Analysis', path: '/ai-analysis' },
-    { label: 'Premium', path: '/services' },
-    { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' }
+  // Các mục riêng cho customer khi đã đăng nhập
+  const customerExtras = [
+    { label: 'Orders', path: '/customer/orders' },
+    { label: 'My Pets', path: '/customer/my-pets' },
+    { label: 'Profile', path: '/customer/account-profile' },
   ];
 
-  const navigationItems = user ? userNavigationItems : publicNavigationItems;
+  // Chèn extras vào ngay SAU "AI Analysis" để giữ cảm giác UI cũ
+  const buildMenu = () => {
+    if (!user) return baseMenu;
+    const aiIdx = baseMenu.findIndex((i) =>
+      i.label.toLowerCase().includes('ai analysis')
+    );
+    if (aiIdx === -1) return [...baseMenu, ...customerExtras];
+    return [
+      ...baseMenu.slice(0, aiIdx + 1),
+      ...customerExtras,
+      ...baseMenu.slice(aiIdx + 1),
+    ];
+  };
 
-  const iconButtons = [
-    { icon: Search, label: 'Search', action: () => console.log('Search clicked') },
-    { icon: Heart, label: 'Wishlist', action: () => console.log('Wishlist clicked') },
-    { icon: ShoppingCart, label: 'Cart', action: () => console.log('Cart clicked') }
-  ];
+  const navigationItems = buildMenu();
+
+  // Những đường dẫn bắt buộc đăng nhập
+  const authRequired = new Set([
+    '/customer/orders',
+    '/customer/ai-analysis',
+    '/customer/my-pets',
+    '/customer/account-profile',
+  ]);
 
   const handleNavigation = (path) => {
+    if (authRequired.has(path) && !user) {
+      navigate('/login', { state: { from: location } });
+      setMobileMenuOpen(false);
+      return;
+    }
     navigate(path);
     setMobileMenuOpen(false);
   };
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/login', { state: { from: location } });
   };
 
   const handleRegister = () => {
@@ -61,9 +81,10 @@ export default function Header() {
     navigate('/');
   };
 
-  const handleDashboard = () => {
-    navigate('/dashboard');
-  };
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(path + '/');
+
+  // -----------------------------------------------------------------------
 
   return (
     <>
@@ -73,17 +94,17 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Left: Logo */}
             <div className="flex items-center space-x-4">
-              <SvgLogo 
+              <SvgLogo
                 size="large"
                 variant="default"
                 onClick={() => handleNavigation('/')}
                 className="hover:scale-105 transition-transform duration-300"
               />
-              <span 
+              <span
                 className="text-2xl font-bold cursor-pointer transition-colors duration-300"
                 style={{ color: '#facc15' }}
-                onMouseEnter={(e) => e.target.style.color = '#c47256'}
-                onMouseLeave={(e) => e.target.style.color = '#facc15'}
+                onMouseEnter={(e) => (e.target.style.color = '#c47256')}
+                onMouseLeave={(e) => (e.target.style.color = '#facc15')}
                 onClick={() => handleNavigation('/')}
               >
                 Pawfect Match
@@ -101,7 +122,7 @@ export default function Header() {
               <div className="hidden md:flex items-center space-x-2 text-sm">
                 <Phone className="w-4 h-4" style={{ color: '#c47256' }} />
                 <span className="font-medium" style={{ color: '#34140e' }}>
-                0778 041 723
+                  0778 041 723
                 </span>
               </div>
 
@@ -128,38 +149,32 @@ export default function Header() {
                     <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-sm font-medium hidden sm:block" style={{ color: '#34140e' }}>
-                      {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
+                    <span
+                      className="text-sm font-medium hidden sm:block"
+                      style={{ color: '#34140e' }}
+                    >
+                      {user.name
+                        ? `Xin chào, ${user.name}`
+                        : `Welcome, ${user.email}`}
                     </span>
                   </div>
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={handleLogout}
-                  >
+                  <Button variant="secondary" size="sm" onClick={handleLogout}>
                     Logout
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={handleLogin}
-                  >
+                  <Button variant="secondary" size="sm" onClick={handleLogin}>
                     Login
                   </Button>
-                  <Button 
-                    size="sm"
-                    onClick={handleRegister}
-                  >
+                  <Button size="sm" onClick={handleRegister}>
                     Sign Up
                   </Button>
                 </div>
               )}
 
               {/* Mobile Menu Button */}
-              <button 
+              <button
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors duration-300"
                 style={{ color: '#34140e' }}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -176,29 +191,30 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center">
             <nav className="hidden md:flex space-x-8 py-3">
-              {navigationItems.map((item, index) => (
+              {navigationItems.map((item) => (
                 <button
-                  key={index}
+                  key={item.path}
                   onClick={() => handleNavigation(item.path)}
                   className={`text-base font-medium transition-all duration-300 px-4 py-2 rounded-lg ${
-                    location.pathname === item.path 
-                      ? 'text-white shadow-md' 
+                    isActive(item.path)
+                      ? 'text-white shadow-md'
                       : 'text-gray-700 hover:text-c47256'
                   }`}
-                  style={{ 
-                    backgroundColor: location.pathname === item.path ? '#c47256' : 'transparent',
-                    color: location.pathname === item.path ? '#ffffff' : undefined
+                  style={{
+                    backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
+                    color: isActive(item.path) ? '#ffffff' : undefined,
                   }}
                   onMouseEnter={(e) => {
-                    if (location.pathname !== item.path) {
-                      e.target.style.color = '#c47256';
-                    }
+                    if (!isActive(item.path)) e.target.style.color = '#c47256';
                   }}
                   onMouseLeave={(e) => {
-                    if (location.pathname !== item.path) {
-                      e.target.style.color = '#374151';
-                    }
+                    if (!isActive(item.path)) e.target.style.color = '#374151';
                   }}
+                  title={
+                    authRequired.has(item.path) && !user
+                      ? 'Bạn cần đăng nhập để truy cập'
+                      : undefined
+                  }
                 >
                   {item.label}
                 </button>
@@ -208,7 +224,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Breadcrumb */}
+      {/* Breadcrumb giữ nguyên layout cũ */}
       <div className="pt-32">
         <Breadcrumb />
       </div>
@@ -221,29 +237,35 @@ export default function Header() {
             <div className="mb-4">
               <SearchBar />
             </div>
-            
+
             {/* Mobile Navigation */}
-            {navigationItems.map((item, index) => (
+            {navigationItems.map((item) => (
               <button
-                key={index}
+                key={item.path}
                 onClick={() => handleNavigation(item.path)}
                 className={`block w-full text-left px-4 py-3 text-lg transition-all duration-300 rounded-lg ${
-                  location.pathname === item.path ? 'font-semibold text-white shadow-md' : 'font-medium hover:bg-gray-50'
+                  isActive(item.path)
+                    ? 'font-semibold text-white shadow-md'
+                    : 'font-medium hover:bg-gray-50'
                 }`}
-                style={{ 
-                  backgroundColor: location.pathname === item.path ? '#c47256' : 'transparent',
-                  color: location.pathname === item.path ? '#ffffff' : '#34140e'
+                style={{
+                  backgroundColor: isActive(item.path) ? '#c47256' : 'transparent',
+                  color: isActive(item.path) ? '#ffffff' : '#34140e',
                 }}
+                title={
+                  authRequired.has(item.path) && !user
+                    ? 'Bạn cần đăng nhập để truy cập'
+                    : undefined
+                }
               >
                 {item.label}
               </button>
             ))}
-            
+
             {/* Mobile Auth Section */}
             <div className="pt-4 border-t border-gray-200 mt-4">
               {user ? (
                 <div className="space-y-3">
-                  {/* User Info */}
                   <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-md">
                     <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
@@ -252,20 +274,10 @@ export default function Header() {
                       {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
                     </span>
                   </div>
-                  
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={() => {
-                      handleDashboard();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full"
-                  >
-                    Dashboard
-                  </Button>
-                  <Button 
-                    variant="secondary" 
+
+                  {/* Không đưa CUSTOMER vào dashboard */}
+                  <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       handleLogout();
@@ -278,8 +290,8 @@ export default function Header() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       handleLogin();
@@ -289,7 +301,7 @@ export default function Header() {
                   >
                     Login
                   </Button>
-                  <Button 
+                  <Button
                     size="sm"
                     onClick={() => {
                       handleRegister();
