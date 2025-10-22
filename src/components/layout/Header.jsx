@@ -1,7 +1,7 @@
 // src/components/layout/Header.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, User, Heart, Menu, X, Phone } from 'lucide-react';
+import { ShoppingCart, User, Heart, Menu, X, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import SvgLogo from '../common/SvgLogo';

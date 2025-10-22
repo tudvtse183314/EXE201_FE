@@ -1,8 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "../components/layout/MainLayout";
 import { ROLES, getDashboardPathByRole } from "../constants/roles";
+import RequireAuth from "../components/auth/RequireAuth";
+import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import CategoriesPage from "../pages/admin/categories/CategoriesPage";
+import ProductsPage from "../pages/admin/products/ProductsPage";
+
 
 // Pages
 import Home from "../pages/Home";
@@ -13,7 +18,6 @@ import Register from "../pages/public/Register.jsx";
 import About from "../pages/public/About";
 import Services from "../pages/public/Services";
 import Contact from "../pages/public/Contact";
-import Shop from "../pages/public/Shop";
 
 
 // Customer Pages
@@ -44,6 +48,9 @@ import AccountListPage from "../pages/manager/AccountListPage";
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 import PetAIAssistant from "../pages/ai/demo.jsx";
+
+import Shop from "../pages/public/Shop.jsx";
+
 
 
 // Private Route Component
@@ -83,8 +90,7 @@ function DashboardRedirect() {
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
         {/* Public Routes */}
         <Route path="/" element={
           <MainLayout>
@@ -117,11 +123,10 @@ export default function AppRoutes() {
         } />
         <Route path="/shop" element={
           <MainLayout>
-            <Shop />
+            <Shop/>
           </MainLayout>
         } />
-        
-        {/* Customer Routes */}
+  
         <Route
           path="/customer/dashboard"
           element={
@@ -234,7 +239,7 @@ export default function AppRoutes() {
           path="/admin/dashboard"
           element={
             <PrivateRoute roles={[ROLES.ADMIN]}>
-              <AdminDashboard />
+              <AdminDashboard/>
             </PrivateRoute>
           }
         />
@@ -286,9 +291,27 @@ export default function AppRoutes() {
         {/* Legacy Routes - Redirect to appropriate dashboard */}
         <Route path="/dashboard" element={<DashboardRedirect />} />
         
+        {/* ADMIN (bảo vệ theo role) */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth roles={['ADMIN', 'MANAGER']}>
+              <AdminLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          
+          {/* placeholders */}
+          <Route path="orders" element={<div>Orders (coming soon)</div>} />
+          <Route path="accounts" element={<div>Accounts (coming soon)</div>} />
+        </Route>
+        
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
   );
 }

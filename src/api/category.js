@@ -22,21 +22,27 @@ export const createCategory = async (categoryData) => {
   }
 };
 
+
+/* ... các hàm khác giữ nguyên ... */
+
 /**
  * Lấy danh sách tất cả danh mục
  * @returns {Promise<Array>} - Danh sách danh mục
  */
 export const getAllCategories = async () => {
   try {
-    const response = await axiosInstance.get("/categories");
+    // ✅ BE thực tế là /categories/getAll
+    const response = await axiosInstance.get("/categories/getAll");
     return response.data;
-  } catch (error) {
-    if (error.response?.status === 401) {
-      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-    }
-    throw error;
+  } catch (e) {
+  if (e.response?.status === 404) {
+    const r = await axiosInstance.get("/categories");
+    return r.data;
+  }
+  throw e;
   }
 };
+
 
 /**
  * Lấy thông tin danh mục theo ID

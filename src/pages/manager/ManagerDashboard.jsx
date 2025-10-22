@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../../api/product';
+import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../../api/products';
 import { getAllCategories, createCategory, updateCategory, deleteCategory } from '../../api/category';
 import { getAllOrders, getOrderById, updateOrderStatus, cancelOrder } from '../../api/order';
 import { Plus, Package, Tag, AlertCircle, Edit, Trash2, BarChart3, Users, ShoppingCart, Clock, CheckCircle, XCircle } from 'lucide-react';
@@ -18,6 +18,9 @@ export default function ManagerDashboard() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
 
+  // Guard against double-fetching
+  const fetchedRef = useRef(false);
+
   // Form states
   const [productForm, setProductForm] = useState({
     name: '',
@@ -32,6 +35,8 @@ export default function ManagerDashboard() {
   });
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     loadData();
   }, []);
 

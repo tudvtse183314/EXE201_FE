@@ -9,8 +9,8 @@ export const ROLES = {
 
 // Chỉ role quản lý mới vào dashboard; CUSTOMER về trang chủ "/"
 export const dashboardPathByRole = {
-  ADMIN: "/admin/dashboard",
-  MANAGER: "/manager/dashboard",
+  ADMIN: "/admin", // 👈 ADMIN và MANAGER vào admin panel
+  MANAGER: "/admin", // 👈 ADMIN và MANAGER vào admin panel
   STAFF: "/staff/dashboard",
   DOCTOR: "/doctor/dashboard",
   CUSTOMER: "/", // 👈 khách quay về Home

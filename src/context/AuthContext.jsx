@@ -44,20 +44,9 @@ export const AuthProvider = ({ children }) => {
         const parsed = JSON.parse(rawUser);
         if (isMounted) setUser(parsed);
 
-        // Thử làm mới thông tin user (nếu endpoint tồn tại)
-        try {
-          const profile = await getProfile(); // Nếu BE chưa có /profile, chấp nhận fail
-          if (profile && isMounted) {
-            localStorage.setItem("user", JSON.stringify(profile));
-            localStorage.setItem("role", profile?.role ?? "");
-            setUser(profile);
-          }
-        } catch (e) {
-          // Nếu 401/403 hoặc lỗi khác → coi như session hết hạn
-          console.warn("[Auth] getProfile failed, clearing session:", e?.response?.status, e?.message);
-          ["accessToken", "user", "role"].forEach((k) => localStorage.removeItem(k));
-          if (isMounted) setUser(null);
-        }
+        // TẠM THỜI TẮT getProfile() để tránh loop
+        // TODO: Bật lại khi BE có endpoint /profile hoạt động
+        console.log("[Auth] Using cached user data, skipping getProfile()");
 
         if (isMounted) setIsLoading(false);
       } catch (err) {
