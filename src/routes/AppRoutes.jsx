@@ -30,6 +30,7 @@ import AIAnalysis from "../pages/AIAnalysis";
 // AI Pages
 import AIAnalysisNew from "../pages/ai/AIAnalysis";
 import SeasonalOutfits from "../pages/ai/SeasonalOutfits";
+import ChatBot from "../pages/ai/ChatBot";
 
 // Error Pages
 import Unauthorized from "../pages/Unauthorized";
@@ -49,6 +50,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import CartsPage from "../pages/admin/carts/CartsPage";
+import ChatHistory from "../pages/admin/ChatHistory";
 import CategoryTest from "../components/admin/CategoryTest";
 import ProductTest from "../components/admin/ProductTest";
 import APITestSummary from "../components/admin/APITestSummary";
@@ -300,6 +302,16 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/ai/chat"
+          element={
+            <PrivateRoute roles={[ROLES.CUSTOMER, ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN]}>
+              <MainLayout>
+                <ChatBot />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
         
         {/* Admin Routes */}
         <Route
@@ -350,6 +362,7 @@ export default function AppRoutes() {
                    <p>Coming soon...</p>
                  </div>} />
                  <Route path="carts" element={<CartsPage />} />
+          <Route path="chat-history" element={<ChatHistory />} />
           <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
             <h1>👥 Accounts Management</h1>
             <p>Coming soon...</p>

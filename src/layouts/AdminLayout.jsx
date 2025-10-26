@@ -10,8 +10,11 @@ import {
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
-  MenuUnfoldOutlined
+  MenuUnfoldOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
+import AIChatFloatingBot from '../components/common/AIChatFloatingBot';
+import '../components/common/AIChatFloatingBot.css';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -51,6 +54,12 @@ export default function AdminLayout() {
       label: 'Giỏ hàng', 
       path: '/admin/carts', 
       icon: <ShoppingOutlined /> 
+    },
+    { 
+      key: 'chat-history', 
+      label: 'Chat History', 
+      path: '/admin/chat-history', 
+      icon: <MessageOutlined /> 
     },
     { 
       key: 'accounts', 
@@ -288,6 +297,9 @@ export default function AdminLayout() {
           <Outlet />
         </Content>
       </Layout>
+      
+      {/* AI Chat Floating Bot */}
+      <AIChatFloatingBot />
     </Layout>
   );
 }
