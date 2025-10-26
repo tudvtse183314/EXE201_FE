@@ -97,6 +97,23 @@ export default function CustomerProfilePage() {
       const result = await updateAccount(user.id, updateData);
       console.log("👤 CustomerProfilePage: API response", result);
       
+      // Update local profileData state immediately
+      const updatedProfileData = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address || '',
+        petName: values.petName || '',
+        petAge: values.petAge || '',
+        petType: values.petType || '',
+        petSize: values.petSize || '',
+        avatar: profileData.avatar,
+        role: profileData.role,
+        createdAt: profileData.createdAt,
+        lastLogin: profileData.lastLogin
+      };
+      setProfileData(updatedProfileData);
+      
       // Update auth context with merged user data
       if (updateUser) {
         const updatedUserData = {
@@ -113,6 +130,9 @@ export default function CustomerProfilePage() {
         updateUser(updatedUserData);
         console.log("👤 CustomerProfilePage: Updated user context", updatedUserData);
       }
+      
+      // Update form fields to reflect new values
+      form.setFieldsValue(updatedProfileData);
       
       setIsEditing(false);
       message.success('Cập nhật thông tin thành công!');

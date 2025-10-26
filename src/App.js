@@ -4,6 +4,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoadingProvider, useLoading } from "./context/LoadingContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { ToastProvider } from "./context/ToastContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AppRoutes from "./routes/AppRoutes";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { setGlobalLoadingState } from "./api/axios";
@@ -44,11 +47,24 @@ export default function App() {
   return (
     <LoadingProvider>
       <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <AppContent />
-          </WishlistProvider>
-        </CartProvider>
+        <ToastProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AppContent />
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </WishlistProvider>
+          </CartProvider>
+        </ToastProvider>
       </AuthProvider>
     </LoadingProvider>
   );
