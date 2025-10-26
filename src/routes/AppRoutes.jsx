@@ -35,7 +35,13 @@ import SeasonalOutfits from "../pages/ai/SeasonalOutfits";
 import Unauthorized from "../pages/Unauthorized";
 
 // Staff Pages
-import StaffDashboard from "../pages/staff/Dashboard";
+import StaffLayout from "../layouts/StaffLayout";
+import StaffDashboard from "../pages/staff/StaffDashboard";
+import StaffCategoriesPage from "../pages/staff/StaffCategoriesPage";
+import StaffProductsPage from "../pages/staff/StaffProductsPage";
+import StaffOrdersPage from "../pages/staff/StaffOrdersPage";
+import StaffReviewsPage from "../pages/staff/StaffReviewsPage";
+import StaffProfilePage from "../pages/staff/StaffProfilePage";
 
 // Admin Pages
 import AdminLayout from "../layouts/AdminLayout";
@@ -310,13 +316,21 @@ export default function AppRoutes() {
         
         {/* Staff Routes */}
         <Route
-          path="/staff/dashboard"
+          path="/staff"
           element={
             <PrivateRoute roles={[ROLES.STAFF, ROLES.MANAGER]}>
-              <StaffDashboard />
+              <StaffLayout />
             </PrivateRoute>
           }
-        />
+        >
+          <Route index element={<StaffDashboard />} />
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="categories" element={<StaffCategoriesPage />} />
+          <Route path="products" element={<StaffProductsPage />} />
+          <Route path="orders" element={<StaffOrdersPage />} />
+          <Route path="reviews" element={<StaffReviewsPage />} />
+          <Route path="profile" element={<StaffProfilePage />} />
+        </Route>
         
         {/* Admin Routes */}
         <Route
