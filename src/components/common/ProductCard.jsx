@@ -73,7 +73,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group flex flex-col h-full">
       {/* Product Image */}
       <div className="relative bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
         {product.badge && (
@@ -98,13 +98,21 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <p className="text-xs text-gray-500 mb-1 font-medium">{product.category.name}</p>
-        <h3 className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+      <div className="p-4 flex flex-col" style={{ minHeight: '180px' }}>
+        <p className="text-xs text-gray-500 mb-1 font-medium line-clamp-1">{product.category?.name || 'Uncategorized'}</p>
+        <h3 
+          className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 group-hover:text-indigo-600 transition-colors"
+          style={{ minHeight: '40px', maxHeight: '40px', overflow: 'hidden' }}
+        >
           {product.name}
         </h3>
-        <p className="text-xs text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-        <p className="text-lg font-bold text-gray-900 mb-3">${product.price.toFixed(2)}</p>
+        <p 
+          className="text-xs text-gray-600 mb-3 line-clamp-2 flex-grow"
+          style={{ minHeight: '32px', maxHeight: '32px', overflow: 'hidden' }}
+        >
+          {product.description}
+        </p>
+        <p className="text-lg font-bold text-gray-900 mb-2">${product.price.toFixed(2)}</p>
         
         {/* Action Buttons */}
         <div className="flex gap-2">
@@ -136,6 +144,8 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           Add to Cart
         </button>
       </div>
+      {/* Fixed height spacer to ensure all cards are same height */}
+      <div className="flex-1"></div>
     </div>
   );
 }

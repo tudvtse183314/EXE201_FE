@@ -105,7 +105,7 @@ export default function StaffDashboard() {
           border: 'none',
           borderRadius: '12px'
         }}
-        bodyStyle={{ padding: '32px' }}
+        styles={{ body: { padding: '32px' } }}
       >
         <Row align="middle" justify="space-between">
           <Col>

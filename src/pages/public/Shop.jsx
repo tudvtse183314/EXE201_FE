@@ -184,7 +184,7 @@ export default function Shop() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: 'none'
                   }}
-                  bodyStyle={{ padding: '20px' }}
+                  styles={{ body: { padding: '20px' } }}
                   cover={
                     <Skeleton.Image style={{ width: '100%', height: '280px' }} />
                   }
@@ -346,12 +346,10 @@ export default function Shop() {
         }}>
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             gap: '12px',
-            overflowX: 'auto',
             paddingBottom: '8px',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitScrollbar: { display: 'none' }
+            justifyContent: 'flex-start'
           }}>
             <Button
               type={activeCatId === "all" ? "primary" : "default"}
@@ -429,7 +427,7 @@ export default function Shop() {
           ) : (
             <Row gutter={[20, 24]}>
               {visibleProducts.map((product) => (
-                <Col xs={24} sm={12} md={8} lg={6} xl={4} xxl={4} key={product.id}>
+                <Col xs={24} sm={12} md={12} lg={6} xl={6} xxl={6} key={product.id}>
                   <Card
                     hoverable
                     style={{
@@ -441,7 +439,7 @@ export default function Shop() {
                       background: '#fff',
                       height: '100%'
                     }}
-                    bodyStyle={{ padding: '20px' }}
+                    styles={{ body: { padding: '20px' } }}
                     cover={
                       <div 
                         style={{ 

@@ -168,7 +168,7 @@ export default function ProductDetail() {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
                 border: 'none'
               }}
-              bodyStyle={{ padding: 0 }}
+              styles={{ body: { padding: 0 } }}
             >
               <div style={{ height: '500px', overflow: 'hidden' }}>
                 <img

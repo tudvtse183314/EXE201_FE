@@ -146,7 +146,7 @@ export default function Wishlist() {
                       background: '#fff',
                       height: '100%'
                     }}
-                    bodyStyle={{ padding: '20px' }}
+                    styles={{ body: { padding: '20px' } }}
                     cover={
                       <div 
                         style={{ 
