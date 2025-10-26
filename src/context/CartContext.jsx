@@ -25,27 +25,49 @@ export const CartProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  // Load cart from localStorage only (API disabled for demo)
+  // Load cart from localStorage based on user ID
   useEffect(() => {
     const loadCart = () => {
-      const savedCart = localStorage.getItem('cart');
+      if (!user?.id) {
+        // No user logged in, clear cart
+        setCartItems([]);
+        console.log('🛒 No user, clearing cart');
+        return;
+      }
+
+      // Load cart specific to this user
+      const cartKey = `cart_user_${user.id}`;
+      const savedCart = localStorage.getItem(cartKey);
+      
       if (savedCart) {
         try {
-          setCartItems(JSON.parse(savedCart));
+          const parsed = JSON.parse(savedCart);
+          setCartItems(parsed);
+          console.log('🛒 Loaded cart for user:', user.id, 'Items:', parsed.length);
         } catch (error) {
           console.error('Error loading cart from localStorage:', error);
           setCartItems([]);
         }
+      } else {
+        // New user or no cart, set empty
+        setCartItems([]);
+        console.log('🛒 New user or empty cart for user:', user.id);
       }
     };
 
     loadCart();
-  }, []);
+  }, [user?.id]);
 
-  // Save cart to localStorage as backup
+  // Save cart to localStorage based on user ID
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!user?.id) {
+      return;
+    }
+
+    const cartKey = `cart_user_${user.id}`;
+    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+    console.log('🛒 Saved cart for user:', user.id, 'Items:', cartItems.length);
+  }, [cartItems, user?.id]);
 
   const addToCart = async (product, quantity = 1) => {
     // Use localStorage only (API disabled for demo)
