@@ -67,18 +67,19 @@ export const CartProvider = ({ children }) => {
       hasLoadedRef.current = true;
       console.log('🛒 Cart: Loaded cart successfully', { count: items.length });
     } catch (e) {
-      console.error('🛒 Cart: Error loading cart', e);
-      setError(e?.message || 'Không thể tải giỏ hàng');
-      
-      // Xử lý lỗi 400 (endpoint không tồn tại) một cách graceful
-      if (e?.response?.status === 400) {
-        // Endpoint chưa tồn tại - không hiển thị lỗi, chỉ log
-        console.warn('🛒 Cart: Endpoint /cart/my may not exist yet. Cart will be loaded on first action.');
-        setCartItems([]); // Set empty cart
-        hasLoadedRef.current = true; // Mark as loaded để không retry
-      } else if (e?.response?.status !== 401 && e?.response?.status !== 403) {
+      // Xử lý lỗi 400 (endpoint không tồn tại) đã được getMyCart xử lý, không cần log thêm
+      if (e?.response?.status !== 400) {
+        console.error('🛒 Cart: Error loading cart', e);
+        setError(e?.message || 'Không thể tải giỏ hàng');
+        
         // Các lỗi khác (trừ 401/403 đã được interceptor xử lý)
-        showError('Không thể tải giỏ hàng. Vui lòng thử lại.');
+        if (e?.response?.status !== 401 && e?.response?.status !== 403) {
+          showError('Không thể tải giỏ hàng. Vui lòng thử lại.');
+        }
+      } else {
+        // 400 đã được getMyCart xử lý, chỉ set empty cart
+        setCartItems([]);
+        hasLoadedRef.current = true;
       }
     } finally {
       setLoading(false);
@@ -109,12 +110,29 @@ export const CartProvider = ({ children }) => {
       try {
         const updatedCart = await getMyCart();
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        setCartItems(items || []);
-      } catch (reloadError) {
-        // Nếu endpoint không tồn tại, thêm item vào local state
-        if (reloadError?.response?.status === 400) {
+        // Nếu endpoint không tồn tại, getMyCart trả về empty array
+        // Trong trường hợp này, thêm item vào local state thay vì xóa tất cả
+        if (items.length === 0 && cartItems.length > 0) {
+          // Endpoint không tồn tại hoặc cart rỗng nhưng local state có items
+          // Thêm item mới vào local state
           const newItem = {
             id: Date.now(), // Temporary ID
+            productId: product.id,
+            quantity: quantity,
+            total: productPrice * quantity,
+            price: productPrice,
+            product: product
+          };
+          setCartItems(prevItems => [...prevItems, newItem]);
+        } else {
+          // Endpoint tồn tại và trả về dữ liệu thực
+          setCartItems(items || []);
+        }
+      } catch (reloadError) {
+        // Các lỗi khác (401, 403, 500, ...) - fallback về local state
+        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
+          const newItem = {
+            id: Date.now(),
             productId: product.id,
             quantity: quantity,
             total: productPrice * quantity,
@@ -150,10 +168,19 @@ export const CartProvider = ({ children }) => {
           const currentCart = await getMyCart();
           const currentItems = Array.isArray(currentCart) ? currentCart : (currentCart?.items || []);
           
-          // Tìm item có cùng productId
-          const existingItem = currentItems.find(
-            item => (item.productId || item.product?.id) === product.id
-          );
+          // Nếu endpoint không tồn tại, tìm trong local state
+          let existingItem = null;
+          if (currentItems.length === 0 && cartItems.length > 0) {
+            // Endpoint không tồn tại, tìm trong local state
+            existingItem = cartItems.find(
+              item => (item.productId || item.product?.id) === product.id
+            );
+          } else {
+            // Endpoint tồn tại, tìm trong response
+            existingItem = currentItems.find(
+              item => (item.productId || item.product?.id) === product.id
+            );
+          }
           
           if (existingItem) {
             const itemId = existingItem.id || existingItem.itemId;
@@ -175,7 +202,18 @@ export const CartProvider = ({ children }) => {
             // Reload cart sau khi cập nhật
             const updatedCart = await getMyCart();
             const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-            setCartItems(items || []);
+            // Nếu endpoint không tồn tại, update local state
+            if (items.length === 0 && cartItems.length > 0) {
+              setCartItems(prevItems => 
+                prevItems.map(item => 
+                  (item.id || item.itemId) === itemId 
+                    ? { ...item, quantity: newQuantity, total: price * newQuantity }
+                    : item
+                )
+              );
+            } else {
+              setCartItems(items || []);
+            }
             
             showSuccess(`Đã cập nhật số lượng ${product.name} trong giỏ hàng`);
             console.log('🛒 Cart: Updated existing item successfully');
@@ -215,10 +253,18 @@ export const CartProvider = ({ children }) => {
       try {
         const updatedCart = await getMyCart();
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        setCartItems(items || []);
-      } catch (reloadError) {
         // Nếu endpoint không tồn tại, update local state
-        if (reloadError?.response?.status === 400) {
+        if (items.length === 0 && cartItems.length > 0) {
+          // Endpoint không tồn tại, xóa từ local state
+          setCartItems(prevItems => 
+            prevItems.filter(item => (item.id || item.itemId) !== itemId)
+          );
+        } else {
+          setCartItems(items || []);
+        }
+      } catch (reloadError) {
+        // Các lỗi khác - fallback về local state
+        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
           setCartItems(prevItems => 
             prevItems.filter(item => (item.id || item.itemId) !== itemId)
           );
@@ -259,11 +305,9 @@ export const CartProvider = ({ children }) => {
       try {
         const updatedCart = await getMyCart();
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        setCartItems(items || []);
-        console.log('🛒 Cart: Updated quantity successfully');
-      } catch (reloadError) {
-        // Nếu endpoint không tồn tại, update local state từ current item
-        if (reloadError?.response?.status === 400) {
+        // Nếu endpoint không tồn tại, update local state
+        if (items.length === 0 && cartItems.length > 0) {
+          // Endpoint không tồn tại, update local state
           setCartItems(prevItems => 
             prevItems.map(item => 
               (item.id || item.itemId) === itemId 
@@ -272,6 +316,21 @@ export const CartProvider = ({ children }) => {
             )
           );
           console.log('🛒 Cart: Updated quantity in local state');
+        } else {
+          setCartItems(items || []);
+          console.log('🛒 Cart: Updated quantity successfully');
+        }
+      } catch (reloadError) {
+        // Các lỗi khác - fallback về local state
+        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
+          setCartItems(prevItems => 
+            prevItems.map(item => 
+              (item.id || item.itemId) === itemId 
+                ? { ...item, quantity, total: price * quantity }
+                : item
+            )
+          );
+          console.log('🛒 Cart: Updated quantity in local state (error fallback)');
         } else {
           throw reloadError;
         }

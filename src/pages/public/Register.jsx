@@ -17,12 +17,7 @@ export default function Register() {
     fullName: '',
     email: '',
     phone: '',
-    password: '',
-    // Pet fields
-    petName: '',
-    petAge: '',
-    petType: '',
-    petSize: '' // select
+    password: ''
   });
 
   // UI state
@@ -46,10 +41,8 @@ export default function Register() {
     if (!/^\d{10,11}$/.test(formData.phone.trim())) newErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
     if (!formData.password || formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
 
-    // Pet (bắt buộc theo form hiện tại)
-    if (!formData.petName.trim()) newErrors.petName = 'Vui lòng nhập tên thú cưng';
-    if (!formData.petType.trim()) newErrors.petType = 'Vui lòng chọn loại thú cưng';
-    if (!formData.petSize.trim()) newErrors.petSize = 'Vui lòng chọn kích cỡ';
+    // Pet fields là optional - user có thể tạo pet profile sau khi đăng ký qua trang "My Pets"
+    // Không validate pet fields vì API register không nhận các field này
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -75,19 +68,18 @@ export default function Register() {
         throw new Error('Đăng nhập tự động thất bại. Vui lòng đăng nhập lại.');
       }
 
-      // 3) Map userData giống trang Login (đang hoạt động ổn)
+      // 3) Map userData từ response (API không trả về pet fields nữa)
       const userData = {
         id: data.id,
         name: data.fullName || data.name,
         email: data.email,
         phone: data.phone,
         role: data.role,
-        accountId: data.accountId || data.id,
-        petName: data.petName,
-        petAge: data.petAge,
-        petType: data.petType,
-        petSize: data.petSize
+        accountId: data.accountId || data.id
       };
+      
+      // Lưu ý: Pet fields không được gửi lên API register nữa
+      // User có thể tạo pet profile sau khi đăng ký qua trang "My Pets"
 
       // 4) Lưu session & điều hướng
       loginUser(userData, data.token);
@@ -238,73 +230,6 @@ export default function Register() {
                     </button>
                   </div>
                   {errors.password && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.password}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Pet */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thú cưng</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Pet name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tên thú cưng</label>
-                  <input
-                    name="petName"
-                    type="text"
-                    placeholder="Milo"
-                    value={formData.petName}
-                    onChange={(e) => handleInputChange('petName', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                  />
-                  {errors.petName && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petName}</p>}
-                </div>
-
-                {/* Pet type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Loại</label>
-                  <select
-                    name="petType"
-                    value={formData.petType}
-                    onChange={(e) => handleInputChange('petType', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petType ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
-                  >
-                    <option value="">Chọn loại</option>
-                    <option value="DOG">Chó</option>
-                    <option value="CAT">Mèo</option>
-                    <option value="OTHER">Khác</option>
-                  </select>
-                  {errors.petType && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petType}</p>}
-                </div>
-
-                {/* Age */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi</label>
-                  <input
-                    name="petAge"
-                    type="text"
-                    placeholder="ví dụ: 2"
-                    value={formData.petAge}
-                    onChange={(e) => handleInputChange('petAge', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                {/* Size (select) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kích cỡ</label>
-                  <select
-                    name="petSize"
-                    value={formData.petSize}
-                    onChange={(e) => handleInputChange('petSize', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petSize ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
-                  >
-                    <option value="">Chọn kích cỡ</option>
-                    <option value="SMALL">Nhỏ</option>
-                    <option value="MEDIUM">Vừa</option>
-                    <option value="LARGE">Lớn</option>
-                  </select>
-                  {errors.petSize && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petSize}</p>}
                 </div>
               </div>
             </div>

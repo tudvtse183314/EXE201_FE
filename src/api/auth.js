@@ -14,21 +14,17 @@ export const login = async (phone, password) => {
 };
 
 /**
- * REGISTER: theo spec BE (nhận cả pet fields)
+ * REGISTER: theo spec BE mới
  * POST /api/register
  * Body JSON:
  * {
- *   "fullName": "...",
- *   "email": "...",
- *   "phone": "...",
- *   "password": "...",
- *   "role": "CUSTOMER",
- *   "petName": "...",
- *   "petAge": "...",
- *   "petType": "...",
- *   "petSize": "..."
+ *   "fullName": "string",
+ *   "email": "string",
+ *   "phone": "string",
+ *   "password": "string",
+ *   "role": "CUSTOMER"
  * }
- * BE trả token = null -> FE sẽ tự login lại bằng /login (phone+password).
+ * BE trả về user object với token = null -> FE sẽ tự login lại bằng /login (phone+password).
  */
 export const register = async (data) => {
   try {
@@ -38,10 +34,6 @@ export const register = async (data) => {
       phone: data.phone,
       password: data.password,
       role: data.role ?? "CUSTOMER",
-      petName: data.petName ?? "",
-      petAge: data.petAge ?? "",
-      petType: data.petType ?? "",
-      petSize: data.petSize ?? "",
     };
 
     const res = await axiosInstance.post("/register", payload);

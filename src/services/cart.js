@@ -8,28 +8,30 @@ import axiosInstance from "../api/axios";
 
 // GET /api/cart/my hoặc /api/carts/user/{userId} - Lấy giỏ hàng của user hiện tại
 // Lưu ý: KHÔNG gửi userId từ client, backend sẽ lấy từ JWT
+// Endpoint /cart/my có thể chưa tồn tại trên backend - sẽ xử lý gracefully
+let hasWarnedAboutMissingEndpoint = false;
+
 export const getMyCart = async () => {
   try {
-    console.log("🛒 Cart: Fetching my cart");
-    
-    // Thử endpoint /cart/my trước (customer endpoint)
-    try {
-      const res = await axiosInstance.get("/cart/my");
-      console.log("🛒 Cart: Fetched my cart successfully (/cart/my)", res.data);
-      return res.data;
-    } catch (newError) {
-      // Nếu endpoint mới không tồn tại, có thể backend chỉ có endpoint cũ
-      // Tuy nhiên, không thể gọi /carts/user/{userId} vì không được gửi userId
-      // Log để debug
-      console.warn("🛒 Cart: /cart/my failed, may need backend update", {
-        status: newError.response?.status,
-        data: newError.response?.data
-      });
-      throw newError;
+    // Thử endpoint /cart/my (customer endpoint)
+    const res = await axiosInstance.get("/cart/my");
+    console.log("🛒 Cart: Fetched my cart successfully (/cart/my)", res.data);
+    return res.data;
+  } catch (error) {
+    // Xử lý lỗi 400 (endpoint không tồn tại) một cách graceful
+    if (error?.response?.status === 400) {
+      // Chỉ log warning một lần để tránh spam console
+      if (!hasWarnedAboutMissingEndpoint) {
+        console.warn("🛒 Cart: Endpoint /cart/my không tồn tại trên backend. Cart sẽ sử dụng local state.");
+        hasWarnedAboutMissingEndpoint = true;
+      }
+      // Trả về empty array thay vì throw error
+      return [];
     }
-  } catch (e) {
-    console.error("🛒 Cart: Error fetching my cart:", e);
-    throw e;
+    
+    // Các lỗi khác (401, 403, 500, ...) vẫn throw để interceptor xử lý
+    console.error("🛒 Cart: Error fetching my cart:", error);
+    throw error;
   }
 };
 
