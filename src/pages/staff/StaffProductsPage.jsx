@@ -40,6 +40,7 @@ import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../
 import { getAllCategories } from '../../services/categories';
 import { dataManager } from '../../utils/dataManager';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
+import { uploadImage, deleteImageByUrl } from '../../lib/firebase';
 
 const { Title, Text } = Typography;
 const { Search } = AntInput;
@@ -57,6 +58,8 @@ export default function StaffProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [fileList, setFileList] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const [form] = Form.useForm();
 
   const loadData = async () => {
@@ -145,6 +148,7 @@ export default function StaffProductsPage() {
       setEditingProduct(null);
       setUploadedImage(null);
       setUploadedImageUrl(null);
+      setFileList([]);
       form.resetFields();
     } catch (error) {
       console.error("📦 StaffProductsPage: Error saving product", error);
@@ -156,7 +160,21 @@ export default function StaffProductsPage() {
     setEditingProduct(product);
     const imageUrl = product.imageUrl || product.image || '';
     setUploadedImageUrl(imageUrl);
-    setUploadedImage(null);
+    setUploadedImage(imageUrl);
+    
+    // Set fileList for Ant Design Upload component if image exists
+    if (imageUrl) {
+      setFileList([{
+        uid: '-1',
+        name: 'current-image',
+        status: 'done',
+        url: imageUrl,
+        thumbUrl: imageUrl
+      }]);
+    } else {
+      setFileList([]);
+    }
+    
     form.setFieldsValue({
       name: product.name,
       description: product.description || '',
@@ -188,6 +206,7 @@ export default function StaffProductsPage() {
     setEditingProduct(null);
     setUploadedImage(null);
     setUploadedImageUrl(null);
+    setFileList([]);
     form.resetFields();
     setIsModalOpen(true);
   };
@@ -197,11 +216,12 @@ export default function StaffProductsPage() {
     setEditingProduct(null);
     setUploadedImage(null);
     setUploadedImageUrl(null);
+    setFileList([]);
     form.resetFields();
   };
 
-  // Handle file upload
-  const handleImageUpload = (file) => {
+  // Handle file upload with Firebase
+  const handleImageUpload = async (file) => {
     // Check file type
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
@@ -216,27 +236,79 @@ export default function StaffProductsPage() {
       return Upload.LIST_IGNORE;
     }
 
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64String = e.target.result;
-      setUploadedImage(base64String);
-      setUploadedImageUrl(base64String);
-      form.setFieldsValue({ imageUrl: base64String });
-    };
-    reader.onerror = () => {
-      message.error('Lỗi khi đọc file ảnh');
-    };
-    reader.readAsDataURL(file);
+    try {
+      setUploading(true);
+      message.loading({ content: 'Đang upload ảnh lên Firebase...', key: 'uploading' });
+      
+      // Upload to Firebase Storage
+      const downloadURL = await uploadImage(file, 'products');
+      
+      // Update states
+      setUploadedImageUrl(downloadURL);
+      setUploadedImage(downloadURL); // Keep for preview compatibility
+      form.setFieldsValue({ imageUrl: downloadURL });
+      
+      // Update fileList for Ant Design Upload component
+      const newFileList = [{
+        uid: Date.now().toString(),
+        name: file.name,
+        status: 'done',
+        url: downloadURL,
+        thumbUrl: downloadURL
+      }];
+      setFileList(newFileList);
+      
+      message.success({ content: 'Upload thành công!', key: 'uploading', duration: 2 });
+    } catch (error) {
+      console.error('🔥 Firebase upload error:', error);
+      message.error({ content: error.message || 'Upload thất bại!', key: 'uploading', duration: 3 });
+      return Upload.LIST_IGNORE;
+    } finally {
+      setUploading(false);
+    }
 
-    // Return false to prevent auto upload
+    // Return false to prevent auto upload (we handle it manually)
     return false;
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
+    // If there's a Firebase URL, optionally delete it from Storage
+    if (uploadedImageUrl && uploadedImageUrl.includes('firebasestorage.googleapis.com')) {
+      try {
+        await deleteImageByUrl(uploadedImageUrl);
+      } catch (error) {
+        console.warn('🔥 Firebase: Could not delete old image:', error);
+      }
+    }
+    
     setUploadedImage(null);
     setUploadedImageUrl(null);
+    setFileList([]);
     form.setFieldsValue({ imageUrl: '' });
+  };
+
+  // Custom request handler for Ant Design Upload
+  const customRequest = async ({ file, onSuccess, onError }) => {
+    try {
+      const downloadURL = await uploadImage(file, 'products');
+      setUploadedImageUrl(downloadURL);
+      setUploadedImage(downloadURL);
+      form.setFieldsValue({ imageUrl: downloadURL });
+      
+      const newFileList = [{
+        uid: file.uid || Date.now().toString(),
+        name: file.name,
+        status: 'done',
+        url: downloadURL,
+        thumbUrl: downloadURL
+      }];
+      setFileList(newFileList);
+      
+      onSuccess && onSuccess({}, new XMLHttpRequest());
+    } catch (error) {
+      console.error('🔥 Firebase upload error:', error);
+      onError && onError(new Error(error.message || 'Upload thất bại'));
+    }
   };
 
   const columns = [
@@ -617,48 +689,43 @@ export default function StaffProductsPage() {
             label="Hình ảnh sản phẩm"
             name="imageUrl"
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Upload
-                beforeUpload={handleImageUpload}
-                maxCount={1}
-                accept="image/*"
-                listType="picture-card"
-                onRemove={handleRemoveImage}
-                showUploadList={{
-                  showPreviewIcon: false,
-                  showRemoveIcon: true
-                }}
-              >
-                {uploadedImageUrl || uploadedImage ? null : (
-                  <div>
-                    <InboxOutlined style={{ fontSize: '32px', color: '#eda274' }} />
-                    <div style={{ marginTop: 8, color: '#666' }}>
-                      Click để upload
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#999' }}>
-                      (Max 5MB)
-                    </div>
-                  </div>
-                )}
-              </Upload>
-              {(uploadedImageUrl || uploadedImage) && (
-                <div style={{ marginTop: 8 }}>
-                  <LazyLoadImage
-                    src={uploadedImage || uploadedImageUrl}
-                    alt="Preview"
-                    style={{ 
-                      width: '100%', 
-                      maxHeight: '200px', 
-                      objectFit: 'contain',
-                      borderRadius: '8px',
-                      border: '1px solid #ddd'
-                    }}
-                    effect="blur"
-                    placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
-                  />
+            <Upload
+              listType="picture-card"
+              fileList={fileList}
+              beforeUpload={handleImageUpload}
+              customRequest={customRequest}
+              onRemove={handleRemoveImage}
+              onChange={({ fileList: newFileList }) => setFileList(newFileList)}
+              maxCount={1}
+              accept="image/*"
+              showUploadList={{
+                showPreviewIcon: true,
+                showRemoveIcon: true,
+                showDownloadIcon: false
+              }}
+              disabled={uploading}
+            >
+              {fileList.length >= 1 ? null : (
+                <div>
+                  {uploading ? (
+                    <>
+                      <Spin />
+                      <div style={{ marginTop: 8 }}>Đang upload...</div>
+                    </>
+                  ) : (
+                    <>
+                      <UploadOutlined style={{ fontSize: '32px', color: '#eda274' }} />
+                      <div style={{ marginTop: 8, color: '#666' }}>
+                        Upload
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#999' }}>
+                        (Max 5MB)
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-            </Space>
+            </Upload>
           </Form.Item>
           
           {/* Option to use URL if prefer */}

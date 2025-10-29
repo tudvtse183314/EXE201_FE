@@ -1,11 +1,14 @@
 import React from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import ShinyText from '../effects/ShinyText';
 import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
@@ -82,17 +85,38 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           </div>
         )}
         
-        {/* Placeholder Image */}
-        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+        {/* Product Image - Firebase URL or fallback */}
+        {product.imageUrl || product.image ? (
+          <LazyLoadImage
+            src={product.imageUrl || product.image}
+            alt={product.name}
+            effect="blur"
+            placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to placeholder on error
+              e.target.style.display = 'none';
+              const placeholder = e.target.parentElement.querySelector('.placeholder-image');
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        
+        {/* Placeholder Image - Show if no imageUrl or on error */}
+        <div 
+          className={`placeholder-image w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center ${
+            product.imageUrl || product.image ? 'hidden' : ''
+          }`}
+        >
           <span className="text-6xl opacity-60">
-            {getPlaceholderImage(product.category.name)}
+            {getPlaceholderImage(product.category?.name)}
           </span>
         </div>
         
         {/* Stock Status */}
         {product.stock < 10 && (
           <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-            Only {product.stock} left!
+            Chỉ còn {product.stock} sản phẩm!
           </div>
         )}
       </div>
