@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "../components/layout/MainLayout";
+import RoleGuard from "./RoleGuard";
 import { ROLES, getDashboardPathByRole } from "../constants/roles";
 
 //admin pages - will be created
@@ -148,16 +149,29 @@ export default function AppRoutes() {
             <ProductDetail/>
           </MainLayout>
         } />
+               {/* Customer routes bắt buộc đăng nhập */}
                <Route path="/cart" element={
-                 <MainLayout>
-                   <Cart/>
-                 </MainLayout>
+                 <RoleGuard roles={[ROLES.CUSTOMER]}>
+                   <MainLayout>
+                     <Cart/>
+                   </MainLayout>
+                 </RoleGuard>
                } />
                <Route path="/wishlist" element={
-                 <MainLayout>
-                   <Wishlist/>
-                 </MainLayout>
+                 <RoleGuard roles={[ROLES.CUSTOMER]}>
+                   <MainLayout>
+                     <Wishlist/>
+                   </MainLayout>
+                 </RoleGuard>
                } />
+               <Route path="/checkout" element={
+                 <RoleGuard roles={[ROLES.CUSTOMER]}>
+                   <MainLayout>
+                     <Checkout/>
+                   </MainLayout>
+                 </RoleGuard>
+               } />
+               {/* Public routes */}
                <Route path="/premium" element={
                  <MainLayout>
                    <Premium/>
@@ -168,11 +182,6 @@ export default function AppRoutes() {
                    <ProductCardDemo/>
                  </MainLayout>
                } />
-        <Route path="/checkout" element={
-          <MainLayout>
-            <Checkout/>
-          </MainLayout>
-        } />
   
         <Route
           path="/customer/dashboard"
@@ -219,21 +228,41 @@ export default function AppRoutes() {
         <Route
           path="/orders"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <UserOrders />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <UserOrders />
+              </MainLayout>
+            </RoleGuard>
           }
         />
         <Route
           path="/my-pets"
           element={
-            <PrivateRoute roles={['CUSTOMER']}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <PetProfilePage />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <CustomerProfile />
+              </MainLayout>
+            </RoleGuard>
           }
         />
         <Route
@@ -247,15 +276,15 @@ export default function AppRoutes() {
           }
         />
         
-        {/* User Routes */}
+        {/* AI Analysis - Customer only */}
         <Route
           path="/ai-analysis"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <AIAnalysis />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
         

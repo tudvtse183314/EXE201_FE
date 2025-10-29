@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoadingProvider, useLoading } from "./context/LoadingContext";
@@ -10,21 +11,24 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AppRoutes from "./routes/AppRoutes";
 import LoadingSpinner from "./components/LoadingSpinner";
-import { setGlobalLoadingState } from "./api/axios";
+import { setGlobalLoadingState, setGlobalLogoutFunction, setGlobalNavigateFunction } from "./api/axios";
 
 function AppContent() {
   const [initialLoading, setInitialLoading] = useState(true);
-  const { apiLoading } = useAuth();
+  const { apiLoading, logout } = useAuth();
   const { loading, setLoadingState } = useLoading();
+  const navigate = useNavigate();
 
   // Guard StrictMode: chỉ đăng ký axios loader đúng 1 lần
   const registeredRef = useRef(false);
   useEffect(() => {
     if (!registeredRef.current) {
       setGlobalLoadingState(setLoadingState);
+      setGlobalLogoutFunction(logout);
+      setGlobalNavigateFunction(navigate);
       registeredRef.current = true;
     }
-  }, [setLoadingState]); 
+  }, [setLoadingState, logout, navigate]); 
   // Lưu ý: setter từ context thường ổn định, nếu không thì đổi sang [] và gọi trong onMount của LoadingProvider.
 
   // Tránh chặn UI quá lâu: giảm fake-loading hoặc bỏ hẳn

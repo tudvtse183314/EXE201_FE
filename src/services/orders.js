@@ -27,7 +27,54 @@ export const getOrderById = async (orderId) => {
   }
 };
 
-// Get orders by account ID (User)
+// GET /api/orders/my - Lấy danh sách đơn hàng của user hiện tại (KHÔNG gửi userId)
+export const getMyOrders = async (params = {}) => {
+  try {
+    console.log("📦 Orders: Fetching my orders", params);
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.size) queryParams.append('size', params.size);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/orders/my?${queryString}` : '/orders/my';
+    
+    const res = await axiosInstance.get(url);
+    console.log("📦 Orders: Fetched my orders successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error fetching my orders:", e);
+    throw e;
+  }
+};
+
+// POST /api/orders/{id}/confirm-payment - Xác nhận thanh toán
+export const confirmPayment = async (orderId) => {
+  try {
+    console.log("📦 Orders: Confirming payment for order", { orderId });
+    const res = await axiosInstance.post(`/orders/${orderId}/confirm-payment`);
+    console.log("📦 Orders: Confirmed payment successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error confirming payment:", e);
+    throw e;
+  }
+};
+
+// POST /api/orders/{id}/cancel - Hủy đơn hàng (chỉ khi status = PENDING)
+export const cancelOrder = async (orderId) => {
+  try {
+    console.log("📦 Orders: Cancelling order", { orderId });
+    const res = await axiosInstance.post(`/orders/${orderId}/cancel`);
+    console.log("📦 Orders: Cancelled successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error cancelling order:", e);
+    throw e;
+  }
+};
+
+// Get orders by account ID (User) - Legacy
 export const getOrdersByAccount = async (accountId) => {
   try {
     console.log("📦 Orders: Fetching orders by account", { accountId });
@@ -40,10 +87,10 @@ export const getOrdersByAccount = async (accountId) => {
   }
 };
 
-// Cancel order (User) - only if status = PENDING
-export const cancelOrder = async (orderId) => {
+// Cancel order (User) - Legacy (dùng POST thay vì PATCH)
+export const cancelOrderLegacy = async (orderId) => {
   try {
-    console.log("📦 Orders: Cancelling order", { orderId });
+    console.log("📦 Orders: Cancelling order (legacy)", { orderId });
     const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
     console.log("📦 Orders: Cancelled successfully", res.data);
     return res.data;

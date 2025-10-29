@@ -73,7 +73,22 @@ export const chatWithAI = async (body) => {
 };
 
 /**
- * Get all chats by user ID
+ * GET /api/chat-history/my - Lấy lịch sử chat của user hiện tại (KHÔNG gửi userId)
+ */
+export const getMyChatHistory = async () => {
+  try {
+    console.log("💬 Chat: Fetching my chat history");
+    const res = await axiosInstance.get("/chat-history/my");
+    console.log("💬 Chat: Fetched my chat history successfully", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("💬 Chat: Error fetching my chat history:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get all chats by user ID (Admin/Staff - Legacy)
  * @param {number} userId - User ID
  */
 export const getChatsByUserId = async (userId) => {

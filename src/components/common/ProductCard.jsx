@@ -89,15 +89,31 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           // Sử dụng imageUrl (đã normalize từ getAllProducts)
           let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
           
-          // Nếu không có → dùng fallback
-          if (!src) {
+          // Debug log cho tất cả products (tạm thời để debug)
+          console.log(`🖼️ ProductCard: Product ${product.id} (${product.name})`, {
+            imageUrl: product.imageUrl,
+            finalBeforeCheck: src,
+            isNull: src === null,
+            isEmpty: src === '',
+            type: typeof src
+          });
+          
+          // Nếu null hoặc empty string → dùng fallback
+          if (!src || src === '' || src === 'null' || src === 'undefined') {
             src = getFallbackImageByIndex(product.id);
-          } else {
+            console.log(`🖼️ ProductCard: Product ${product.id} using fallback`, src);
+          } else if (src.startsWith('http://') || src.startsWith('https://')) {
+            // Nếu đã là full URL → dùng trực tiếp
+            console.log(`🖼️ ProductCard: Product ${product.id} using external URL`, src);
+          } else if (src.startsWith('/api/uploads/')) {
             // Build full URL nếu là relative path từ BE
-            if (!src.startsWith('http') && src.startsWith('/api/uploads/')) {
-              const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
-              src = baseURL.replace('/api', '') + src;
-            }
+            const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+            src = baseURL.replace('/api', '') + src;
+            console.log(`🖼️ ProductCard: Product ${product.id} building BE URL`, src);
+          } else {
+            // Không match pattern → dùng fallback
+            console.warn(`🖼️ ProductCard: Product ${product.id} unmatched pattern, using fallback`, src);
+            src = getFallbackImageByIndex(product.id);
           }
           
           const fallbackSrc = getFallbackImageByIndex(product.id);
@@ -106,19 +122,37 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
             <LazyLoadImage
               src={src}
               alt={product.name || 'Product'}
+              width="100%"
+              height="192px"
               effect="blur"
               placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
               className="w-full h-full object-cover"
+              style={{ 
+                display: 'block',
+                width: '100%',
+                height: '192px',
+                objectFit: 'cover',
+                backgroundColor: '#f5f5f5' // Background để thấy khi loading
+              }}
               onError={(e) => {
+                console.error(`🖼️ ProductCard: Image load error for product ${product.id}`, {
+                  attemptedSrc: e.target.src,
+                  product: { id: product.id, name: product.name, imageUrl: product.imageUrl }
+                });
                 // Nếu load lỗi → fallback về assets
                 if (e.target.src !== fallbackSrc && fallbackSrc) {
+                  console.log(`🖼️ ProductCard: Trying fallback for product ${product.id}`, fallbackSrc);
                   e.target.src = fallbackSrc;
                 } else {
                   // Nếu cả fallback cũng lỗi → show placeholder emoji
+                  console.error(`🖼️ ProductCard: Fallback also failed for product ${product.id}`);
                   e.target.style.display = 'none';
                   const placeholder = e.target.parentElement.querySelector('.placeholder-image');
                   if (placeholder) placeholder.style.display = 'flex';
                 }
+              }}
+              onLoad={() => {
+                console.log(`🖼️ ProductCard: Image loaded successfully for product ${product.id}`);
               }}
             />
           );

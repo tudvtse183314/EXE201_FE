@@ -459,32 +459,69 @@ export default function Shop() {
                             // Sử dụng imageUrl (đã normalize từ getAllProducts)
                             let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
                             
-                            // Nếu không có → dùng fallback
-                            if (!src) {
-                              return getFallbackImageByIndex(product.id);
+                            // Debug log cho tất cả products (tạm thời để debug)
+                            console.log(`🖼️ Shop: Product ${product.id} (${product.name})`, {
+                              imageUrl: product.imageUrl,
+                              image_url: product.image_url,
+                              image: product.image,
+                              finalBeforeCheck: src,
+                              isNull: src === null,
+                              isEmpty: src === '',
+                              type: typeof src
+                            });
+                            
+                            // Nếu null hoặc empty string → dùng fallback
+                            if (!src || src === '' || src === 'null' || src === 'undefined') {
+                              const fallback = getFallbackImageByIndex(product.id);
+                              console.log(`🖼️ Shop: Product ${product.id} using fallback`, fallback);
+                              return fallback;
+                            }
+                            
+                            // Nếu đã là full URL (http/https) → dùng trực tiếp
+                            if (src.startsWith('http://') || src.startsWith('https://')) {
+                              console.log(`🖼️ Shop: Product ${product.id} using external URL`, src);
+                              return src;
                             }
                             
                             // Build full URL nếu là relative path từ BE
-                            if (!src.startsWith('http') && src.startsWith('/api/uploads/')) {
+                            if (src.startsWith('/api/uploads/')) {
                               const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
-                              src = baseURL.replace('/api', '') + src;
+                              const fullUrl = baseURL.replace('/api', '') + src;
+                              console.log(`🖼️ Shop: Product ${product.id} building BE URL`, { src, fullUrl });
+                              return fullUrl;
                             }
                             
-                            return src;
+                            // Nếu không match pattern nào → dùng fallback
+                            console.warn(`🖼️ Shop: Product ${product.id} unmatched URL pattern, using fallback`, src);
+                            return getFallbackImageByIndex(product.id);
                           })()}
+                          width="100%"
+                          height="280px"
                           style={{
                             width: '100%',
-                            height: '100%',
+                            height: '280px',
                             objectFit: 'cover',
-                            transition: 'transform 0.3s ease'
+                            display: 'block',
+                            transition: 'transform 0.3s ease',
+                            backgroundColor: '#f5f5f5' // Background để thấy khi loading
                           }}
                           effect="blur"
                           placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                           onError={(e) => {
+                            console.error(`🖼️ Shop: Image load error for product ${product.id}`, {
+                              attemptedSrc: e.target.src,
+                              product: { id: product.id, name: product.name, imageUrl: product.imageUrl }
+                            });
                             const fallback = getFallbackImageByIndex(product.id);
                             if (e.target.src !== fallback) {
+                              console.log(`🖼️ Shop: Trying fallback for product ${product.id}`, fallback);
                               e.target.src = fallback;
+                            } else {
+                              console.error(`🖼️ Shop: Fallback also failed for product ${product.id}`);
                             }
+                          }}
+                          onLoad={() => {
+                            console.log(`🖼️ Shop: Image loaded successfully for product ${product.id}`);
                           }}
                           onMouseEnter={(e) => {
                             e.target.style.transform = 'scale(1.03)';
