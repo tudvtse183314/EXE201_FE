@@ -12,24 +12,24 @@ const HowItWorksSection = () => {
   const steps = [
     {
       number: "01",
-      title: "Create Your Pet's Profile",
-      description: "Tell us about your pet's breed, age, personality, and preferences. Our AI learns what makes your furry friend unique.",
+      title: "Tạo hồ sơ thú cưng của bạn",
+      description: "Cho chúng tôi biết về giống, tuổi, tính cách và sở thích của thú cưng. AI của chúng tôi học những gì làm cho người bạn lông thú trở nên độc đáo.",
       image: "/src/assets/home/step1-create-profile.png",
       reverse: false,
       icon: PawPrint
     },
     {
       number: "02", 
-      title: "Receive Personalized Recommendations",
-      description: "Get AI-powered suggestions for toys, food, and accessories that perfectly match your pet's needs and personality.",
+      title: "Nhận gợi ý cá nhân hóa",
+      description: "Nhận gợi ý dựa trên AI cho đồ chơi, thức ăn và phụ kiện phù hợp hoàn hảo với nhu cầu và tính cách của thú cưng.",
       image: "/src/assets/home/step2-recommendations.png",
       reverse: true,
       icon: Heart
     },
     {
       number: "03",
-      title: "Shop with Ease",
-      description: "Browse curated collections and make purchases directly in the app. Track orders and manage your pet's wishlist.",
+      title: "Mua sắm dễ dàng",
+      description: "Duyệt qua các bộ sưu tập được tuyển chọn và mua hàng trực tiếp trong ứng dụng. Theo dõi đơn hàng và quản lý danh sách yêu thích của thú cưng.",
       image: "/src/assets/home/step3-shop.png",
       reverse: false,
       icon: Gift
@@ -103,10 +103,10 @@ const HowItWorksSection = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            How Pawfect Match Works
+            Cách Pawfect Match hoạt động
           </h2>
           <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            Three simple steps to find the perfect products for your pet
+            Ba bước đơn giản để tìm sản phẩm hoàn hảo cho thú cưng
           </p>
         </motion.div>
         

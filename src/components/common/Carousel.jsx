@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 /**
  * Reusable Carousel Component
@@ -136,10 +138,12 @@ export const HeroCarousel = ({ items, className = '' }) => (
 export const ImageCarousel = ({ images, className = '' }) => {
   const imageItems = images.map((image, index) => (
     <div key={index} className="w-full h-full">
-      <img 
+      <LazyLoadImage 
         src={image.src} 
         alt={image.alt || `Carousel image ${index + 1}`}
         className="w-full h-full object-cover"
+        effect="blur"
+        placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
       />
     </div>
   ));

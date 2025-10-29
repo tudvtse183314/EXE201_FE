@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PawPrint, Plus, Edit, Trash2, Heart, Calendar, Weight, Stethoscope, Camera } from "lucide-react";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getMyPets, createPetProfile, updatePetProfile, deletePetProfile } from "../../api/petProfile";
+import { message } from 'antd';
 
 export default function PetProfilePage() {
   const [pets, setPets] = useState([]);
@@ -38,10 +41,17 @@ export default function PetProfilePage() {
 
   const handleSubmit = async () => {
     try {
+      if (!form.petName || !form.petType) {
+        message.error("Vui lòng nhập tên thú cưng và loại thú cưng!");
+        return;
+      }
+
       if (selectedPet) {
         await updatePetProfile(selectedPet.petId, form);
+        message.success("Cập nhật hồ sơ thú cưng thành công!");
       } else {
         await createPetProfile(form);
+        message.success("Thêm thú cưng thành công!");
       }
       setOpen(false);
       setSelectedPet(null);
@@ -57,6 +67,7 @@ export default function PetProfilePage() {
       fetchPets();
     } catch (err) {
       setError(err.message);
+      message.error(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
     }
   };
 
@@ -64,9 +75,11 @@ export default function PetProfilePage() {
     if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ thú cưng này?")) {
       try {
         await deletePetProfile(id);
+        message.success("Xóa hồ sơ thú cưng thành công!");
         fetchPets();
       } catch (err) {
         setError(err.message);
+        message.error(err.message || "Có lỗi xảy ra khi xóa!");
       }
     }
   };
@@ -253,10 +266,12 @@ export default function PetProfilePage() {
                   {/* Pet Image */}
                   <div className="relative h-48 overflow-hidden">
                     {pet.imageUrl ? (
-                      <img 
+                      <LazyLoadImage 
                         src={pet.imageUrl} 
                         alt={pet.petName}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        effect="blur"
+                        placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextElementSibling.style.display = 'flex';

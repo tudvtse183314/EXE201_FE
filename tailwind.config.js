@@ -101,9 +101,11 @@ module.exports = {
       },
       
       fontFamily: {
-        'sans': ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
-        'serif': ['Georgia', 'serif'],
-        'mono': ['Monaco', 'Consolas', 'monospace'],
+        sans: ['var(--font-primary)', 'Poppins', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        display: ['var(--font-display)', 'Baloo 2', 'Poppins', 'ui-sans-serif', 'system-ui'],
+        accent: ['var(--font-accent)', 'Caveat', 'Poppins', 'ui-sans-serif'],
+        serif: ['Georgia', 'serif'],
+        mono: ['Monaco', 'Consolas', 'monospace'],
       },
       
       spacing: {

@@ -1,37 +1,33 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Circle } from 'lucide-react';
+import { createPetProfile } from '../../api/petProfile';
+import { message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 export default function CreatePetProfile() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Basic Information
     petName: '',
-    species: '',
+    petType: '',
     breed: '',
-    age: '',
+    birthDate: '',
     weight: '',
-    
-    // Physical Traits
-    overallSize: '',
-    coatType: '',
-    neckGirth: '',
-    backLength: '',
-    
-    // Preferences
-    activityLevel: '',
-    chewHabits: '',
-    toyPreferences: []
+    healthNotes: '',
+    imageUrl: ''
   });
 
   const [currentStep, setCurrentStep] = useState(3); // Behavior & Preferences
 
   const steps = [
-    { id: 1, title: 'Account Created', completed: true },
-    { id: 2, title: 'Basic Information', completed: true },
-    { id: 3, title: 'Physical Traits', completed: true },
-    { id: 4, title: 'Behavior & Preferences', completed: false, current: true },
-    { id: 5, title: 'Dietary Needs', completed: false },
-    { id: 6, title: 'Review Profile', completed: false }
+    { id: 1, title: 'Đã tạo tài khoản', completed: true },
+    { id: 2, title: 'Thông tin cơ bản', completed: true },
+    { id: 3, title: 'Đặc điểm thể chất', completed: true },
+    { id: 4, title: 'Hành vi & Sở thích', completed: false, current: true },
+    { id: 5, title: 'Nhu cầu dinh dưỡng', completed: false },
+    { id: 6, title: 'Xem lại hồ sơ', completed: false }
   ];
 
   const handleInputChange = (e) => {
@@ -52,10 +48,24 @@ export default function CreatePetProfile() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Pet Profile Data:', formData);
-    alert('Pet profile saved successfully!');
+    
+    if (!formData.petName || !formData.petType) {
+      message.error("Vui lòng nhập tên thú cưng và loại thú cưng!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await createPetProfile(formData);
+      message.success("Tạo hồ sơ thú cưng thành công!");
+      navigate('/customer/pet-profiles');
+    } catch (error) {
+      message.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,9 +81,9 @@ export default function CreatePetProfile() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="font-bold text-lg text-gray-800 mb-2">Profile Setup</h2>
+              <h2 className="font-bold text-lg text-gray-800 mb-2">Thiết lập hồ sơ</h2>
               <p className="text-sm text-gray-600 mb-6">
-                Complete these steps to unlock personalized recommendations.
+                Hoàn thành các bước để mở khóa gợi ý cá nhân hóa.
               </p>
               
               <div className="space-y-3">
@@ -116,10 +126,10 @@ export default function CreatePetProfile() {
               {/* Header */}
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  Create Your Pet's Profile
+                  Tạo hồ sơ thú cưng của bạn
                 </h1>
                 <p className="text-gray-600 text-lg">
-                  Provide us with details about your beloved companion to unlock highly personalized accessory recommendations.
+                  Cung cấp thông tin chi tiết về thú cưng để nhận gợi ý phụ kiện được cá nhân hóa cao.
                 </p>
               </div>
 
@@ -142,12 +152,12 @@ export default function CreatePetProfile() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  <h3 className="font-semibold text-lg text-gray-800 mb-4">Basic Information</h3>
+                  <h3 className="font-semibold text-lg text-gray-800 mb-4">Thông tin cơ bản</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Pet Name
+                        Tên thú cưng
                       </label>
                       <input
                         type="text"
@@ -155,32 +165,32 @@ export default function CreatePetProfile() {
                         value={formData.petName}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Enter your pet's name"
+                        placeholder="Nhập tên thú cưng của bạn"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Species
+                        Loại thú cưng *
                       </label>
                       <select
-                        name="species"
-                        value={formData.species}
+                        name="petType"
+                        value={formData.petType}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                       >
-                        <option value="">Select species</option>
-                        <option value="dog">Dog</option>
-                        <option value="cat">Cat</option>
-                        <option value="bird">Bird</option>
-                        <option value="rabbit">Rabbit</option>
-                        <option value="other">Other</option>
+                        <option value="">Chọn loại thú cưng</option>
+                        <option value="dog">Chó</option>
+                        <option value="cat">Mèo</option>
+                        <option value="bird">Chim</option>
+                        <option value="rabbit">Thỏ</option>
+                        <option value="other">Khác</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Breed
+                        Giống
                       </label>
                       <input
                         type="text"
@@ -188,29 +198,26 @@ export default function CreatePetProfile() {
                         value={formData.breed}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Enter breed"
+                        placeholder="Nhập giống"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Age (Years)
+                        Ngày sinh
                       </label>
                       <input
-                        type="number"
-                        name="age"
-                        value={formData.age}
+                        type="date"
+                        name="birthDate"
+                        value={formData.birthDate}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Age in years"
-                        min="0"
-                        max="30"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Weight (kg)
+                        Cân nặng (kg)
                       </label>
                       <input
                         type="number"
@@ -218,154 +225,53 @@ export default function CreatePetProfile() {
                         value={formData.weight}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Weight in kg"
+                        placeholder="Cân nặng (kg)"
                         min="0"
                         step="0.1"
+                      />
+                    </div>
+                    
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ghi chú sức khỏe
+                      </label>
+                      <textarea
+                        name="healthNotes"
+                        value={formData.healthNotes}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        rows="3"
+                        placeholder="Ghi chú về tình trạng sức khỏe, dị ứng..."
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Ảnh thú cưng (URL)
+                      </label>
+                      <input
+                        type="url"
+                        name="imageUrl"
+                        value={formData.imageUrl}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        placeholder="https://example.com/pet-image.jpg"
                       />
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Physical Traits Card */}
+                {/* Physical Traits Card - Optional for future use */}
+                {false && (
                 <motion.div 
                   className="bg-white p-6 rounded-xl shadow-sm"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
-                  <h3 className="font-semibold text-lg text-gray-800 mb-4">Physical Traits</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Overall Size
-                      </label>
-                      <select
-                        name="overallSize"
-                        value={formData.overallSize}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                      >
-                        <option value="">Select size</option>
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Coat Type
-                      </label>
-                      <select
-                        name="coatType"
-                        value={formData.coatType}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                      >
-                        <option value="">Select coat type</option>
-                        <option value="short">Short</option>
-                        <option value="medium">Medium</option>
-                        <option value="long">Long</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Neck Girth (cm)
-                      </label>
-                      <input
-                        type="number"
-                        name="neckGirth"
-                        value={formData.neckGirth}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Neck circumference"
-                        min="0"
-                        step="0.1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Back Length (cm)
-                      </label>
-                      <input
-                        type="number"
-                        name="backLength"
-                        value={formData.backLength}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        placeholder="Back length"
-                        min="0"
-                        step="0.1"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Checkbox Groups */}
-                  <div className="space-y-6">
-                    {/* Activity Level */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Activity Level</h4>
-                      <div className="space-y-2">
-                        {['High Energy', 'Moderate Energy', 'Low Energy'].map((level) => (
-                          <label key={level} className="flex items-center space-x-3 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="activityLevel"
-                              value={level.toLowerCase().replace(' ', '_')}
-                              checked={formData.activityLevel === level.toLowerCase().replace(' ', '_')}
-                              onChange={handleInputChange}
-                              className="accent-purple-600 rounded-md"
-                            />
-                            <span className="text-sm text-gray-700">{level}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Chew Habits */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Chew Habits</h4>
-                      <div className="space-y-2">
-                        {['Power Chewer', 'Gentle Chewer', 'Doesn\'t Chew Much'].map((habit) => (
-                          <label key={habit} className="flex items-center space-x-3 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="chewHabits"
-                              value={habit.toLowerCase().replace(' ', '_').replace('\'', '')}
-                              checked={formData.chewHabits === habit.toLowerCase().replace(' ', '_').replace('\'', '')}
-                              onChange={handleInputChange}
-                              className="accent-purple-600 rounded-md"
-                            />
-                            <span className="text-sm text-gray-700">{habit}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Toy Preferences */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Toy Preferences</h4>
-                      <div className="space-y-2">
-                        {['Interactive Toys', 'Plush Toys', 'Fetch Toys'].map((toy) => (
-                          <label key={toy} className="flex items-center space-x-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              name="toyPreferences"
-                              value={toy.toLowerCase().replace(' ', '_')}
-                              checked={formData.toyPreferences.includes(toy.toLowerCase().replace(' ', '_'))}
-                              onChange={handleCheckboxChange}
-                              className="accent-purple-600 rounded-md"
-                            />
-                            <span className="text-sm text-gray-700">{toy}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <h3 className="font-semibold text-lg text-gray-800 mb-4">Đặc điểm thể chất</h3>
                 </motion.div>
+                )}
 
                 {/* Save Button */}
                 <motion.div 
@@ -376,9 +282,10 @@ export default function CreatePetProfile() {
                 >
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    disabled={loading}
+                    className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save Profile
+                    {loading ? 'Đang lưu...' : 'Lưu hồ sơ'}
                   </button>
                 </motion.div>
               </form>

@@ -64,3 +64,39 @@ export const deletePetProfile = async (id) => {
     throw error;
   }
 };
+
+// 👥 Lấy hồ sơ thú cưng theo User ID
+export const getPetProfilesByUserId = async (userId) => {
+  try {
+    const res = await axiosInstance.get(`/pet-profiles/user/${userId}`);
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    throw error;
+  }
+};
+
+// 🐕 Lấy hồ sơ thú cưng theo loại
+export const getPetProfilesByType = async (petType) => {
+  try {
+    const res = await axiosInstance.get(`/pet-profiles/type/${petType}`);
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    throw error;
+  }
+};
+
+// 📋 Lấy tất cả hồ sơ thú cưng (Admin only)
+export const getAllPetProfiles = async () => {
+  try {
+    const res = await axiosInstance.get("/pet-profiles/getAll");
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Chỉ admin mới có quyền xem tất cả hồ sơ thú cưng.");
+    throw error;
+  }
+};

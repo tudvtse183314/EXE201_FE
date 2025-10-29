@@ -19,38 +19,38 @@ const WhyChooseSection = () => {
   const features = [
     {
       icon: Brain,
-      title: "AI-Powered Matching",
-      description: "Advanced AI analyzes traits to recommend accessories tailored to each pet.",
+      title: "Khớp sản phẩm bằng AI",
+      description: "AI tiên tiến phân tích đặc điểm để gợi ý phụ kiện phù hợp với từng thú cưng.",
       image: dog1
     },
     {
       icon: User,
-      title: "Personalized Profiles",
-      description: "Create detailed pet profiles for smarter recommendations.",
+      title: "Hồ sơ cá nhân hóa",
+      description: "Tạo hồ sơ thú cưng chi tiết để nhận gợi ý thông minh hơn.",
       image: cat1
     },
     {
       icon: ShoppingCart,
-      title: "Seamless Shopping",
-      description: "Shop your pet's favorites directly within the app.",
+      title: "Mua sắm mượt mà",
+      description: "Mua sắm những sản phẩm yêu thích của thú cưng trực tiếp trong ứng dụng.",
       image: dog2
     },
     {
       icon: Package,
-      title: "Order Tracking",
-      description: "Track every order in real time from purchase to delivery.",
+      title: "Theo dõi đơn hàng",
+      description: "Theo dõi mọi đơn hàng theo thời gian thực từ mua đến giao hàng.",
       image: cat2
     },
     {
       icon: Star,
-      title: "Curated Collections",
-      description: "Discover handpicked selections for every breed and mood.",
+      title: "Bộ sưu tập được tuyển chọn",
+      description: "Khám phá lựa chọn được tuyển chọn cho mọi giống và tâm trạng.",
       image: pet1
     },
     {
       icon: Shield,
-      title: "Quality Guaranteed",
-      description: "Partnered with trusted brands ensuring comfort and safety.",
+      title: "Đảm bảo chất lượng",
+      description: "Đối tác với các thương hiệu uy tín đảm bảo sự thoải mái và an toàn.",
       image: pet2
     }
   ];
@@ -88,10 +88,10 @@ const WhyChooseSection = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-            Why Choose Pawfect Match
+            Tại sao chọn Pawfect Match
           </h2>
           <p className="text-xl max-w-3xl mx-auto text-gray-600">
-            Experience the future of pet care with our innovative AI-powered platform
+            Trải nghiệm tương lai của chăm sóc thú cưng với nền tảng AI sáng tạo của chúng tôi
           </p>
         </motion.div>
         

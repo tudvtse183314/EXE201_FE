@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useEffect, useRef, useState } from "react";
+import { ConfigProvider } from "antd";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoadingProvider, useLoading } from "./context/LoadingContext";
 import { CartProvider } from "./context/CartContext";
@@ -45,28 +46,50 @@ function AppContent() {
 
 export default function App() {
   return (
-    <LoadingProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <AppContent />
-              <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-              />
-            </WishlistProvider>
-          </CartProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </LoadingProvider>
+    <ConfigProvider
+      theme={{
+        token: {
+          fontFamily: "Poppins, ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif",
+          fontFamilyCode: "source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace",
+        },
+        components: {
+          Typography: {
+            fontFamily: "Poppins, ui-sans-serif, system-ui",
+            titleMarginTop: 0,
+            titleMarginBottom: 8,
+          },
+          Button: {
+            fontWeight: 600,
+          },
+          Input: {
+            fontFamily: "Poppins, ui-sans-serif, system-ui",
+          },
+        },
+      }}
+    >
+      <LoadingProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <AppContent />
+                <ToastContainer
+                  position="top-right"
+                  autoClose={3000}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                />
+              </WishlistProvider>
+            </CartProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </LoadingProvider>
+    </ConfigProvider>
   );
 }
 

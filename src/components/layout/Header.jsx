@@ -23,13 +23,13 @@ export default function Header() {
 
   // Menu theo thứ tự yêu cầu
   const baseMenu = [
-    { label: 'Home', path: '/' },
-    { label: 'Shop', path: '/shop' },
-    { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' },
+    { label: 'Trang chủ', path: '/' },
+    { label: 'Cửa hàng', path: '/shop' },
+    { label: 'Giới thiệu', path: '/about' },
+    { label: 'Liên hệ', path: '/contact' },
     { label: 'Premium', path: '/premium' },
-    { label: 'My Pets', path: '/my-pets', requiresAuth: true },
-    { label: 'AI Analysis', path: '/ai-analysis', isSpecial: true }, // Nút đặc biệt
+    { label: 'Thú cưng của tôi', path: '/my-pets', requiresAuth: true },
+    { label: 'AI Phân tích', path: '/ai-analysis', isSpecial: true }, // Nút đặc biệt
   ];
 
   // Menu items không cần thay đổi theo user
@@ -148,20 +148,20 @@ export default function Header() {
                     >
                       {user.name
                         ? `Xin chào, ${user.name}`
-                        : `Welcome, ${user.email}`}
+                        : `Xin chào, ${user.email}`}
                     </span>
                   </div>
                   <Button variant="secondary" size="sm" onClick={handleLogout}>
-                    Logout
+                    Đăng xuất
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
                   <Button variant="secondary" size="sm" onClick={handleLogin}>
-                    Login
+                    Đăng nhập
                   </Button>
                   <Button size="sm" onClick={handleRegister}>
-                    Sign Up
+                    Đăng ký
                   </Button>
                 </div>
               )}
@@ -280,7 +280,7 @@ export default function Header() {
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <span className="text-sm font-medium" style={{ color: '#34140e' }}>
-                      {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
+                      {user.name ? `Xin chào, ${user.name}` : `Xin chào, ${user.email}`}
                     </span>
                   </div>
 
@@ -294,7 +294,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Logout
+                    Đăng xuất
                   </Button>
                 </div>
               ) : (
@@ -308,7 +308,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Login
+                    Đăng nhập
                   </Button>
                   <Button
                     size="sm"
@@ -318,7 +318,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Sign Up
+                    Đăng ký
                   </Button>
                 </div>
               )}

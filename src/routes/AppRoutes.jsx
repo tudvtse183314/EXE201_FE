@@ -305,7 +305,7 @@ export default function AppRoutes() {
         <Route
           path="/ai/chat"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER, ROLES.STAFF, ROLES.MANAGER, ROLES.ADMIN]}>
+            <PrivateRoute roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <ChatBot />
               </MainLayout>

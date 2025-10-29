@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ROLES } from '../../constants/roles';
 import './AIChatFloatingBot.css';
 
 const AIChatFloatingBot = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
 
-  // Only show for authenticated users
+  // Only show for authenticated CUSTOMER users
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated() && user?.role === ROLES.CUSTOMER) {
       // Delay appearance for smooth entrance
       const timer = setTimeout(() => setIsVisible(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.role]);
 
-  if (!isAuthenticated()) {
+  // Don't show for non-authenticated users or non-customers
+  if (!isAuthenticated() || user?.role !== ROLES.CUSTOMER) {
     return null;
   }
 

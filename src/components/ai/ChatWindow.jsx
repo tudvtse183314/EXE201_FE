@@ -11,11 +11,12 @@ const ChatWindow = ({
   currentTab = 'general',
   onTabChange,
   formatChatDate,
+  onImageUpload,
 }) => {
   const tabItems = [
     {
       key: 'general',
-      label: '💬 General',
+      label: '💬 Tổng quát',
       children: (
         <div className="flex-1 overflow-hidden">
           <MessageList messages={messages} formatChatDate={formatChatDate} />
@@ -24,7 +25,7 @@ const ChatWindow = ({
     },
     {
       key: 'product_inquiry',
-      label: '🛍️ Product Inquiry',
+      label: '🛍️ Tư vấn sản phẩm',
       children: (
         <div className="flex-1 overflow-hidden">
           <MessageList messages={messages} formatChatDate={formatChatDate} />
@@ -33,7 +34,7 @@ const ChatWindow = ({
     },
     {
       key: 'order_support',
-      label: '📦 Order Support',
+      label: '📦 Hỗ trợ đơn hàng',
       children: (
         <div className="flex-1 overflow-hidden">
           <MessageList messages={messages} formatChatDate={formatChatDate} />
@@ -54,7 +55,7 @@ const ChatWindow = ({
         <div className="flex items-center space-x-2">
           <MessageOutlined className="text-2xl text-accent" />
           <h2 className="text-xl font-semibold text-gray-800">
-            AI Assistant
+            Trợ lý AI
           </h2>
         </div>
         <p className="text-sm text-gray-500 mt-1">
@@ -82,6 +83,7 @@ const ChatWindow = ({
           onSend={onSendMessage}
           disabled={isSending}
           placeholder={`Nhập câu hỏi của bạn về ${getPlaceholder(currentTab)}...`}
+          onImageUpload={onImageUpload}
         />
       </div>
     </div>

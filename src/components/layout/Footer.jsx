@@ -2,15 +2,15 @@ import React from 'react';
 
 export default function Footer() {
   const footerLinks = [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
-    { label: 'Contact', href: '#' }
+    { label: 'Quyền riêng tư', href: '#' },
+    { label: 'Điều khoản', href: '#' },
+    { label: 'Liên hệ', href: '#' }
   ];
 
   return (
     <footer className="bg-gray-900 text-white py-12 px-4">
       <div className="max-w-7xl mx-auto text-center">
-        <p className="text-gray-400">© 2025 Pawfect Match</p>
+          <p className="text-gray-400">© 2025 Pawfect Match - Chuyên chăm sóc thú cưng</p>
         
         {/* Footer Links */}
         <div className="mt-4 flex justify-center gap-6">
@@ -27,7 +27,7 @@ export default function Footer() {
         
         {/* Attribution */}
         <div className="mt-8 text-sm text-gray-500">
-          Made with ❤️ Visily
+          Được tạo bằng ❤️ Visily
         </div>
       </div>
     </footer>

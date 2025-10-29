@@ -98,21 +98,48 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4 flex flex-col" style={{ minHeight: '180px' }}>
-        <p className="text-xs text-gray-500 mb-1 font-medium line-clamp-1">{product.category?.name || 'Uncategorized'}</p>
+      <div className="p-4 flex flex-col" style={{ minHeight: '200px' }}>
+        <p 
+          className="text-xs text-gray-500 mb-2 font-medium"
+          style={{ 
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            height: '16px'
+          }}
+        >
+          {product.category?.name || 'Uncategorized'}
+        </p>
         <h3 
-          className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 group-hover:text-indigo-600 transition-colors"
-          style={{ minHeight: '40px', maxHeight: '40px', overflow: 'hidden' }}
+          className="font-semibold text-sm mb-2 text-gray-800 group-hover:text-indigo-600 transition-colors"
+          style={{ 
+            height: '38px',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            textOverflow: 'ellipsis',
+            lineHeight: '1.3'
+          }}
+          title={product.name}
         >
           {product.name}
         </h3>
         <p 
-          className="text-xs text-gray-600 mb-3 line-clamp-2 flex-grow"
-          style={{ minHeight: '32px', maxHeight: '32px', overflow: 'hidden' }}
+          className="text-xs text-gray-600 mb-3"
+          style={{ 
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            textOverflow: 'ellipsis',
+            minHeight: '32px',
+            maxHeight: '32px'
+          }}
         >
-          {product.description}
+          {product.description || 'Không có mô tả'}
         </p>
-        <p className="text-lg font-bold text-gray-900 mb-2">${product.price.toFixed(2)}</p>
+        <p className="text-lg font-bold text-gray-900 mb-2" style={{ height: '24px' }}>${product.price.toFixed(2)}</p>
         
         {/* Action Buttons */}
         <div className="flex gap-2">

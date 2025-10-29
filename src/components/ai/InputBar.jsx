@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input, Button } from 'antd';
-import { SendOutlined } from '@ant-design/icons';
+import { SendOutlined, PictureOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 
 const { TextArea } = Input;
 
-const InputBar = ({ onSend, disabled = false, placeholder = 'Nhập tin nhắn...' }) => {
+const InputBar = ({ onSend, disabled = false, placeholder = 'Nhập tin nhắn...', onImageUpload }) => {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
@@ -41,9 +42,62 @@ const InputBar = ({ onSend, disabled = false, placeholder = 'Nhập tin nhắn..
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Chỉ chấp nhận file ảnh');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Kích thước file không được vượt quá 10MB');
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageData = event.target.result;
+      if (onImageUpload) {
+        onImageUpload(imageData, file.name);
+      }
+    };
+    reader.onerror = () => {
+      toast.error('Lỗi khi đọc file ảnh');
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="border-t border-gray-200 p-4 bg-white">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={disabled || isSending}
+      />
       <div className="flex items-end space-x-2">
+        <Button
+          type="default"
+          icon={<PictureOutlined />}
+          onClick={handleImageButtonClick}
+          disabled={disabled || isSending}
+          className="h-10"
+          title="Tải ảnh lên"
+        />
         <div className="flex-1">
           <TextArea
             value={message}

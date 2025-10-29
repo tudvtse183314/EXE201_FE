@@ -15,8 +15,6 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-import AIChatFloatingBot from '../components/common/AIChatFloatingBot';
-import '../components/common/AIChatFloatingBot.css';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -275,9 +273,6 @@ export default function StaffLayout() {
           <Outlet />
         </Content>
       </Layout>
-      
-      {/* AI Chat Floating Bot */}
-      <AIChatFloatingBot />
     </Layout>
   );
 }

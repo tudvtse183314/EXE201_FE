@@ -1,5 +1,7 @@
 import React from 'react';
 import { Tag } from 'antd';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import TypingLoader from './TypingLoader';
 import { formatChatDate, getChatTypeDisplayName, getChatTypeBadgeColor } from '../../utils/chatUtils';
 
@@ -55,7 +57,20 @@ const MessageList = ({ messages, formatChatDate }) => {
                   <TypingLoader />
                 ) : (
                   <>
-                    <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                    {message.image && (
+                      <div className="mb-2 rounded-lg overflow-hidden">
+                        <LazyLoadImage 
+                          src={message.image} 
+                          alt="Uploaded" 
+                          className="max-w-full max-h-64 object-contain rounded-lg"
+                          effect="blur"
+                          placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+                        />
+                      </div>
+                    )}
+                    {message.text && (
+                      <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                    )}
                     <div className="text-xs mt-2 opacity-70">
                       {formatChatDate(message.createdAt)}
                     </div>

@@ -134,7 +134,7 @@ export default function Register() {
               <span className="text-4xl">🐾</span>
             </div>
             <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
-            <p className="text-lg drop-shadow-md text-center">Join our community of pet lovers</p>
+            <p className="text-lg drop-shadow-md text-center">Tham gia cộng đồng những người yêu thú cưng của chúng tôi</p>
           </div>
         </div>
       </RegisterBackground>
@@ -142,8 +142,8 @@ export default function Register() {
       {/* Right Side - Form (2/3) */}
       <div className="w-full lg:w-2/3 flex items-center justify-center p-6 sm:p-8">
         <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 sm:p-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Create your account</h2>
-          <p className="text-gray-500 mb-6">It only takes a minute to join us.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Tạo tài khoản của bạn</h2>
+          <p className="text-gray-500 mb-6">Chỉ mất một phút để tham gia cùng chúng tôi.</p>
 
           {/* Success */}
           {successMessage && (
@@ -168,16 +168,16 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Parent */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet&apos;s Parent</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Người chăm sóc thú cưng</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Full name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
                   <input
                     name="fullName"
                     autoComplete="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Nguyễn Văn A"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
@@ -192,7 +192,7 @@ export default function Register() {
                     name="email"
                     autoComplete="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="email.cua.ban@example.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
@@ -217,7 +217,7 @@ export default function Register() {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
                   <div className="relative">
                     <input
                       name="password"
@@ -244,11 +244,11 @@ export default function Register() {
 
             {/* Pet */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Thú cưng</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Pet name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pet&apos;s Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tên thú cưng</label>
                   <input
                     name="petName"
                     type="text"
@@ -262,28 +262,28 @@ export default function Register() {
 
                 {/* Pet type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Loại</label>
                   <select
                     name="petType"
                     value={formData.petType}
                     onChange={(e) => handleInputChange('petType', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.petType ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
                   >
-                    <option value="">Select type</option>
-                    <option value="DOG">Dog</option>
-                    <option value="CAT">Cat</option>
-                    <option value="OTHER">Other</option>
+                    <option value="">Chọn loại</option>
+                    <option value="DOG">Chó</option>
+                    <option value="CAT">Mèo</option>
+                    <option value="OTHER">Khác</option>
                   </select>
                   {errors.petType && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petType}</p>}
                 </div>
 
                 {/* Age */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tuổi</label>
                   <input
                     name="petAge"
                     type="text"
-                    placeholder="e.g. 2"
+                    placeholder="ví dụ: 2"
                     value={formData.petAge}
                     onChange={(e) => handleInputChange('petAge', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -292,17 +292,17 @@ export default function Register() {
 
                 {/* Size (select) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kích cỡ</label>
                   <select
                     name="petSize"
                     value={formData.petSize}
                     onChange={(e) => handleInputChange('petSize', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.petSize ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
                   >
-                    <option value="">Select size</option>
-                    <option value="SMALL">Small</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="LARGE">Large</option>
+                    <option value="">Chọn kích cỡ</option>
+                    <option value="SMALL">Nhỏ</option>
+                    <option value="MEDIUM">Vừa</option>
+                    <option value="LARGE">Lớn</option>
                   </select>
                   {errors.petSize && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petSize}</p>}
                 </div>
@@ -314,17 +314,17 @@ export default function Register() {
               disabled={isLoading}
               className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
             >
-              {isLoading ? 'Đang xử lý...' : 'Create account'}
+              {isLoading ? 'Đang xử lý...' : 'Tạo tài khoản'}
             </button>
 
             <p className="text-sm text-gray-600 text-center">
-              Already have an account?{' '}
+              Đã có tài khoản?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/login')}
                 className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
               >
-                Log In
+                Đăng nhập
               </button>
             </p>
           </form>

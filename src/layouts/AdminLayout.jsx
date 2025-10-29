@@ -13,8 +13,6 @@ import {
   MenuUnfoldOutlined,
   MessageOutlined
 } from '@ant-design/icons';
-import AIChatFloatingBot from '../components/common/AIChatFloatingBot';
-import '../components/common/AIChatFloatingBot.css';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -297,9 +295,6 @@ export default function AdminLayout() {
           <Outlet />
         </Content>
       </Layout>
-      
-      {/* AI Chat Floating Bot */}
-      <AIChatFloatingBot />
     </Layout>
   );
 }

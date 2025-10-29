@@ -16,51 +16,51 @@ const HeroCarousel = ({
     {
       id: 1,
       image: gif1,
-      title: "Welcome to Pawfect Match",
-      subtitle: "Find the perfect accessories for your furry friend",
-      description: "AI-powered recommendations tailored to your pet's unique needs"
+      title: "Chào mừng đến với Pawfect Match",
+      subtitle: "Tìm phụ kiện hoàn hảo cho thú cưng của bạn",
+      description: "Gợi ý dựa trên AI được tùy chỉnh theo nhu cầu độc đáo của thú cưng"
     },
     {
       id: 2,
       image: gif2,
-      title: "Smart Pet Care",
-      subtitle: "Advanced AI technology meets pet love",
-      description: "Get personalized product suggestions based on your pet's characteristics"
+      title: "Chăm sóc thú cưng thông minh",
+      subtitle: "Công nghệ AI tiên tiến gặp tình yêu thú cưng",
+      description: "Nhận gợi ý sản phẩm cá nhân hóa dựa trên đặc điểm của thú cưng"
     },
     {
       id: 3,
       image: gif3,
-      title: "Quality Products",
-      subtitle: "Curated by pet experts",
-      description: "Only the best products from trusted brands worldwide"
+      title: "Sản phẩm chất lượng",
+      subtitle: "Được tuyển chọn bởi chuyên gia thú cưng",
+      description: "Chỉ những sản phẩm tốt nhất từ các thương hiệu uy tín toàn cầu"
     },
     {
       id: 4,
       image: gif4,
-      title: "Happy Pets",
-      subtitle: "See the joy in every recommendation",
-      description: "Watch your pets enjoy their perfectly matched products"
+      title: "Thú cưng hạnh phúc",
+      subtitle: "Cảm nhận niềm vui trong mỗi gợi ý",
+      description: "Xem thú cưng tận hưởng những sản phẩm được khớp hoàn hảo"
     },
     {
       id: 5,
       image: gif5,
-      title: "Community Love",
-      subtitle: "Join thousands of pet lovers",
-      description: "Share experiences and get advice from our pet community"
+      title: "Tình yêu cộng đồng",
+      subtitle: "Tham gia hàng nghìn người yêu thú cưng",
+      description: "Chia sẻ kinh nghiệm và nhận tư vấn từ cộng đồng thú cưng của chúng tôi"
     },
     {
       id: 6,
       image: gif6,
-      title: "Expert Support",
-      subtitle: "24/7 pet care assistance",
-      description: "Get help from veterinarians and pet care specialists"
+      title: "Hỗ trợ chuyên gia",
+      subtitle: "Hỗ trợ chăm sóc thú cưng 24/7",
+      description: "Nhận sự giúp đỡ từ bác sĩ thú y và chuyên gia chăm sóc thú cưng"
     },
     {
       id: 7,
       image: gif7,
-      title: "Start Your Journey",
-      subtitle: "Create your pet's profile today",
-      description: "Begin discovering products that will make your pet's life better"
+      title: "Bắt đầu hành trình của bạn",
+      subtitle: "Tạo hồ sơ thú cưng ngay hôm nay",
+      description: "Bắt đầu khám phá những sản phẩm sẽ làm cho cuộc sống thú cưng tốt hơn"
     }
   ];
 
@@ -146,10 +146,10 @@ const HeroCarousel = ({
                   className="flex flex-col sm:flex-row gap-4"
                 >
                   <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-lg transition-colors duration-300">
-                    Get Started
+                    Bắt đầu
                   </button>
                   <button className="border-2 border-white text-white hover:bg-white hover:text-black font-bold py-3 px-8 rounded-lg transition-colors duration-300">
-                    Learn More
+                    Tìm hiểu thêm
                   </button>
                 </motion.div>
               </div>

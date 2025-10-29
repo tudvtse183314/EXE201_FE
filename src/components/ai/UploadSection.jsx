@@ -1,5 +1,7 @@
 import React from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 export default function UploadSection({ onImageUpload, onImageRemove, uploadedImage, isAnalyzing }) {
   const handleFileChange = (e) => {
@@ -31,10 +33,12 @@ export default function UploadSection({ onImageUpload, onImageRemove, uploadedIm
         </div>
       ) : (
         <div className="relative">
-          <img
+          <LazyLoadImage
             src={uploadedImage}
             alt="Uploaded pet"
             className="w-full h-64 object-cover rounded-lg"
+            effect="blur"
+            placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
           />
           <button
             onClick={onImageRemove}

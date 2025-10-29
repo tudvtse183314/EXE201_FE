@@ -11,49 +11,49 @@ const TestimonialsSection = () => {
     {
       id: 1,
       name: "Sarah L.",
-      role: "Dog Owner",
+      role: "Người nuôi chó",
       image: "/src/assets/home/testimonial-1.png",
-      quote: "Pawfect Match truly understood my dog, Max! Shopping was a breeze.",
+      quote: "Pawfect Match thực sự hiểu chú chó Max của tôi! Việc mua sắm thật dễ dàng.",
       rating: 5
     },
     {
       id: 2,
       name: "David K.",
-      role: "Cat Parent", 
+      role: "Người nuôi mèo", 
       image: "/src/assets/home/testimonial-2.png",
-      quote: "Finally, an app that gets it! The accessory suggestions were purr-fect.",
+      quote: "Cuối cùng, một ứng dụng hiểu được! Các gợi ý phụ kiện thật hoàn hảo.",
       rating: 5
     },
     {
       id: 3,
       name: "Jessica T.",
-      role: "Pet Trainer",
+      role: "Huấn luyện viên thú cưng",
       image: "/src/assets/home/testimonial-3.png",
-      quote: "No more hours wasted searching! Highly recommend.",
+      quote: "Không còn lãng phí hàng giờ để tìm kiếm! Rất khuyên dùng.",
       rating: 5
     },
     {
       id: 4,
       name: "Michael B.",
-      role: "Veterinarian",
+      role: "Bác sĩ thú y",
       image: "/src/assets/home/testimonial-4.png",
-      quote: "The personalized food recommendation changed my dog's health.",
+      quote: "Gợi ý thức ăn cá nhân hóa đã thay đổi sức khỏe chú chó của tôi.",
       rating: 5
     },
     {
       id: 5,
       name: "Lisa M.",
-      role: "Pet Enthusiast",
+      role: "Người đam mê thú cưng",
       image: "/src/assets/home/testimonial-5.png",
-      quote: "My pets are happier than ever. The recommendations are perfect!",
+      quote: "Thú cưng của tôi hạnh phúc hơn bao giờ hết. Các gợi ý thật hoàn hảo!",
       rating: 5
     },
     {
       id: 6,
       name: "John D.",
-      role: "Pet Store Owner",
+      role: "Chủ cửa hàng thú cưng",
       image: "/src/assets/home/testimonial-6.png",
-      quote: "This platform has revolutionized how I recommend products to customers.",
+      quote: "Nền tảng này đã cách mạng hóa cách tôi giới thiệu sản phẩm cho khách hàng.",
       rating: 5
     }
   ];
@@ -93,10 +93,10 @@ const TestimonialsSection = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-            What Our Customers Say
+            Khách hàng nói gì về chúng tôi
           </h2>
           <p className="text-xl text-gray-600">
-            Join thousands of happy pet owners who found their perfect matches
+            Tham gia hàng nghìn chủ thú cưng hạnh phúc đã tìm thấy sự lựa chọn hoàn hảo
           </p>
         </motion.div>
 

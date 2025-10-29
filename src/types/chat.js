@@ -39,6 +39,7 @@
  * @property {string} text
  * @property {string} createdAt
  * @property {boolean} [pending] - để vẽ loader
+ * @property {string} [image] - base64 image data or image URL
  * @property {Record<string, any>} [ctx]
  */
 

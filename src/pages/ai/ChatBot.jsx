@@ -42,6 +42,25 @@ const ChatBot = () => {
     loadChatHistory();
   }, [user?.userId, currentTab]);
 
+  // Handle image upload
+  const handleImageUpload = (imageData, fileName) => {
+    if (!user?.userId) {
+      toast.error('Vui lòng đăng nhập để sử dụng tính năng này');
+      return;
+    }
+
+    // Add image message
+    addMessage({
+      id: `user-image-${Date.now()}`,
+      role: 'user',
+      image: imageData,
+      text: `Đã gửi ảnh: ${fileName}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    toast.success('Đã gửi ảnh');
+  };
+
   // Handle sending a message
   const handleSendMessage = async (userMessage) => {
     if (!user?.userId) {
@@ -127,6 +146,7 @@ const ChatBot = () => {
           currentTab={currentTab}
           onTabChange={setCurrentTab}
           formatChatDate={formatChatDate}
+          onImageUpload={handleImageUpload}
         />
       </div>
     </div>
