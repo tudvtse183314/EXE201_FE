@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PawPrint, Plus, Edit, Trash2, Heart, Calendar, Weight, Stethoscope, Camera } from "lucide-react";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -22,20 +22,56 @@ export default function PetProfilePage() {
     imageUrl: ""
   });
 
+  // Ref để tránh gọi API liên tục
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
-    fetchPets();
+    isMountedRef.current = true;
+    
+    // Chỉ fetch nếu chưa load và không đang load
+    if (!hasLoadedRef.current && !isLoadingRef.current) {
+      fetchPets();
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const fetchPets = async () => {
+    // Guard: tránh gọi nhiều lần
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    
     try {
       setLoading(true);
-      const data = await getMyPets();
-      setPets(data);
       setError(null);
+      const data = await getMyPets();
+      
+      if (isMountedRef.current) {
+        setPets(Array.isArray(data) ? data : []);
+        setError(null);
+        hasLoadedRef.current = true;
+      }
     } catch (err) {
-      setError(err.message);
+      if (isMountedRef.current) {
+        // Xử lý lỗi 502 Bad Gateway
+        if (err?.response?.status === 502) {
+          setError("Máy chủ đang quá tải. Vui lòng thử lại sau vài giây.");
+        } else {
+          setError(err.message || "Không thể tải danh sách thú cưng. Vui lòng thử lại!");
+        }
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+      isLoadingRef.current = false;
     }
   };
 
@@ -64,6 +100,8 @@ export default function PetProfilePage() {
         healthNotes: "",
         imageUrl: ""
       });
+      // Reset flag để fetch lại sau khi tạo/sửa
+      hasLoadedRef.current = false;
       fetchPets();
     } catch (err) {
       setError(err.message);
@@ -76,6 +114,8 @@ export default function PetProfilePage() {
       try {
         await deletePetProfile(id);
         message.success("Xóa hồ sơ thú cưng thành công!");
+        // Reset flag để fetch lại sau khi xóa
+        hasLoadedRef.current = false;
         fetchPets();
       } catch (err) {
         setError(err.message);

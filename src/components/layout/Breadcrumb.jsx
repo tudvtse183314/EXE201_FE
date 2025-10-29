@@ -25,7 +25,7 @@ export default function Breadcrumb() {
     '/manager/dashboard': 'Manager Dashboard',
     '/doctor/dashboard': 'Doctor Dashboard',
     '/user/home': 'Home',
-    '/create-pet-profile': 'Create Pet Profile',
+    '/my-pets': 'Thú cưng của tôi',
     '/ai/analysis': 'AI Analysis',
     '/ai/seasonal-outfits': 'Seasonal Outfits',
     '/unauthorized': 'Unauthorized'

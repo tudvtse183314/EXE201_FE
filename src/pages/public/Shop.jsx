@@ -455,7 +455,23 @@ export default function Shop() {
                       >
                         <LazyLoadImage
                           alt={product.name}
-                          src={product.imageUrl || product.image || getFallbackImageByIndex(product.id)}
+                          src={(() => {
+                            // Sử dụng imageUrl (đã normalize từ getAllProducts)
+                            let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
+                            
+                            // Nếu không có → dùng fallback
+                            if (!src) {
+                              return getFallbackImageByIndex(product.id);
+                            }
+                            
+                            // Build full URL nếu là relative path từ BE
+                            if (!src.startsWith('http') && src.startsWith('/api/uploads/')) {
+                              const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+                              src = baseURL.replace('/api', '') + src;
+                            }
+                            
+                            return src;
+                          })()}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -465,7 +481,10 @@ export default function Shop() {
                           effect="blur"
                           placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                           onError={(e) => {
-                            e.target.src = getFallbackImageByIndex(product.id);
+                            const fallback = getFallbackImageByIndex(product.id);
+                            if (e.target.src !== fallback) {
+                              e.target.src = fallback;
+                            }
                           }}
                           onMouseEnter={(e) => {
                             e.target.style.transform = 'scale(1.03)';

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import ShinyText from '../effects/ShinyText';
 import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
@@ -82,17 +85,58 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           </div>
         )}
         
-        {/* Placeholder Image */}
-        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+        {(() => {
+          // Sử dụng imageUrl (đã normalize từ getAllProducts)
+          let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
+          
+          // Nếu không có → dùng fallback
+          if (!src) {
+            src = getFallbackImageByIndex(product.id);
+          } else {
+            // Build full URL nếu là relative path từ BE
+            if (!src.startsWith('http') && src.startsWith('/api/uploads/')) {
+              const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+              src = baseURL.replace('/api', '') + src;
+            }
+          }
+          
+          const fallbackSrc = getFallbackImageByIndex(product.id);
+          
+          return (
+            <LazyLoadImage
+              src={src}
+              alt={product.name || 'Product'}
+              effect="blur"
+              placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Nếu load lỗi → fallback về assets
+                if (e.target.src !== fallbackSrc && fallbackSrc) {
+                  e.target.src = fallbackSrc;
+                } else {
+                  // Nếu cả fallback cũng lỗi → show placeholder emoji
+                  e.target.style.display = 'none';
+                  const placeholder = e.target.parentElement.querySelector('.placeholder-image');
+                  if (placeholder) placeholder.style.display = 'flex';
+                }
+              }}
+            />
+          );
+        })()}
+        
+        {/* Placeholder Image - Show only if image fails to load */}
+        <div 
+          className="placeholder-image w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center hidden absolute inset-0"
+        >
           <span className="text-6xl opacity-60">
-            {getPlaceholderImage(product.category.name)}
+            {getPlaceholderImage(product.category?.name)}
           </span>
         </div>
         
         {/* Stock Status */}
-        {product.stock < 10 && (
+        {product.stock !== undefined && product.stock < 10 && (
           <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-            Only {product.stock} left!
+            Chỉ còn {product.stock} sản phẩm!
           </div>
         )}
       </div>

@@ -21,6 +21,8 @@ export const getMyPets = async () => {
   } catch (error) {
     if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    if (error.response?.status === 502) throw new Error("Máy chủ đang quá tải. Vui lòng thử lại sau vài giây.");
+    if (error.response?.status === 503) throw new Error("Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.");
     throw error;
   }
 };

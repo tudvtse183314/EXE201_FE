@@ -24,7 +24,6 @@ import PetProfilePage from "../pages/customer/PetProfilePage";
 import AccountProfilePage from "../pages/customer/AccountProfilePage";
 
 // User Pages
-import CreatePetProfile from "../pages/user/CreatePetProfile";
 import AIAnalysis from "../pages/AIAnalysis";
 
 // AI Pages
@@ -67,7 +66,6 @@ import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
 import Premium from "../pages/public/Premium";
-import MyPets from "../pages/customer/MyPets";
 import ProductCardDemo from "../pages/public/ProductCardDemo";
 
 
@@ -228,26 +226,16 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         />
-         <Route
-           path="/customer/pet-profiles"
-           element={
-             <PrivateRoute roles={['CUSTOMER']}>
-               <MainLayout>
-                 <PetProfilePage />
-               </MainLayout>
-             </PrivateRoute>
-           }
-         />
-         <Route
-           path="/my-pets"
-           element={
-             <PrivateRoute roles={['CUSTOMER']}>
-               <MainLayout>
-                 <MyPets />
-               </MainLayout>
-             </PrivateRoute>
-           }
-         />
+        <Route
+          path="/my-pets"
+          element={
+            <PrivateRoute roles={['CUSTOMER']}>
+              <MainLayout>
+                <PetProfilePage />
+              </MainLayout>
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/customer/account-profile"
           element={
@@ -260,16 +248,6 @@ export default function AppRoutes() {
         />
         
         {/* User Routes */}
-        <Route
-          path="/create-pet-profile"
-          element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
-              <MainLayout>
-                <CreatePetProfile />
-              </MainLayout>
-            </PrivateRoute>
-          }
-        />
         <Route
           path="/ai-analysis"
           element={
