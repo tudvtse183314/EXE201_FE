@@ -40,7 +40,12 @@ export const getAllProducts = async () => {
     });
     return normalizedData;
   } catch (e) {
-    console.error("🛍️ Products: Error fetching products:", e);
+    const status = e?.response?.status;
+    if (status === 404) {
+      console.warn("🛍️ Products: /products/getAll not found (404). Returning empty list.");
+      return [];
+    }
+    console.warn("🛍️ Products: Error fetching products:", e?.message || e);
     return [];
   }
 };

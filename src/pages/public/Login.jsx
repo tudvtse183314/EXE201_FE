@@ -30,8 +30,34 @@ export default function Login() {
   }, [user, navigate, from]);
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) setErrors({ ...errors, [field]: '' });
+    const nextData = { ...formData, [field]: value };
+    setFormData(nextData);
+
+    // Clear general and field errors when typing
+    const nextErrors = { ...errors, [field]: '' };
+
+    // Realtime inline validation per-field
+    if (field === 'phone') {
+      const v = value.trim();
+      if (!v) {
+        nextErrors.phone = 'Vui lòng nhập số điện thoại';
+      } else if (!/^[0-9]{10,11}$/.test(v)) {
+        nextErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
+      } else if (nextErrors.phone === 'Không tìm thấy tài khoản với số này') {
+        // Keep server-derived existence error until user changes drastically
+        nextErrors.phone = '';
+      }
+    }
+    if (field === 'password') {
+      const v = value;
+      if (!v) {
+        nextErrors.password = 'Vui lòng nhập mật khẩu';
+      } else if (v.length < 6) {
+        nextErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+    }
+
+    setErrors(nextErrors);
     if (generalError) setGeneralError(null);
     if (successMessage) setSuccessMessage('');
   };
@@ -94,13 +120,24 @@ export default function Login() {
       if (err?.message === 'TIMEOUT' || err?.code === 'ECONNABORTED') {
         msg = 'Máy chủ phản hồi chậm. Có thể do khởi động lần đầu trên Render. Vui lòng thử lại sau ít phút.';
       } else if (err.response?.status === 401) {
-        msg = 'Username or password invalid!';
+        msg = 'Số điện thoại hoặc mật khẩu không đúng.';
+        // Map 401 to inline field errors for real-time feedback
+        setErrors((prev) => ({
+          ...prev,
+          phone: prev.phone || 'Số điện thoại hoặc mật khẩu không đúng',
+          password: prev.password || 'Số điện thoại hoặc mật khẩu không đúng',
+        }));
       } else if (err.response?.status === 400) {
         msg = 'Thông tin đăng nhập không hợp lệ.';
       } else if (err.response?.status === 403) {
         msg = 'Tài khoản đã bị khóa. Vui lòng liên hệ admin.';
       } else if (err.response?.status === 404) {
         msg = 'Không tìm thấy tài khoản.';
+        // Highlight phone field when user/phone not found
+        setErrors((prev) => ({
+          ...prev,
+          phone: prev.phone || 'Không tìm thấy tài khoản với số này',
+        }));
       } else if (err.response?.status >= 500) {
         msg = 'Lỗi server. Vui lòng thử lại sau.';
       } else if (err.message) {

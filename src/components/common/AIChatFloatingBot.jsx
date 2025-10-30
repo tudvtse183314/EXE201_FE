@@ -24,7 +24,7 @@ const AIChatFloatingBot = () => {
   }
 
   const handleClick = () => {
-    navigate('/ai/chat');
+    navigate('/customer/ai');
   };
 
   return (

@@ -57,7 +57,7 @@ export const createStaff = async (staffData) => {
 export const deleteAccount = async (id) => {
   try {
     console.log("👥 Auth: Deleting account", { id });
-    const res = await axiosInstance.delete(`/${id}`);
+    const res = await axiosInstance.delete(`/accounts/${id}`);
     console.log("👥 Auth: Deleted account successfully", res.data);
     return res.data;
   } catch (e) {
@@ -70,7 +70,7 @@ export const deleteAccount = async (id) => {
 export const restoreAccount = async (id) => {
   try {
     console.log("👥 Auth: Restoring account", { id });
-    const res = await axiosInstance.put(`/${id}/restore`);
+    const res = await axiosInstance.put(`/accounts/${id}/restore`);
     console.log("👥 Auth: Restored account successfully", res.data);
     return res.data;
   } catch (e) {

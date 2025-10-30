@@ -34,7 +34,7 @@ const ShinyText = ({
       }}
     >
       {text}
-      <style jsx>{`
+      <style>{`
         @keyframes shiny {
           0% {
             background-position: -200% 0;

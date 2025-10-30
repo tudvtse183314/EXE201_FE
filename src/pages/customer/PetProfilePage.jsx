@@ -30,9 +30,15 @@ export default function PetProfilePage() {
   useEffect(() => {
     isMountedRef.current = true;
     
+    // Session guard: tránh fetch lặp khi trang bị remount ngoài ý muốn
+    const sessionKey = 'pv-pets-loaded';
+    const alreadyLoaded = sessionStorage.getItem(sessionKey) === '1';
+
     // Chỉ fetch nếu chưa load và không đang load
-    if (!hasLoadedRef.current && !isLoadingRef.current) {
-      fetchPets();
+    if (!hasLoadedRef.current && !isLoadingRef.current && !alreadyLoaded) {
+      fetchPets().finally(() => {
+        sessionStorage.setItem(sessionKey, '1');
+      });
     }
 
     return () => {
@@ -102,7 +108,8 @@ export default function PetProfilePage() {
       });
       // Reset flag để fetch lại sau khi tạo/sửa
       hasLoadedRef.current = false;
-      fetchPets();
+      sessionStorage.removeItem('pv-pets-loaded');
+      fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
     } catch (err) {
       setError(err.message);
       message.error(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
@@ -116,7 +123,8 @@ export default function PetProfilePage() {
         message.success("Xóa hồ sơ thú cưng thành công!");
         // Reset flag để fetch lại sau khi xóa
         hasLoadedRef.current = false;
-        fetchPets();
+        sessionStorage.removeItem('pv-pets-loaded');
+        fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
       } catch (err) {
         setError(err.message);
         message.error(err.message || "Có lỗi xảy ra khi xóa!");

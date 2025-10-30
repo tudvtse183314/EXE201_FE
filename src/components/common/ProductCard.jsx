@@ -21,7 +21,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
     navigate(`/product/${product.id}`);
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e?.stopPropagation();
+    
+    // Kiểm tra đăng nhập
+    if (!user) {
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    
+    // Kiểm tra role CUSTOMER
+    const userRole = (user.role || "").toUpperCase();
+    if (userRole !== 'CUSTOMER') {
+      navigate('/unauthorized');
+      return;
+    }
+    
     try {
       if (onAddToCart) {
         onAddToCart(product);
@@ -34,7 +49,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
     }
   };
 
-  const handleAddToWishlist = () => {
+  const handleAddToWishlist = (e) => {
+    e?.stopPropagation();
+    
+    // Kiểm tra đăng nhập
+    if (!user) {
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    
+    // Kiểm tra role CUSTOMER
+    const userRole = (user.role || "").toUpperCase();
+    if (userRole !== 'CUSTOMER') {
+      navigate('/unauthorized');
+      return;
+    }
+    
     if (onAddToWishlist) {
       onAddToWishlist(product);
     } else {

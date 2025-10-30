@@ -339,7 +339,7 @@ const PetAIAssistant = () => {
 
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes slideUp {
           from {
             opacity: 0;

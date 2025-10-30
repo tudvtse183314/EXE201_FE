@@ -6,6 +6,7 @@ import {
   updateCartItemQuantity, 
   deleteCartItem 
 } from '../services/cart';
+import { getProductById } from '../services/products';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
@@ -29,6 +30,8 @@ export const CartProvider = ({ children }) => {
   // Guards để tránh spam API calls
   const hasLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
+  const lastLoadTimeRef = useRef(0);
+  const MIN_LOAD_INTERVAL = 1000; // Chỉ cho phép load lại sau 1 giây
 
   // Load cart from API khi user đăng nhập
   // Lưu ý: Không load tự động khi mount vì endpoint có thể chưa tồn tại
@@ -48,28 +51,81 @@ export const CartProvider = ({ children }) => {
   }, [user]);
 
   // Function để load cart manually (gọi từ Cart page hoặc khi cần)
-  const loadCart = async () => {
-    // Chỉ load khi user đã đăng nhập và chưa đang load
-    if (!isAuthenticated() || !user || isLoadingRef.current) {
+  const loadCart = async (force = false) => {
+    // Chỉ load khi user đã đăng nhập
+    if (!isAuthenticated() || !user) {
+      console.log('🛒 Cart Context: Skipping load - user not authenticated');
       return;
     }
 
+    // Throttle: Chỉ cho phép load lại sau MIN_LOAD_INTERVAL (trừ khi force)
+    const now = Date.now();
+    if (!force) {
+      // Kiểm tra nếu đang loading
+      if (isLoadingRef.current) {
+        console.log('🛒 Cart Context: Already loading, skipping duplicate request');
+        return;
+      }
+      
+      // Kiểm tra throttle interval
+      if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+        console.log('🛒 Cart Context: Skipping load - too soon since last load', {
+          timeSinceLastLoad: now - lastLoadTimeRef.current,
+          minInterval: MIN_LOAD_INTERVAL
+        });
+        return;
+      }
+      
+      // Kiểm tra nếu đã load và chưa cần reload
+      if (hasLoadedRef.current && cartItems.length > 0) {
+        console.log('🛒 Cart Context: Cart already loaded, skipping (use force=true to reload)');
+        return;
+      }
+    }
+
     isLoadingRef.current = true;
+    lastLoadTimeRef.current = now;
     setLoading(true);
+    
     try {
-      console.log('🛒 Cart: Loading cart from API for user');
-      const cartData = await getMyCart();
+      const stack = new Error().stack;
+      const caller = stack?.split('\n')[2]?.trim() || 'unknown';
+      console.log('🛒 Cart Context: loadCart() called', { force, caller });
+      
+      // Force reload (skip cache) nếu force = true
+      const cartData = await getMyCart(force);
       
       // Normalize cart data từ BE
-      const items = Array.isArray(cartData) ? cartData : (cartData?.items || []);
-      
+      const rawItems = Array.isArray(cartData) ? cartData : (cartData?.items || []);
+
+      // Nếu BE không trả kèm thông tin product → hydrate bằng productId
+      const uniqueIds = Array.from(new Set(
+        rawItems.map(i => i.productId || i.product?.id).filter(Boolean)
+      ));
+      let productMap = {};
+      if (uniqueIds.length > 0) {
+        const results = await Promise.allSettled(uniqueIds.map(id => getProductById(id)));
+        results.forEach((r, idx) => {
+          const pid = uniqueIds[idx];
+          if (r.status === 'fulfilled' && r.value) {
+            productMap[pid] = r.value;
+          }
+        });
+      }
+
+      const items = rawItems.map(i => {
+        const pid = i.productId || i.product?.id;
+        const hydrated = productMap[pid];
+        return hydrated ? { ...i, product: hydrated, price: i.price ?? hydrated.price } : i;
+      });
+
       setCartItems(items || []);
       hasLoadedRef.current = true;
-      console.log('🛒 Cart: Loaded cart successfully', { count: items.length });
+      console.log('🛒 Cart Context: Loaded cart successfully', { count: items.length });
     } catch (e) {
       // Xử lý lỗi 400 (endpoint không tồn tại) đã được getMyCart xử lý, không cần log thêm
       if (e?.response?.status !== 400) {
-        console.error('🛒 Cart: Error loading cart', e);
+        console.error('🛒 Cart Context: Error loading cart', e);
         setError(e?.message || 'Không thể tải giỏ hàng');
         
         // Các lỗi khác (trừ 401/403 đã được interceptor xử lý)
@@ -107,8 +163,9 @@ export const CartProvider = ({ children }) => {
       await addCartItem(product.id, quantity, productPrice);
       
       // Reload cart sau khi thêm - xử lý lỗi 400 gracefully
+      // Force reload để có data mới nhất
       try {
-        const updatedCart = await getMyCart();
+        const updatedCart = await getMyCart(true); // Force reload
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
         // Nếu endpoint không tồn tại, getMyCart trả về empty array
         // Trong trường hợp này, thêm item vào local state thay vì xóa tất cả
@@ -164,8 +221,8 @@ export const CartProvider = ({ children }) => {
         console.log('🛒 Cart: Item already exists, updating quantity instead');
         
         try {
-          // Reload cart để lấy item hiện tại
-          const currentCart = await getMyCart();
+          // Reload cart để lấy item hiện tại - force reload
+          const currentCart = await getMyCart(true); // Force reload
           const currentItems = Array.isArray(currentCart) ? currentCart : (currentCart?.items || []);
           
           // Nếu endpoint không tồn tại, tìm trong local state
@@ -199,8 +256,8 @@ export const CartProvider = ({ children }) => {
             // Cập nhật số lượng
             await updateCartItemQuantity(itemId, newQuantity, price, productIdForUpdate);
             
-            // Reload cart sau khi cập nhật
-            const updatedCart = await getMyCart();
+            // Reload cart sau khi cập nhật - force reload
+            const updatedCart = await getMyCart(true); // Force reload
             const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
             // Nếu endpoint không tồn tại, update local state
             if (items.length === 0 && cartItems.length > 0) {
@@ -250,8 +307,9 @@ export const CartProvider = ({ children }) => {
       await deleteCartItem(itemId);
       
       // Reload cart sau khi xóa - xử lý lỗi 400 gracefully
+      // Force reload để có data mới nhất
       try {
-        const updatedCart = await getMyCart();
+        const updatedCart = await getMyCart(true); // Force reload
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
         // Nếu endpoint không tồn tại, update local state
         if (items.length === 0 && cartItems.length > 0) {
@@ -302,8 +360,9 @@ export const CartProvider = ({ children }) => {
       await updateCartItemQuantity(itemId, quantity, price, productId);
       
       // Reload cart sau khi cập nhật - xử lý lỗi 400 gracefully
+      // Force reload để có data mới nhất
       try {
-        const updatedCart = await getMyCart();
+        const updatedCart = await getMyCart(true); // Force reload
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
         // Nếu endpoint không tồn tại, update local state
         if (items.length === 0 && cartItems.length > 0) {
@@ -387,10 +446,10 @@ export const CartProvider = ({ children }) => {
     error,
     // Load cart manually (gọi từ Cart page)
     loadCart,
-    // Refresh cart manually
+    // Refresh cart manually (force reload)
     refreshCart: async () => {
       hasLoadedRef.current = false;
-      await loadCart();
+      await loadCart(true); // Force reload
     }
   };
 

@@ -1,5 +1,5 @@
 // src/pages/public/Cart.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -37,11 +37,42 @@ export default function Cart() {
     loadCart
   } = useCart();
 
-  // Load cart khi vào trang Cart (nếu endpoint tồn tại)
+  // Guard để đảm bảo chỉ load cart một lần khi mount
+  const hasLoadedRef = useRef(false);
+  
+  // Load cart khi vào trang Cart - chỉ load một lần khi mount
   useEffect(() => {
+    // Nếu đã load rồi thì không load lại
+    if (hasLoadedRef.current) {
+      console.log('🛒 Cart Page: Skipping load - already loaded');
+      return;
+    }
+    
+    console.log('🛒 Cart Page: useEffect triggered, loading cart...');
+    hasLoadedRef.current = true;
     loadCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Chỉ load 1 lần khi mount
+  
+  // Reset flag khi component unmount (để có thể load lại khi quay lại trang)
+  useEffect(() => {
+    return () => {
+      hasLoadedRef.current = false;
+      console.log('🛒 Cart Page: Component unmounted, reset load flag');
+    };
+  }, []);
+  
+  // Debug: Log khi component re-render (chỉ trong development)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🛒 Cart Page: Component re-rendered', {
+        cartItemsCount: cartItems.length,
+        loading,
+        error,
+        hasLoaded: hasLoadedRef.current
+      });
+    }
+  });
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
@@ -86,19 +117,25 @@ export default function Cart() {
               {cartItems.map((item) => {
                 // BE có thể trả về id hoặc itemId
                 const itemId = item.id || item.itemId;
-                const productId = item.productId || item.product?.id;
+                const productId = item.productId || item.product?.id || item.id;
                 const product = item.product || {};
-                const quantity = item.quantity || 1;
-                const price = item.price || product.price || 0;
-                const itemTotal = item.total || (price * quantity);
+                const quantity = Number(item.quantity || 1);
+                const price = Number(
+                  item.price ?? product.price ?? item.unitPrice ?? item.productPrice ?? 0
+                );
+                const name = product.name || item.productName || item.name || 'Unknown Product';
+                const categoryName = product.category?.name || item.categoryName || null;
+                const imageUrl =
+                  product.imageUrl || product.image || item.productImage || item.imageUrl || item.image || null;
+                const itemTotal = Number(item.total ?? price * quantity);
 
                 return (
                   <div key={itemId}>
                     <Row gutter={[16, 16]} align="middle">
                       <Col xs={24} sm={6}>
                         <Image
-                          alt={product.name || 'Product'}
-                          src={product.imageUrl || product.image || getFallbackImageByIndex(productId)}
+                          alt={name || 'Product'}
+                          src={imageUrl || getFallbackImageByIndex(productId)}
                           style={{ width: '100%', maxWidth: 100 }}
                           fallback={getFallbackImageByIndex(productId)}
                           onError={(e) => {
@@ -109,10 +146,10 @@ export default function Cart() {
                       <Col xs={24} sm={12}>
                         <div>
                           <Title level={5} style={{ margin: 0 }}>
-                            {product.name || 'Unknown Product'}
+                            {name}
                           </Title>
-                          {product.category && (
-                            <Text type="secondary">{product.category.name}</Text>
+                          {categoryName && (
+                            <Text type="secondary">{categoryName}</Text>
                           )}
                           <div style={{ marginTop: 4 }}>
                             <Text strong style={{ color: '#1890ff' }}>
@@ -135,7 +172,6 @@ export default function Cart() {
                           value={quantity}
                           onChange={(value) => updateQuantity(itemId, value)}
                           style={{ width: '100%' }}
-                          loading={loading}
                         />
                       </Col>
                       <Col xs={4} sm={1}>
