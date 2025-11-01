@@ -89,7 +89,8 @@ export default function PetProfilePage() {
       }
 
       if (selectedPet) {
-        await updatePetProfile(selectedPet.petId, form);
+        const targetId = selectedPet.id || selectedPet.petId;
+        await updatePetProfile(targetId, form);
         message.success("Cập nhật hồ sơ thú cưng thành công!");
       } else {
         await createPetProfile(form);
@@ -119,7 +120,8 @@ export default function PetProfilePage() {
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ thú cưng này?")) {
       try {
-        await deletePetProfile(id);
+        const targetId = id?.id || id?.petId || id;
+        await deletePetProfile(targetId);
         message.success("Xóa hồ sơ thú cưng thành công!");
         // Reset flag để fetch lại sau khi xóa
         hasLoadedRef.current = false;
@@ -135,13 +137,13 @@ export default function PetProfilePage() {
   const handleEdit = (pet) => {
     setSelectedPet(pet);
     setForm({
-      petName: pet.petName || "",
-      petType: pet.petType || "",
+      petName: pet.petName || pet.name || "",
+      petType: pet.petType || pet.type || "",
       breed: pet.breed || "",
-      birthDate: pet.birthDate || "",
-      weight: pet.weight || "",
-      healthNotes: pet.healthNotes || "",
-      imageUrl: pet.imageUrl || ""
+      birthDate: pet.birthDate || pet.dob || "",
+      weight: pet.weight || pet.weightKg || "",
+      healthNotes: pet.healthNotes || pet.notes || "",
+      imageUrl: pet.imageUrl || pet.image || ""
     });
     setOpen(true);
   };

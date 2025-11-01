@@ -115,7 +115,6 @@ export default function Cart() {
           <Card>
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               {cartItems.map((item) => {
-                // BE có thể trả về id hoặc itemId
                 const itemId = item.id || item.itemId;
                 const productId = item.productId || item.product?.id || item.id;
                 const product = item.product || {};
@@ -125,56 +124,69 @@ export default function Cart() {
                 );
                 const name = product.name || item.productName || item.name || 'Unknown Product';
                 const categoryName = product.category?.name || item.categoryName || null;
-                const imageUrl =
-                  product.imageUrl || product.image || item.productImage || item.imageUrl || item.image || null;
+                const imageUrl = product.imageUrl || product.image || item.productImage || item.imageUrl || item.image || null;
                 const itemTotal = Number(item.total ?? price * quantity);
-
+                const hasDiscount = product.salePrice && product.salePrice < price;
+                const salePrice = Number(product.salePrice) || price;
+                const stock = product.stock ?? 999;
+                const badge = product.badge;
+                const description = product.description || '';
                 return (
-                  <div key={itemId}>
-                    <Row gutter={[16, 16]} align="middle">
-                      <Col xs={24} sm={6}>
-                        <Image
-                          alt={name || 'Product'}
-                          src={imageUrl || getFallbackImageByIndex(productId)}
-                          style={{ width: '100%', maxWidth: 100 }}
-                          fallback={getFallbackImageByIndex(productId)}
-                          onError={(e) => {
-                            e.target.src = getFallbackImageByIndex(productId);
-                          }}
-                        />
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <div>
-                          <Title level={5} style={{ margin: 0 }}>
-                            {name}
-                          </Title>
-                          {categoryName && (
-                            <Text type="secondary">{categoryName}</Text>
+                  <div key={itemId} style={{marginBottom: 32}}>
+                    <Row gutter={[12, 12]} align="middle" wrap={true}>
+                      {/* IMAGE with badge */}
+                      <Col xs={24} sm={5} md={4} lg={3} style={{position:'relative'}}>
+                        <div style={{position:'relative', width:'100%', maxWidth:90}}>
+                          <Image
+                            alt={name || 'Product'}
+                            src={imageUrl || getFallbackImageByIndex(productId)}
+                            style={{ width: '100%', maxWidth: 90, borderRadius: 8, objectFit: 'cover' }}
+                            fallback={getFallbackImageByIndex(productId)}
+                          />
+                          {badge && (
+                            <span style={{
+                              position:'absolute', top:6, right:2, background:'#fff', color:'#c47256', fontWeight:600, fontSize:12, borderRadius: '8px', padding: '2px 6px', boxShadow:'0 2px 8px #0001'
+                            }}>{badge}</span>
                           )}
-                          <div style={{ marginTop: 4 }}>
-                            <Text strong style={{ color: '#1890ff' }}>
-                              {price.toLocaleString()}đ
-                            </Text>
-                          </div>
+                          {/* Stock Status */}
+                          {stock <= 10 && (
+                            <span style={{position:'absolute',left:2,bottom:6,background:'#ef4444',color:'#fff',fontWeight:500,fontSize:11,borderRadius:6,padding:'2px 5px'}}>
+                              Còn {stock} sp!
+                            </span>
+                          )}
                         </div>
                       </Col>
-                      <Col xs={12} sm={3}>
-                        <div style={{ textAlign: 'center' }}>
-                          <Text strong>
-                            {itemTotal.toLocaleString()}đ
+                      <Col xs={24} sm={11} md={9} lg={8}>
+                        <div style={{minHeight: 60}}>
+                          <Title level={5} style={{ margin: 0 }}>{name}</Title>
+                          {categoryName && <Text type="secondary" style={{marginRight:8}}>{categoryName}</Text>}
+                          {description && <div style={{fontSize:13, color:'#888',marginTop:4,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis',maxWidth:200}}>{description}</div>}
+                        </div>
+                        {/* Giá sale và giá gốc nếu có */}
+                        <div style={{marginTop:4, display:'flex', alignItems:'baseline', gap:12}}>
+                          <Text strong style={{color:'#c47256', fontSize:16}}>
+                            {salePrice.toLocaleString()}đ
                           </Text>
+                          {hasDiscount && (
+                            <Text delete style={{color:'#888', fontSize:12}}>{price.toLocaleString()}đ</Text>
+                          )}
                         </div>
                       </Col>
-                      <Col xs={8} sm={2}>
+                      <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
                         <InputNumber
                           min={1}
-                          max={product.stock || 999}
+                          max={stock}
                           value={quantity}
                           onChange={(value) => updateQuantity(itemId, value)}
-                          style={{ width: '100%' }}
+                          style={{ width: 64 }}
                         />
                       </Col>
-                      <Col xs={4} sm={1}>
+                      <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
+                        <Text strong style={{fontSize:14,color:'#1890ff'}}>
+                          {itemTotal.toLocaleString()}đ
+                        </Text>
+                      </Col>
+                      <Col xs={4} sm={2} md={3} lg={2} style={{textAlign:'center'}}>
                         <Button
                           type="text"
                           danger
@@ -185,7 +197,7 @@ export default function Cart() {
                         />
                       </Col>
                     </Row>
-                    <Divider />
+                    <Divider/>
                   </div>
                 );
               })}
