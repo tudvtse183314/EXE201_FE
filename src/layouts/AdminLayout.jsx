@@ -10,7 +10,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
-  MenuUnfoldOutlined
+  MenuUnfoldOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -51,6 +52,12 @@ export default function AdminLayout() {
       label: 'Giỏ hàng', 
       path: '/admin/carts', 
       icon: <ShoppingOutlined /> 
+    },
+    { 
+      key: 'chat-history', 
+      label: 'Chat History', 
+      path: '/admin/chat-history', 
+      icon: <MessageOutlined /> 
     },
     { 
       key: 'accounts', 

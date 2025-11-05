@@ -79,7 +79,7 @@ const CTASection = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
-            Ready to Find the Perfect Match for Your Pet?
+            Sẵn sàng tìm sự lựa chọn hoàn hảo cho thú cưng của bạn?
           </h2>
           
           <motion.p 
@@ -89,7 +89,7 @@ const CTASection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           >
-            Join thousands of happy pet owners who found ideal products tailored to their furry friends.
+            Tham gia hàng nghìn chủ thú cưng hạnh phúc đã tìm được sản phẩm lý tưởng cho bạn bốn chân của họ.
           </motion.p>
           
           <motion.div
@@ -121,7 +121,7 @@ const CTASection = () => {
               />
               
               <span className="relative z-10">
-                Get Personalized Recommendations
+                Nhận gợi ý cá nhân hóa
               </span>
             </motion.button>
           </motion.div>
@@ -145,7 +145,7 @@ const CTASection = () => {
             >
               10K+
             </motion.div>
-            <p className="text-white">Happy Pet Owners</p>
+            <p className="text-white">Chủ thú cưng hạnh phúc</p>
           </div>
           
           <div className="text-center">
@@ -158,7 +158,7 @@ const CTASection = () => {
             >
               50K+
             </motion.div>
-            <p className="text-white">Products Matched</p>
+            <p className="text-white">Sản phẩm được khớp</p>
           </div>
           
           <div className="text-center">
@@ -171,7 +171,7 @@ const CTASection = () => {
             >
               98%
             </motion.div>
-            <p className="text-white">Satisfaction Rate</p>
+            <p className="text-white">Tỷ lệ hài lòng</p>
           </div>
         </motion.div>
       </div>

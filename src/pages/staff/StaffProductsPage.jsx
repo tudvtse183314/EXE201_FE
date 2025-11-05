@@ -21,7 +21,8 @@ import {
   Empty,
   Image,
   Tag,
-  Tooltip
+  Tooltip,
+  Upload
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -29,11 +30,16 @@ import {
   DeleteOutlined, 
   ReloadOutlined,
   SearchOutlined,
-  EyeOutlined
+  EyeOutlined,
+  UploadOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../../services/products';
 import { getAllCategories } from '../../services/categories';
 import { dataManager } from '../../utils/dataManager';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 const { Title, Text } = Typography;
 const { Search } = AntInput;
@@ -49,6 +55,8 @@ export default function StaffProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [form] = Form.useForm();
 
   const loadData = async () => {
@@ -108,11 +116,16 @@ export default function StaffProductsPage() {
   const handleSubmit = async (values) => {
     try {
       const submitData = {
-        ...values,
+        name: values.name,
+        description: values.description,
         price: parseFloat(values.price),
         stock: parseInt(values.stock),
-        categoryId: parseInt(values.categoryId)
+        categoryId: parseInt(values.categoryId),
+        imageUrl: values.imageUrl || uploadedImage || uploadedImageUrl,
+        type: values.type
       };
+
+      console.log("📦 StaffProductsPage: Submitting product", submitData);
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, submitData);
@@ -130,6 +143,8 @@ export default function StaffProductsPage() {
       
       setIsModalOpen(false);
       setEditingProduct(null);
+      setUploadedImage(null);
+      setUploadedImageUrl(null);
       form.resetFields();
     } catch (error) {
       console.error("📦 StaffProductsPage: Error saving product", error);
@@ -139,13 +154,16 @@ export default function StaffProductsPage() {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    const imageUrl = product.imageUrl || product.image || '';
+    setUploadedImageUrl(imageUrl);
+    setUploadedImage(null);
     form.setFieldsValue({
       name: product.name,
       description: product.description || '',
       price: product.price,
       stock: product.stock,
       categoryId: product.category?.id,
-      imageUrl: product.imageUrl || product.image || '',
+      imageUrl: imageUrl,
       type: product.type || ''
     });
     setIsModalOpen(true);
@@ -168,6 +186,8 @@ export default function StaffProductsPage() {
 
   const openModal = () => {
     setEditingProduct(null);
+    setUploadedImage(null);
+    setUploadedImageUrl(null);
     form.resetFields();
     setIsModalOpen(true);
   };
@@ -175,7 +195,48 @@ export default function StaffProductsPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+    setUploadedImage(null);
+    setUploadedImageUrl(null);
     form.resetFields();
+  };
+
+  // Handle file upload
+  const handleImageUpload = (file) => {
+    // Check file type
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('Chỉ chấp nhận file ảnh!');
+      return Upload.LIST_IGNORE;
+    }
+
+    // Check file size (5MB)
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Kích thước ảnh không được vượt quá 5MB!');
+      return Upload.LIST_IGNORE;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target.result;
+      setUploadedImage(base64String);
+      setUploadedImageUrl(base64String);
+      form.setFieldsValue({ imageUrl: base64String });
+    };
+    reader.onerror = () => {
+      message.error('Lỗi khi đọc file ảnh');
+    };
+    reader.readAsDataURL(file);
+
+    // Return false to prevent auto upload
+    return false;
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setUploadedImageUrl(null);
+    form.setFieldsValue({ imageUrl: '' });
   };
 
   const columns = [
@@ -184,16 +245,28 @@ export default function StaffProductsPage() {
       dataIndex: 'image',
       key: 'image',
       width: 100,
-      render: (imageUrl, record) => (
-        <Image
-          width={60}
-          height={60}
-          src={imageUrl || record.image || '/api/placeholder/60/60'}
-          alt={record.name}
-          style={{ objectFit: 'cover', borderRadius: '8px' }}
-          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
-        />
-      ),
+      render: (imageUrl, record) => {
+        const productImage = imageUrl || record.imageUrl || record.image || '';
+        const fallbackImage = getFallbackImageByIndex(record.id);
+        
+        return (
+          <LazyLoadImage
+            src={productImage || fallbackImage}
+            alt={record.name}
+            effect="blur"
+            placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+            style={{ 
+              width: 60, 
+              height: 60, 
+              objectFit: 'cover', 
+              borderRadius: '8px' 
+            }}
+            onError={(e) => {
+              e.target.src = fallbackImage;
+            }}
+          />
+        );
+      },
     },
     {
       title: 'Tên sản phẩm',
@@ -541,13 +614,67 @@ export default function StaffProductsPage() {
           </Row>
 
           <Form.Item
-            label="URL hình ảnh"
+            label="Hình ảnh sản phẩm"
             name="imageUrl"
           >
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Upload
+                beforeUpload={handleImageUpload}
+                maxCount={1}
+                accept="image/*"
+                listType="picture-card"
+                onRemove={handleRemoveImage}
+                showUploadList={{
+                  showPreviewIcon: false,
+                  showRemoveIcon: true
+                }}
+              >
+                {uploadedImageUrl || uploadedImage ? null : (
+                  <div>
+                    <InboxOutlined style={{ fontSize: '32px', color: '#eda274' }} />
+                    <div style={{ marginTop: 8, color: '#666' }}>
+                      Click để upload
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#999' }}>
+                      (Max 5MB)
+                    </div>
+                  </div>
+                )}
+              </Upload>
+              {(uploadedImageUrl || uploadedImage) && (
+                <div style={{ marginTop: 8 }}>
+                  <LazyLoadImage
+                    src={uploadedImage || uploadedImageUrl}
+                    alt="Preview"
+                    style={{ 
+                      width: '100%', 
+                      maxHeight: '200px', 
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      border: '1px solid #ddd'
+                    }}
+                    effect="blur"
+                    placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+                  />
+                </div>
+              )}
+            </Space>
+          </Form.Item>
+          
+          {/* Option to use URL if prefer */}
+          <Form.Item
+            label="Hoặc nhập URL hình ảnh"
+          >
             <Input 
-              placeholder="Nhập URL hình ảnh..."
+              placeholder="Nhập URL hình ảnh (tùy chọn)..."
               size="large"
               style={{ borderRadius: '8px' }}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setUploadedImageUrl(e.target.value);
+                  form.setFieldsValue({ imageUrl: e.target.value });
+                }
+              }}
             />
           </Form.Item>
 

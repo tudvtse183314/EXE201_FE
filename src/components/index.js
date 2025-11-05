@@ -27,3 +27,4 @@ export { default as TextLogo } from './common/TextLogo';
 export { default as SimpleLogo } from './common/SimpleLogo';
 export { default as Breadcrumbs } from './common/Breadcrumbs';
 export { default as NavigationMenu } from './common/NavigationMenu';
+export * from './common/Typography';

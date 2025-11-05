@@ -184,16 +184,41 @@ export default function ProductsPage() {
       dataIndex: 'image',
       key: 'image',
       width: 100,
-      render: (imageUrl, record) => (
-        <Image
-          width={60}
-          height={60}
-          src={imageUrl || record.image || '/api/placeholder/60/60'}
-          alt={record.name}
-          style={{ objectFit: 'cover', borderRadius: '8px' }}
-          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
-        />
-      ),
+      render: (image, record) => {
+        // Build image src giống logic ở ProductCard (Home/Shop)
+        let src = record.imageUrl ?? record.image ?? image ?? null;
+        if (!src || src === '' || src === 'null' || src === 'undefined') {
+          // fallback assets (dựa vào id để đa dạng ảnh)
+          const idx = record.id || 1;
+          const fallback = `/static/media/pets/${(idx % 9) + 1}.jpg`;
+          return (
+            <Image
+              width={60}
+              height={60}
+              src={fallback}
+              alt={record.name}
+              style={{ objectFit: 'cover', borderRadius: '8px' }}
+            />
+          );
+        }
+        if (src.startsWith('/api/uploads/')) {
+          const base = (process.env.REACT_APP_API_BASE_URL || 'https://exe201-be-uhno.onrender.com/api').replace('/api','');
+          src = base + src;
+        }
+        return (
+          <Image
+            width={60}
+            height={60}
+            src={src}
+            alt={record.name}
+            style={{ objectFit: 'cover', borderRadius: '8px' }}
+            onError={(e) => {
+              // Nếu lỗi → fallback ảnh placeholder
+              e.target.src = '/logo192.png';
+            }}
+          />
+        );
+      },
     },
     {
       title: 'Tên sản phẩm',

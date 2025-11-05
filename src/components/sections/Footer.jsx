@@ -44,8 +44,8 @@ const Footer = () => {
                 Pawfect Match
               </h3>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                The AI-powered platform that helps you find the perfect products for your beloved pets. 
-                Join thousands of happy pet owners who discovered their pet's perfect match.
+                Nền tảng được hỗ trợ bởi AI giúp bạn tìm những sản phẩm hoàn hảo cho thú cưng yêu quý. 
+                Tham gia hàng nghìn chủ thú cưng hạnh phúc đã tìm thấy sự lựa chọn hoàn hảo.
               </p>
               
               {/* Social Links */}
@@ -75,10 +75,10 @@ const Footer = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              Stay Updated
+              Cập nhật thường xuyên
             </motion.h4>
             <p className="text-gray-300 mb-4">
-              Get the latest pet care tips and exclusive offers.
+              Nhận mẹo chăm sóc thú cưng mới nhất và ưu đãi độc quyền.
             </p>
             
             <form onSubmit={handleSubscribe} className="space-y-3">
@@ -87,7 +87,7 @@ const Footer = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300"
                   required
                 />
@@ -100,7 +100,7 @@ const Footer = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {isSubscribed ? 'Subscribed!' : 'Subscribe'}
+                {isSubscribed ? 'Đã đăng ký!' : 'Đăng ký'}
               </motion.button>
             </form>
             
@@ -111,7 +111,7 @@ const Footer = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                Thank you for subscribing! 🎉
+                Cảm ơn bạn đã đăng ký! 🎉
               </motion.p>
             )}
           </div>
@@ -125,7 +125,7 @@ const Footer = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              Contact & Language
+              Liên hệ & Ngôn ngữ
             </motion.h4>
             
             <div className="space-y-4">
@@ -137,8 +137,8 @@ const Footer = () => {
               <div className="flex items-center space-x-2">
                 <Globe className="w-4 h-4 text-gray-300" />
                 <select className="bg-gray-800 border border-gray-700 rounded px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-pink-500">
+                  <option value="vi">Tiếng Việt</option>
                   <option value="en">English</option>
-                  <option value="vn">Tiếng Việt</option>
                 </select>
               </div>
             </div>
@@ -154,20 +154,20 @@ const Footer = () => {
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           <div className="flex items-center space-x-2 text-gray-400 mb-4 md:mb-0">
-            <span>© 2024 Pawfect Match. Made with</span>
+            <span>© 2024 Pawfect Match. Được tạo bằng</span>
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
               <Heart className="w-4 h-4 text-pink-500 fill-current" />
             </motion.div>
-            <span>for pet lovers everywhere.</span>
+            <span>dành cho người yêu thú cưng ở khắp mọi nơi.</span>
           </div>
           
           <div className="flex space-x-6 text-sm text-gray-400">
-            <button className="hover:text-pink-400 transition-colors duration-300">Privacy Policy</button>
-            <button className="hover:text-pink-400 transition-colors duration-300">Terms of Service</button>
-            <button className="hover:text-pink-400 transition-colors duration-300">Support</button>
+            <button className="hover:text-pink-400 transition-colors duration-300">Chính sách riêng tư</button>
+            <button className="hover:text-pink-400 transition-colors duration-300">Điều khoản dịch vụ</button>
+            <button className="hover:text-pink-400 transition-colors duration-300">Hỗ trợ</button>
           </div>
         </motion.div>
       </div>

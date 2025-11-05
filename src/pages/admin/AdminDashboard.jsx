@@ -96,7 +96,7 @@ export default function AdminDashboard() {
           marginBottom: '24px',
           textAlign: 'center'
         }}
-        bodyStyle={{ padding: '40px' }}
+        styles={{ body: { padding: '40px' } }}
       >
         <Title level={1} style={{ color: 'white', margin: '0 0 16px 0' }}>
           🎉 Chào mừng đến Admin Dashboard

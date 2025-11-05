@@ -22,7 +22,7 @@ export default function Contact() {
     e.preventDefault();
     // Handle form submission
     console.log('Form submitted:', formData);
-    alert('Thank you for your message! We\'ll get back to you soon.');
+    alert('Cảm ơn bạn đã gửi tin nhắn! Chúng tôi sẽ phản hồi sớm nhất có thể.');
   };
 
   return (
@@ -44,7 +44,7 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Contact Us
+            Liên hệ với chúng tôi
           </motion.h1>
           <motion.p 
             className="text-xl text-gray-200 max-w-2xl mx-auto"
@@ -52,7 +52,7 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            Có câu hỏi? Chúng tôi rất muốn nghe từ bạn. Gửi tin nhắn cho chúng tôi và chúng tôi sẽ phản hồi sớm nhất có thể.
           </motion.p>
         </div>
       </section>
@@ -63,7 +63,7 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Information */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">Get in Touch</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-8">Liên hệ</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -71,7 +71,7 @@ export default function Contact() {
                     <Mail className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Email</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Thư điện tử</h3>
                     <p className="text-gray-600">support@pawfectmatch.com</p>
                     <p className="text-gray-600">info@pawfectmatch.com</p>
                   </div>
@@ -82,7 +82,7 @@ export default function Contact() {
                     <Phone className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Phone</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Điện thoại</h3>
                     <p className="text-gray-600">+1 (555) 123-4567</p>
                     <p className="text-gray-600">Mon-Fri 9AM-6PM EST</p>
                   </div>
@@ -93,7 +93,7 @@ export default function Contact() {
                     <MapPin className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Address</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Địa chỉ</h3>
                     <p className="text-gray-600">123 Pet Street</p>
                     <p className="text-gray-600">San Francisco, CA 94102</p>
                   </div>
@@ -104,10 +104,10 @@ export default function Contact() {
                     <Clock className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Business Hours</h3>
-                    <p className="text-gray-600">Monday - Friday: 9:00 AM - 6:00 PM</p>
-                    <p className="text-gray-600">Saturday: 10:00 AM - 4:00 PM</p>
-                    <p className="text-gray-600">Sunday: Closed</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Giờ làm việc</h3>
+                    <p className="text-gray-600">Thứ Hai - Thứ Sáu: 9:00 - 18:00</p>
+                    <p className="text-gray-600">Thứ Bảy: 10:00 - 16:00</p>
+                    <p className="text-gray-600">Chủ Nhật: Đóng cửa</p>
                   </div>
                 </div>
               </div>
@@ -115,12 +115,12 @@ export default function Contact() {
 
             {/* Contact Form */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">Send us a Message</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-8">Gửi tin nhắn cho chúng tôi</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
+                    Họ và tên
                   </label>
                   <input
                     type="text"
@@ -130,13 +130,13 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Your full name"
+                    placeholder="Họ và tên của bạn"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
+                    Địa chỉ Email
                   </label>
                   <input
                     type="email"
@@ -146,13 +146,13 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="your.email@example.com"
+                    placeholder="email.cua.ban@example.com"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject
+                    Chủ đề
                   </label>
                   <input
                     type="text"
@@ -162,13 +162,13 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="What's this about?"
+                    placeholder="Chủ đề này về gì?"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Message
+                    Tin nhắn
                   </label>
                   <textarea
                     id="message"
@@ -178,7 +178,7 @@ export default function Contact() {
                     required
                     rows={6}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Tell us more about your inquiry..."
+                    placeholder="Hãy cho chúng tôi biết thêm về câu hỏi của bạn..."
                   />
                 </div>
 
@@ -186,7 +186,7 @@ export default function Contact() {
                   type="submit"
                   className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-300"
                 >
-                  Send Message
+                  Gửi tin nhắn
                 </button>
               </form>
             </div>

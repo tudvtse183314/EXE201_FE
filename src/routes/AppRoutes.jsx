@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import MainLayout from "../components/layout/MainLayout";
+import RoleGuard from "./RoleGuard";
 import { ROLES, getDashboardPathByRole } from "../constants/roles";
 
 //admin pages - will be created
@@ -21,15 +22,10 @@ import Contact from "../pages/public/Contact";
 import CustomerDashboard from "../pages/customer/Dashboard";
 import CustomerProfile from "../pages/customer/Profile";
 import PetProfilePage from "../pages/customer/PetProfilePage";
-import AccountProfilePage from "../pages/customer/AccountProfilePage";
-
-// User Pages
-import CreatePetProfile from "../pages/user/CreatePetProfile";
-import AIAnalysis from "../pages/AIAnalysis";
 
 // AI Pages
-import AIAnalysisNew from "../pages/ai/AIAnalysis";
 import SeasonalOutfits from "../pages/ai/SeasonalOutfits";
+import ChatBot from "../pages/ai/ChatBot";
 
 // Error Pages
 import Unauthorized from "../pages/Unauthorized";
@@ -49,6 +45,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
 import CartsPage from "../pages/admin/carts/CartsPage";
+import ChatHistory from "../pages/admin/ChatHistory";
 import CategoryTest from "../components/admin/CategoryTest";
 import ProductTest from "../components/admin/ProductTest";
 import APITestSummary from "../components/admin/APITestSummary";
@@ -64,8 +61,8 @@ import Wishlist from "../pages/public/Wishlist";
 import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
+import OrderDetail from "../pages/customer/OrderDetail.jsx";
 import Premium from "../pages/public/Premium";
-import MyPets from "../pages/customer/MyPets";
 import ProductCardDemo from "../pages/public/ProductCardDemo";
 
 
@@ -148,156 +145,192 @@ export default function AppRoutes() {
             <ProductDetail/>
           </MainLayout>
         } />
-               <Route path="/cart" element={
-                 <MainLayout>
-                   <Cart/>
-                 </MainLayout>
-               } />
-               <Route path="/wishlist" element={
-                 <MainLayout>
-                   <Wishlist/>
-                 </MainLayout>
-               } />
-               <Route path="/premium" element={
-                 <MainLayout>
-                   <Premium/>
-                 </MainLayout>
-               } />
-               <Route path="/product-card-demo" element={
-                 <MainLayout>
-                   <ProductCardDemo/>
-                 </MainLayout>
-               } />
-        <Route path="/checkout" element={
+        {/* Public routes */}
+        <Route path="/premium" element={
           <MainLayout>
-            <Checkout/>
+            <Premium/>
           </MainLayout>
         } />
-  
+        <Route path="/product-card-demo" element={
+          <MainLayout>
+            <ProductCardDemo/>
+          </MainLayout>
+        } />
+
+        {/* ============================================ */}
+        {/* CUSTOMER ROUTES - Tất cả dưới prefix /customer/ */}
+        {/* ============================================ */}
+        
+        {/* My Pets - Trang mặc định sau login CUSTOMER */}
         <Route
-          path="/customer/dashboard"
+          path="/customer/my-pets"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <CustomerDashboard />
+                <PetProfilePage />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
         
-        {/* User Routes (CUSTOMER) */}
+        {/* Cart */}
         <Route
-          path="/user/home"
+          path="/customer/cart"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <CustomerDashboard />
+                <Cart/>
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
+        
+        {/* Wishlist */}
         <Route
-          path="/customer/profile"
+          path="/customer/wishlist"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <CustomerProfile />
+                <Wishlist/>
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
+        
+        {/* Checkout */}
+        <Route
+          path="/customer/checkout"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <Checkout/>
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* AI Chatbot */}
+        <Route
+          path="/customer/ai"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <ChatBot />
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* Orders - List */}
         <Route
           path="/customer/orders"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <UserOrders />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
+        />
+        
+        {/* Orders - Detail */}
+        <Route
+          path="/customer/orders/:id"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <OrderDetail />
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* Profile */}
+        <Route
+          path="/customer/profile"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <CustomerProfile />
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* Dashboard (optional) */}
+        <Route
+          path="/customer/dashboard"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <CustomerDashboard />
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* ============================================ */}
+        {/* LEGACY ROUTES - Redirect to /customer/* */}
+        {/* ============================================ */}
+        
+        {/* Redirect old paths to new /customer/* paths */}
+        <Route
+          path="/my-pets"
+          element={<Navigate to="/customer/my-pets" replace />}
+        />
+        <Route
+          path="/cart"
+          element={<Navigate to="/customer/cart" replace />}
+        />
+        <Route
+          path="/wishlist"
+          element={<Navigate to="/customer/wishlist" replace />}
+        />
+        <Route
+          path="/checkout"
+          element={<Navigate to="/customer/checkout" replace />}
         />
         <Route
           path="/orders"
+          element={<Navigate to="/customer/orders" replace />}
+        />
+        {/* Redirect /orders/:id to /customer/orders/:id */}
+        <Route
+          path="/orders/:id"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <UserOrders />
+                <OrderDetail />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
-         <Route
-           path="/customer/pet-profiles"
-           element={
-             <PrivateRoute roles={['CUSTOMER']}>
-               <MainLayout>
-                 <PetProfilePage />
-               </MainLayout>
-             </PrivateRoute>
-           }
-         />
-         <Route
-           path="/my-pets"
-           element={
-             <PrivateRoute roles={['CUSTOMER']}>
-               <MainLayout>
-                 <MyPets />
-               </MainLayout>
-             </PrivateRoute>
-           }
-         />
         <Route
-          path="/customer/account-profile"
-          element={
-            <PrivateRoute roles={['CUSTOMER']}>
-              <MainLayout>
-                <AccountProfilePage />
-              </MainLayout>
-            </PrivateRoute>
-          }
-        />
-        
-        {/* User Routes */}
-        <Route
-          path="/create-pet-profile"
-          element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
-              <MainLayout>
-                <CreatePetProfile />
-              </MainLayout>
-            </PrivateRoute>
-          }
+          path="/profile"
+          element={<Navigate to="/customer/profile" replace />}
         />
         <Route
           path="/ai-analysis"
-          element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
-              <MainLayout>
-                <AIAnalysis />
-              </MainLayout>
-            </PrivateRoute>
-          }
+          element={<Navigate to="/customer/ai" replace />}
         />
-        
-        {/* AI Routes */}
+        <Route
+          path="/ai/chat"
+          element={<Navigate to="/customer/ai" replace />}
+        />
         <Route
           path="/ai/analysis"
-          element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
-              <MainLayout>
-                <AIAnalysisNew />
-              </MainLayout>
-            </PrivateRoute>
-          }
+          element={<Navigate to="/customer/ai" replace />}
         />
+        
+        {/* Keep other AI routes for backward compatibility */}
         <Route
           path="/ai/seasonal-outfits"
           element={
-            <PrivateRoute roles={[ROLES.CUSTOMER]}>
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <SeasonalOutfits />
               </MainLayout>
-            </PrivateRoute>
+            </RoleGuard>
           }
         />
         
@@ -350,6 +383,7 @@ export default function AppRoutes() {
                    <p>Coming soon...</p>
                  </div>} />
                  <Route path="carts" element={<CartsPage />} />
+          <Route path="chat-history" element={<ChatHistory />} />
           <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
             <h1>👥 Accounts Management</h1>
             <p>Coming soon...</p>

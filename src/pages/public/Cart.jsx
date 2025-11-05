@@ -1,5 +1,5 @@
 // src/pages/public/Cart.jsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -33,8 +33,46 @@ export default function Cart() {
     getTotalItems,
     getTotalPrice,
     loading,
-    error
+    error,
+    loadCart
   } = useCart();
+
+  // Guard để đảm bảo chỉ load cart một lần khi mount
+  const hasLoadedRef = useRef(false);
+  
+  // Load cart khi vào trang Cart - chỉ load một lần khi mount
+  useEffect(() => {
+    // Nếu đã load rồi thì không load lại
+    if (hasLoadedRef.current) {
+      console.log('🛒 Cart Page: Skipping load - already loaded');
+      return;
+    }
+    
+    console.log('🛒 Cart Page: useEffect triggered, loading cart...');
+    hasLoadedRef.current = true;
+    loadCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Chỉ load 1 lần khi mount
+  
+  // Reset flag khi component unmount (để có thể load lại khi quay lại trang)
+  useEffect(() => {
+    return () => {
+      hasLoadedRef.current = false;
+      console.log('🛒 Cart Page: Component unmounted, reset load flag');
+    };
+  }, []);
+  
+  // Debug: Log khi component re-render (chỉ trong development)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🛒 Cart Page: Component re-rendered', {
+        cartItemsCount: cartItems.length,
+        loading,
+        error,
+        hasLoaded: hasLoadedRef.current
+      });
+    }
+  });
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
@@ -76,61 +114,93 @@ export default function Cart() {
         <Col xs={24} lg={16}>
           <Card>
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
-              {cartItems.map((item) => (
-                <div key={item.id}>
-                  <Row gutter={[16, 16]} align="middle">
-                    <Col xs={24} sm={6}>
-                      <Image
-                        alt={item.product?.name || 'Product'}
-                        src={item.product?.image || getFallbackImageByIndex(item.productId)}
-                        style={{ width: '100%', maxWidth: 100 }}
-                        fallback={getFallbackImageByIndex(item.productId)}
-                        onError={(e) => {
-                          e.target.src = getFallbackImageByIndex(item.productId);
-                        }}
-                      />
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <div>
-                        <Title level={5} style={{ margin: 0 }}>
-                          {item.product?.name || 'Unknown Product'}
-                        </Title>
-                        {item.product?.category && (
-                          <Text type="secondary">{item.product.category.name}</Text>
-                        )}
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={3}>
-                      <div style={{ textAlign: 'center' }}>
-                        <Text strong>
-                          {item.product?.price ? `${item.product.price.toLocaleString()}đ` : 'Liên hệ'}
+              {cartItems.map((item) => {
+                const itemId = item.id || item.itemId;
+                const productId = item.productId || item.product?.id || item.id;
+                const product = item.product || {};
+                const quantity = Number(item.quantity || 1);
+                const price = Number(
+                  item.price ?? product.price ?? item.unitPrice ?? item.productPrice ?? 0
+                );
+                const name = product.name || item.productName || item.name || 'Unknown Product';
+                const categoryName = product.category?.name || item.categoryName || null;
+                const imageUrl = product.imageUrl || product.image || item.productImage || item.imageUrl || item.image || null;
+                const itemTotal = Number(item.total ?? price * quantity);
+                const hasDiscount = product.salePrice && product.salePrice < price;
+                const salePrice = Number(product.salePrice) || price;
+                const stock = product.stock ?? 999;
+                const badge = product.badge;
+                const description = product.description || '';
+                return (
+                  <div key={itemId} style={{marginBottom: 32}}>
+                    <Row gutter={[12, 12]} align="middle" wrap={true}>
+                      {/* IMAGE with badge */}
+                      <Col xs={24} sm={5} md={4} lg={3} style={{position:'relative'}}>
+                        <div style={{position:'relative', width:'100%', maxWidth:90}}>
+                          <Image
+                            alt={name || 'Product'}
+                            src={imageUrl || getFallbackImageByIndex(productId)}
+                            style={{ width: '100%', maxWidth: 90, borderRadius: 8, objectFit: 'cover' }}
+                            fallback={getFallbackImageByIndex(productId)}
+                          />
+                          {badge && (
+                            <span style={{
+                              position:'absolute', top:6, right:2, background:'#fff', color:'#c47256', fontWeight:600, fontSize:12, borderRadius: '8px', padding: '2px 6px', boxShadow:'0 2px 8px #0001'
+                            }}>{badge}</span>
+                          )}
+                          {/* Stock Status */}
+                          {stock <= 10 && (
+                            <span style={{position:'absolute',left:2,bottom:6,background:'#ef4444',color:'#fff',fontWeight:500,fontSize:11,borderRadius:6,padding:'2px 5px'}}>
+                              Còn {stock} sp!
+                            </span>
+                          )}
+                        </div>
+                      </Col>
+                      <Col xs={24} sm={11} md={9} lg={8}>
+                        <div style={{minHeight: 60}}>
+                          <Title level={5} style={{ margin: 0 }}>{name}</Title>
+                          {categoryName && <Text type="secondary" style={{marginRight:8}}>{categoryName}</Text>}
+                          {description && <div style={{fontSize:13, color:'#888',marginTop:4,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis',maxWidth:200}}>{description}</div>}
+                        </div>
+                        {/* Giá sale và giá gốc nếu có */}
+                        <div style={{marginTop:4, display:'flex', alignItems:'baseline', gap:12}}>
+                          <Text strong style={{color:'#c47256', fontSize:16}}>
+                            {salePrice.toLocaleString()}đ
+                          </Text>
+                          {hasDiscount && (
+                            <Text delete style={{color:'#888', fontSize:12}}>{price.toLocaleString()}đ</Text>
+                          )}
+                        </div>
+                      </Col>
+                      <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
+                        <InputNumber
+                          min={1}
+                          max={stock}
+                          value={quantity}
+                          onChange={(value) => updateQuantity(itemId, value)}
+                          style={{ width: 64 }}
+                        />
+                      </Col>
+                      <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
+                        <Text strong style={{fontSize:14,color:'#1890ff'}}>
+                          {itemTotal.toLocaleString()}đ
                         </Text>
-                      </div>
-                    </Col>
-                    <Col xs={8} sm={2}>
-                      <InputNumber
-                        min={1}
-                        max={999}
-                        value={item.quantity}
-                        onChange={(value) => updateQuantity(item.id, value)}
-                        style={{ width: '100%' }}
-                        loading={loading}
-                      />
-                    </Col>
-                    <Col xs={4} sm={1}>
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => removeFromCart(item.id)}
-                        title="Xóa"
-                        loading={loading}
-                      />
-                    </Col>
-                  </Row>
-                  <Divider />
-                </div>
-              ))}
+                      </Col>
+                      <Col xs={4} sm={2} md={3} lg={2} style={{textAlign:'center'}}>
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => removeFromCart(itemId)}
+                          title="Xóa"
+                          loading={loading}
+                        />
+                      </Col>
+                    </Row>
+                    <Divider/>
+                  </div>
+                );
+              })}
             </Space>
           </Card>
         </Col>

@@ -68,10 +68,10 @@ const PartnersSection = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Trusted by Pet Lovers
+            Được tin cậy bởi người yêu thú cưng
           </h2>
           <p className="text-xl text-gray-600">
-            Partnered with leading brands in pet care and nutrition
+            Đối tác với các thương hiệu hàng đầu về chăm sóc và dinh dưỡng thú cưng
           </p>
         </motion.div>
         
@@ -140,7 +140,7 @@ const PartnersSection = () => {
               >
                 <span className="text-white text-xs">✓</span>
               </motion.div>
-              <span className="text-sm font-medium">Verified Partners</span>
+              <span className="text-sm font-medium">Đối tác được xác minh</span>
             </div>
             
             <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ const PartnersSection = () => {
               >
                 <span className="text-white text-xs">🔒</span>
               </motion.div>
-              <span className="text-sm font-medium">Secure Shopping</span>
+              <span className="text-sm font-medium">Mua sắm an toàn</span>
             </div>
             
             <div className="flex items-center gap-2">
@@ -162,7 +162,7 @@ const PartnersSection = () => {
               >
                 <span className="text-white text-xs">⭐</span>
               </motion.div>
-              <span className="text-sm font-medium">Quality Guaranteed</span>
+              <span className="text-sm font-medium">Đảm bảo chất lượng</span>
             </div>
           </div>
         </motion.div>

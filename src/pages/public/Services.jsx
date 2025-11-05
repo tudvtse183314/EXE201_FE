@@ -6,27 +6,27 @@ export default function Services() {
   const services = [
     {
       icon: '🤖',
-      title: 'AI Product Matching',
-      description: 'Our advanced AI analyzes your pet\'s breed, age, size, and personality to recommend the perfect products.',
-      features: ['Breed-specific recommendations', 'Age-appropriate suggestions', 'Personality-based matching']
+      title: 'Khớp sản phẩm AI',
+      description: 'AI tiên tiến của chúng tôi phân tích giống, tuổi, kích cỡ và tính cách thú cưng để gợi ý sản phẩm hoàn hảo.',
+      features: ['Gợi ý theo giống', 'Gợi ý phù hợp độ tuổi', 'Khớp theo tính cách']
     },
     {
       icon: '🛍️',
-      title: 'Curated Product Catalog',
-      description: 'Hand-picked products from trusted brands, tested and approved by our pet experts.',
-      features: ['Quality assurance', 'Expert reviews', 'Brand partnerships']
+      title: 'Danh mục sản phẩm được tuyển chọn',
+      description: 'Sản phẩm được tuyển chọn từ các thương hiệu uy tín, được kiểm tra và phê duyệt bởi các chuyên gia thú cưng.',
+      features: ['Đảm bảo chất lượng', 'Đánh giá chuyên gia', 'Đối tác thương hiệu']
     },
     {
       icon: '📱',
-      title: 'Mobile App',
-      description: 'Access your pet\'s profile and get recommendations on the go with our user-friendly mobile app.',
-      features: ['Profile management', 'Quick recommendations', 'Order tracking']
+      title: 'Ứng dụng di động',
+      description: 'Truy cập hồ sơ thú cưng và nhận gợi ý khi di chuyển với ứng dụng di động thân thiện.',
+      features: ['Quản lý hồ sơ', 'Gợi ý nhanh', 'Theo dõi đơn hàng']
     },
     {
       icon: '💬',
-      title: 'Expert Support',
-      description: 'Get personalized advice from our team of veterinarians and pet care specialists.',
-      features: ['24/7 chat support', 'Expert consultations', 'Health advice']
+      title: 'Hỗ trợ chuyên gia',
+      description: 'Nhận lời khuyên cá nhân hóa từ đội ngũ bác sĩ thú y và chuyên gia chăm sóc thú cưng.',
+      features: ['Hỗ trợ chat 24/7', 'Tư vấn chuyên gia', 'Lời khuyên sức khỏe']
     }
   ];
 
@@ -49,7 +49,7 @@ export default function Services() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Our Services
+            Dịch vụ của chúng tôi
           </motion.h1>
           <motion.p 
             className="text-xl text-gray-200 max-w-2xl mx-auto"
@@ -57,7 +57,7 @@ export default function Services() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Comprehensive pet care solutions powered by AI and backed by expert knowledge.
+            Giải pháp chăm sóc thú cưng toàn diện với công nghệ AI và kiến thức chuyên gia.
           </motion.p>
         </div>
       </section>
@@ -101,9 +101,9 @@ export default function Services() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Cách hoạt động</h2>
             <p className="text-lg text-gray-600">
-              Get started in just a few simple steps
+              Bắt đầu chỉ trong vài bước đơn giản
             </p>
           </div>
           
@@ -119,9 +119,9 @@ export default function Services() {
                   <span className="text-2xl font-bold text-white">1</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Pet Profile</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Tạo hồ sơ thú cưng</h3>
               <p className="text-gray-600">
-                Tell us about your pet's breed, age, size, and personality traits.
+                Cho chúng tôi biết về giống, tuổi, kích cỡ và đặc điểm tính cách của thú cưng.
               </p>
             </div>
             
@@ -136,9 +136,9 @@ export default function Services() {
                   <span className="text-2xl font-bold text-white">2</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Get AI Recommendations</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Nhận gợi ý AI</h3>
               <p className="text-gray-600">
-                Our AI analyzes your pet's profile and suggests the perfect products.
+                AI của chúng tôi phân tích hồ sơ thú cưng và đề xuất sản phẩm hoàn hảo.
               </p>
             </div>
             
@@ -153,9 +153,9 @@ export default function Services() {
                   <span className="text-2xl font-bold text-white">3</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Shop & Enjoy</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Mua sắm & Tận hưởng</h3>
               <p className="text-gray-600">
-                Purchase recommended products and watch your pet enjoy their new favorites.
+                Mua sản phẩm được gợi ý và xem thú cưng tận hưởng các sản phẩm yêu thích mới.
               </p>
             </div>
           </div>
@@ -166,9 +166,9 @@ export default function Services() {
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Success Stories</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Câu chuyện thành công</h2>
             <p className="text-lg text-gray-600">
-              See how our AI recommendations have helped pets and their owners.
+              Xem cách gợi ý AI của chúng tôi đã giúp đỡ thú cưng và chủ sở hữu.
             </p>
           </div>
           

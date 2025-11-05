@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, Row, Col, Button, Empty, message } from 'antd';
 import { HeartOutlined, ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
@@ -146,7 +148,7 @@ export default function Wishlist() {
                       background: '#fff',
                       height: '100%'
                     }}
-                    bodyStyle={{ padding: '20px' }}
+                    styles={{ body: { padding: '20px' } }}
                     cover={
                       <div 
                         style={{ 
@@ -157,16 +159,17 @@ export default function Wishlist() {
                         }}
                         onClick={() => handleViewProduct(product)}
                       >
-                        <img
+                        <LazyLoadImage
                           alt={product.name}
-                          src={product.image || getFallbackImageByIndex(product.id)}
+                          src={product.imageUrl || product.image || getFallbackImageByIndex(product.id)}
                           style={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             transition: 'transform 0.3s ease'
                           }}
-                          loading="lazy"
+                          effect="blur"
+                          placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                           onError={(e) => {
                             e.target.src = getFallbackImageByIndex(product.id);
                           }}

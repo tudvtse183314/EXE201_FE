@@ -22,7 +22,7 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            About Pawfect Match
+            Giới thiệu về Pawfect Match
           </motion.h1>
           <motion.p 
             className="text-xl text-gray-200 max-w-2xl mx-auto"
@@ -30,7 +30,7 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            We're passionate about helping pet owners find the perfect products for their beloved companions.
+            Chúng tôi đam mê giúp chủ thú cưng tìm được những sản phẩm hoàn hảo cho người bạn đồng hành yêu quý.
           </motion.p>
         </div>
       </section>
@@ -40,15 +40,15 @@ export default function About() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Sứ mệnh của chúng tôi</h2>
               <p className="text-lg text-gray-600 mb-6">
-                At Pawfect Match, we believe every pet deserves the best. Our AI-powered platform 
-                helps you discover products that perfectly match your pet's unique personality, 
-                needs, and preferences.
+                Tại Pawfect Match, chúng tôi tin rằng mỗi thú cưng đều xứng đáng với những điều tốt đẹp nhất. 
+                Nền tảng AI của chúng tôi giúp bạn khám phá những sản phẩm phù hợp hoàn hảo với tính cách, 
+                nhu cầu và sở thích độc đáo của thú cưng.
               </p>
               <p className="text-lg text-gray-600">
-                From toys and accessories to food and healthcare products, we make it easy to 
-                find exactly what your furry friend needs to live their happiest, healthiest life.
+                Từ đồ chơi và phụ kiện đến thức ăn và sản phẩm chăm sóc sức khỏe, chúng tôi giúp bạn dễ dàng 
+                tìm thấy chính xác những gì người bạn bốn chân cần để sống hạnh phúc và khỏe mạnh nhất.
               </p>
             </div>
             <div className="relative">
@@ -67,9 +67,9 @@ export default function About() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Gặp gỡ đội ngũ của chúng tôi</h2>
             <p className="text-lg text-gray-600">
-              Pet lovers, tech enthusiasts, and product experts working together for your pets.
+              Những người yêu thú cưng, người đam mê công nghệ và chuyên gia sản phẩm cùng làm việc vì thú cưng của bạn.
             </p>
           </div>
           
@@ -85,9 +85,9 @@ export default function About() {
                   <span className="text-2xl text-white">👨‍💻</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Tech Team</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Đội ngũ Công nghệ</h3>
               <p className="text-gray-600">
-                Building the AI technology that powers our matching algorithm.
+                Xây dựng công nghệ AI cung cấp năng lượng cho thuật toán khớp của chúng tôi.
               </p>
             </div>
             
@@ -102,9 +102,9 @@ export default function About() {
                   <span className="text-2xl text-white">🐕</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Pet Experts</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Chuyên gia Thú cưng</h3>
               <p className="text-gray-600">
-                Veterinarians and pet care specialists ensuring product quality.
+                Bác sĩ thú y và chuyên gia chăm sóc thú cưng đảm bảo chất lượng sản phẩm.
               </p>
             </div>
             
@@ -119,9 +119,9 @@ export default function About() {
                   <span className="text-2xl text-white">🛍️</span>
                 </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Product Team</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Đội ngũ Sản phẩm</h3>
               <p className="text-gray-600">
-                Curating the best products from trusted brands worldwide.
+                Tuyển chọn những sản phẩm tốt nhất từ các thương hiệu uy tín trên toàn thế giới.
               </p>
             </div>
           </div>
@@ -132,9 +132,9 @@ export default function About() {
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Pet Community</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Cộng đồng thú cưng của chúng tôi</h2>
             <p className="text-lg text-gray-600">
-              Meet some of the amazing pets that inspire our product recommendations.
+              Hãy gặp gỡ một số thú cưng tuyệt vời đã truyền cảm hứng cho các gợi ý sản phẩm của chúng tôi.
             </p>
           </div>
           

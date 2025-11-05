@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getImage, defaultImage } from '../../assets/images';
 
 /**
@@ -44,15 +46,27 @@ export default function Image({
         </div>
       )}
       
-      <img
-        src={getImage(imageSrc, fallback)}
-        alt={alt}
-        className={`w-full h-full object-cover ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        onLoad={handleLoad}
-        onError={handleError}
-        loading={lazy ? 'lazy' : 'eager'}
-        {...props}
-      />
+      {lazy ? (
+        <LazyLoadImage
+          src={getImage(imageSrc, fallback)}
+          alt={alt}
+          className={`w-full h-full object-cover ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+          effect="blur"
+          placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+          onLoad={handleLoad}
+          onError={handleError}
+          {...props}
+        />
+      ) : (
+        <img
+          src={getImage(imageSrc, fallback)}
+          alt={alt}
+          className={`w-full h-full object-cover ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+          onLoad={handleLoad}
+          onError={handleError}
+          {...props}
+        />
+      )}
     </div>
   );
 }

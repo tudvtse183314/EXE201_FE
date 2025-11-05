@@ -81,6 +81,7 @@ export default function CustomerProfilePage() {
       console.log("👤 CustomerProfilePage: Saving profile", values);
       
       // Prepare data for API - map form values to API format
+      // Note: API only accepts these fields according to UpdateAccountRequest
       const updateData = {
         fullName: values.name,
         email: values.email,
@@ -88,13 +89,30 @@ export default function CustomerProfilePage() {
         petName: values.petName || '',
         petAge: values.petAge || '',
         petType: values.petType || '',
-        petSize: values.petSize || '',
-        address: values.address || ''
+        petSize: values.petSize || ''
+        // Note: 'address' field is not accepted by API according to UpdateAccountRequest schema
       };
       
       // Call API to update account
       const result = await updateAccount(user.id, updateData);
       console.log("👤 CustomerProfilePage: API response", result);
+      
+      // Update local profileData state immediately
+      const updatedProfileData = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address || '',
+        petName: values.petName || '',
+        petAge: values.petAge || '',
+        petType: values.petType || '',
+        petSize: values.petSize || '',
+        avatar: profileData.avatar,
+        role: profileData.role,
+        createdAt: profileData.createdAt,
+        lastLogin: profileData.lastLogin
+      };
+      setProfileData(updatedProfileData);
       
       // Update auth context with merged user data
       if (updateUser) {
@@ -104,7 +122,6 @@ export default function CustomerProfilePage() {
           name: values.name,
           email: values.email,
           phone: values.phone,
-          address: values.address,
           petName: values.petName || '',
           petAge: values.petAge || '',
           petType: values.petType || '',
@@ -113,6 +130,9 @@ export default function CustomerProfilePage() {
         updateUser(updatedUserData);
         console.log("👤 CustomerProfilePage: Updated user context", updatedUserData);
       }
+      
+      // Update form fields to reflect new values
+      form.setFieldsValue(updatedProfileData);
       
       setIsEditing(false);
       message.success('Cập nhật thông tin thành công!');
@@ -311,11 +331,8 @@ export default function CustomerProfilePage() {
                 </Col>
                 <Col span={12}>
                   <Form.Item
-                    label="Địa chỉ"
+                    label="Địa chỉ (tùy chọn)"
                     name="address"
-                    rules={[
-                      { required: true, message: 'Vui lòng nhập địa chỉ!' }
-                    ]}
                   >
                     <Input 
                       placeholder="Nhập địa chỉ..."

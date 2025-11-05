@@ -30,12 +30,14 @@ import {
   KeyOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { updateAccount, resetPassword } from '../../services/auth';
 
 const { Title, Text } = Typography;
 
 export default function StaffProfilePage() {
   const { user, updateUser } = useAuth();
+  const { showSuccess, showError, showWarning } = useToast();
   const [form] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -83,6 +85,7 @@ export default function StaffProfilePage() {
       console.log("👤 StaffProfilePage: Saving profile", values);
       
       // Prepare data for API - map form values to API format
+      // Note: API only accepts these fields according to UpdateAccountRequest
       const updateData = {
         fullName: values.name,
         email: values.email,
@@ -90,13 +93,30 @@ export default function StaffProfilePage() {
         petName: values.petName || '',
         petAge: values.petAge || '',
         petType: values.petType || '',
-        petSize: values.petSize || '',
-        address: values.address || ''
+        petSize: values.petSize || ''
+        // Note: 'address' field is not accepted by API according to UpdateAccountRequest schema
       };
       
       // Call API to update account
       const result = await updateAccount(user.id, updateData);
       console.log("👤 StaffProfilePage: API response", result);
+      
+      // Update local profileData state immediately
+      const updatedProfileData = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address || '',
+        petName: values.petName || '',
+        petAge: values.petAge || '',
+        petType: values.petType || '',
+        petSize: values.petSize || '',
+        avatar: profileData.avatar,
+        role: profileData.role,
+        createdAt: profileData.createdAt,
+        lastLogin: profileData.lastLogin
+      };
+      setProfileData(updatedProfileData);
       
       // Update auth context with merged user data
       if (updateUser) {
@@ -106,7 +126,6 @@ export default function StaffProfilePage() {
           name: values.name,
           email: values.email,
           phone: values.phone,
-          address: values.address,
           petName: values.petName || '',
           petAge: values.petAge || '',
           petType: values.petType || '',
@@ -116,12 +135,16 @@ export default function StaffProfilePage() {
         console.log("👤 StaffProfilePage: Updated user context", updatedUserData);
       }
       
+      // Update form fields to reflect new values
+      form.setFieldsValue(updatedProfileData);
+      
       setIsEditing(false);
-      message.success('Cập nhật thông tin thành công!');
+      showSuccess('Cập nhật thông tin thành công!');
       console.log("👤 StaffProfilePage: Profile updated successfully");
     } catch (error) {
       console.error("👤 StaffProfilePage: Error saving profile", error);
-      message.error('Lỗi khi cập nhật thông tin: ' + (error?.response?.data?.message || error.message));
+      const errorMessage = error?.response?.data?.message || error.message || 'Lỗi không xác định';
+      showError('Cập nhật thông tin thất bại: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -141,11 +164,12 @@ export default function StaffProfilePage() {
       
       setIsPasswordModalOpen(false);
       passwordForm.resetFields();
-      message.success('Đổi mật khẩu thành công!');
+      showSuccess('Đổi mật khẩu thành công!');
       console.log("👤 StaffProfilePage: Password changed", result);
     } catch (error) {
       console.error("👤 StaffProfilePage: Error changing password", error);
-      message.error('Lỗi khi đổi mật khẩu: ' + (error?.response?.data?.message || error.message));
+      const errorMessage = error?.response?.data?.message || error.message || 'Lỗi không xác định';
+      showError('Đổi mật khẩu thất bại: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -313,11 +337,8 @@ export default function StaffProfilePage() {
                 </Col>
                 <Col span={12}>
                   <Form.Item
-                    label="Địa chỉ"
+                    label="Địa chỉ (tùy chọn)"
                     name="address"
-                    rules={[
-                      { required: true, message: 'Vui lòng nhập địa chỉ!' }
-                    ]}
                   >
                     <Input 
                       placeholder="Nhập địa chỉ..."

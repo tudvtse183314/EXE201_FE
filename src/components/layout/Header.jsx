@@ -22,14 +22,20 @@ export default function Header() {
   // --- MENU LOGIC ---------------------------------------------------------
 
   // Menu theo thứ tự yêu cầu
+  // Chỉ hiển thị menu customer cho user có role CUSTOMER
+  const userRole = user?.role?.toUpperCase();
+  const isCustomer = userRole === 'CUSTOMER';
+  
   const baseMenu = [
-    { label: 'Home', path: '/' },
-    { label: 'Shop', path: '/shop' },
-    { label: 'About', path: '/about' },
-    { label: 'Contact', path: '/contact' },
+    { label: 'Trang chủ', path: '/' },
+    { label: 'Cửa hàng', path: '/shop' },
+    { label: 'Giới thiệu', path: '/about' },
+    { label: 'Liên hệ', path: '/contact' },
     { label: 'Premium', path: '/premium' },
-    { label: 'My Pets', path: '/my-pets', requiresAuth: true },
-    { label: 'AI Analysis', path: '/ai-analysis', isSpecial: true }, // Nút đặc biệt
+    ...(isCustomer ? [
+      { label: 'Thú cưng của tôi', path: '/customer/my-pets', requiresAuth: true },
+      { label: 'AI Phân tích', path: '/customer/ai', isSpecial: true, requiresAuth: true },
+    ] : []),
   ];
 
   // Menu items không cần thay đổi theo user
@@ -37,8 +43,12 @@ export default function Header() {
 
   // Những đường dẫn bắt buộc đăng nhập
   const authRequired = new Set([
-    '/my-pets',
-    '/ai-analysis',
+    '/customer/my-pets',
+    '/customer/ai',
+    '/customer/cart',
+    '/customer/wishlist',
+    '/customer/orders',
+    '/customer/profile',
   ]);
 
   const handleNavigation = (path) => {
@@ -66,6 +76,13 @@ export default function Header() {
 
   const isActive = (path) =>
     location.pathname === path || location.pathname.startsWith(path + '/');
+
+  // Thêm handler
+  const handleProfileClick = () => {
+    if (!user) return;
+    navigate('/customer/profile');
+    setMobileMenuOpen(false);
+  };
 
   // -----------------------------------------------------------------------
 
@@ -138,30 +155,30 @@ export default function Header() {
               {/* User Actions */}
               {user ? (
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
+                  <div className="flex items-center space-x-2 cursor-pointer group"
+                       onClick={handleProfileClick}
+                       title="Trang cá nhân">
+                    <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center group-hover:ring-2 ring-c47256 transition" >
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <span
-                      className="text-sm font-medium hidden sm:block"
+                      className="text-sm font-medium hidden sm:block group-hover:text-c47256 transition"
                       style={{ color: '#34140e' }}
                     >
-                      {user.name
-                        ? `Xin chào, ${user.name}`
-                        : `Welcome, ${user.email}`}
+                      {user.name ? `Xin chào, ${user.name}` : `Xin chào, ${user.email}`}
                     </span>
                   </div>
                   <Button variant="secondary" size="sm" onClick={handleLogout}>
-                    Logout
+                    Đăng xuất
                   </Button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
                   <Button variant="secondary" size="sm" onClick={handleLogin}>
-                    Login
+                    Đăng nhập
                   </Button>
                   <Button size="sm" onClick={handleRegister}>
-                    Sign Up
+                    Đăng ký
                   </Button>
                 </div>
               )}
@@ -275,12 +292,14 @@ export default function Header() {
             <div className="pt-4 border-t border-gray-200 mt-4">
               {user ? (
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-md">
-                    <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center">
+                  <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-md cursor-pointer group"
+                       onClick={handleProfileClick}
+                       title="Trang cá nhân">
+                    <div className="w-8 h-8 bg-oldCopper-400 rounded-full flex items-center justify-center group-hover:ring-2 ring-c47256 transition">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <span className="text-sm font-medium" style={{ color: '#34140e' }}>
-                      {user.name ? `Xin chào, ${user.name}` : `Welcome, ${user.email}`}
+                      {user.name ? `Xin chào, ${user.name}` : `Xin chào, ${user.email}`}
                     </span>
                   </div>
 
@@ -294,7 +313,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Logout
+                    Đăng xuất
                   </Button>
                 </div>
               ) : (
@@ -308,7 +327,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Login
+                    Đăng nhập
                   </Button>
                   <Button
                     size="sm"
@@ -318,7 +337,7 @@ export default function Header() {
                     }}
                     className="w-full"
                   >
-                    Sign Up
+                    Đăng ký
                   </Button>
                 </div>
               )}

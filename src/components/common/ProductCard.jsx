@@ -1,11 +1,14 @@
 import React from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import ShinyText from '../effects/ShinyText';
 import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
@@ -18,7 +21,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
     navigate(`/product/${product.id}`);
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e?.stopPropagation();
+    
+    // Kiểm tra đăng nhập
+    if (!user) {
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    
+    // Kiểm tra role CUSTOMER
+    const userRole = (user.role || "").toUpperCase();
+    if (userRole !== 'CUSTOMER') {
+      navigate('/unauthorized');
+      return;
+    }
+    
     try {
       if (onAddToCart) {
         onAddToCart(product);
@@ -31,7 +49,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
     }
   };
 
-  const handleAddToWishlist = () => {
+  const handleAddToWishlist = (e) => {
+    e?.stopPropagation();
+    
+    // Kiểm tra đăng nhập
+    if (!user) {
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+    
+    // Kiểm tra role CUSTOMER
+    const userRole = (user.role || "").toUpperCase();
+    if (userRole !== 'CUSTOMER') {
+      navigate('/unauthorized');
+      return;
+    }
+    
     if (onAddToWishlist) {
       onAddToWishlist(product);
     } else {
@@ -73,7 +106,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group">
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 group flex flex-col h-full">
       {/* Product Image */}
       <div className="relative bg-gray-100 h-48 flex items-center justify-center overflow-hidden">
         {product.badge && (
@@ -82,29 +115,139 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           </div>
         )}
         
-        {/* Placeholder Image */}
-        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+        {(() => {
+          // Sử dụng imageUrl (đã normalize từ getAllProducts)
+          let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
+          
+          // Debug log cho tất cả products (tạm thời để debug)
+          console.log(`🖼️ ProductCard: Product ${product.id} (${product.name})`, {
+            imageUrl: product.imageUrl,
+            finalBeforeCheck: src,
+            isNull: src === null,
+            isEmpty: src === '',
+            type: typeof src
+          });
+          
+          // Nếu null hoặc empty string → dùng fallback
+          if (!src || src === '' || src === 'null' || src === 'undefined') {
+            src = getFallbackImageByIndex(product.id);
+            console.log(`🖼️ ProductCard: Product ${product.id} using fallback`, src);
+          } else if (src.startsWith('http://') || src.startsWith('https://')) {
+            // Nếu đã là full URL → dùng trực tiếp
+            console.log(`🖼️ ProductCard: Product ${product.id} using external URL`, src);
+          } else if (src.startsWith('/api/uploads/')) {
+            // Build full URL nếu là relative path từ BE
+            const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+            src = baseURL.replace('/api', '') + src;
+            console.log(`🖼️ ProductCard: Product ${product.id} building BE URL`, src);
+          } else {
+            // Không match pattern → dùng fallback
+            console.warn(`🖼️ ProductCard: Product ${product.id} unmatched pattern, using fallback`, src);
+            src = getFallbackImageByIndex(product.id);
+          }
+          
+          const fallbackSrc = getFallbackImageByIndex(product.id);
+          
+          return (
+            <LazyLoadImage
+              src={src}
+              alt={product.name || 'Product'}
+              width="100%"
+              height="192px"
+              effect="blur"
+              placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
+              className="w-full h-full object-cover"
+              style={{ 
+                display: 'block',
+                width: '100%',
+                height: '192px',
+                objectFit: 'cover',
+                backgroundColor: '#f5f5f5' // Background để thấy khi loading
+              }}
+              onError={(e) => {
+                console.error(`🖼️ ProductCard: Image load error for product ${product.id}`, {
+                  attemptedSrc: e.target.src,
+                  product: { id: product.id, name: product.name, imageUrl: product.imageUrl }
+                });
+                // Nếu load lỗi → fallback về assets
+                if (e.target.src !== fallbackSrc && fallbackSrc) {
+                  console.log(`🖼️ ProductCard: Trying fallback for product ${product.id}`, fallbackSrc);
+                  e.target.src = fallbackSrc;
+                } else {
+                  // Nếu cả fallback cũng lỗi → show placeholder emoji
+                  console.error(`🖼️ ProductCard: Fallback also failed for product ${product.id}`);
+                  e.target.style.display = 'none';
+                  const placeholder = e.target.parentElement.querySelector('.placeholder-image');
+                  if (placeholder) placeholder.style.display = 'flex';
+                }
+              }}
+              onLoad={() => {
+                console.log(`🖼️ ProductCard: Image loaded successfully for product ${product.id}`);
+              }}
+            />
+          );
+        })()}
+        
+        {/* Placeholder Image - Show only if image fails to load */}
+        <div 
+          className="placeholder-image w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center hidden absolute inset-0"
+        >
           <span className="text-6xl opacity-60">
-            {getPlaceholderImage(product.category.name)}
+            {getPlaceholderImage(product.category?.name)}
           </span>
         </div>
         
         {/* Stock Status */}
-        {product.stock < 10 && (
+        {product.stock !== undefined && product.stock < 10 && (
           <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-            Only {product.stock} left!
+            Chỉ còn {product.stock} sản phẩm!
           </div>
         )}
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <p className="text-xs text-gray-500 mb-1 font-medium">{product.category.name}</p>
-        <h3 className="font-semibold text-sm mb-2 text-gray-800 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+      <div className="p-4 flex flex-col" style={{ minHeight: '200px' }}>
+        <p 
+          className="text-xs text-gray-500 mb-2 font-medium"
+          style={{ 
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            height: '16px'
+          }}
+        >
+          {product.category?.name || 'Uncategorized'}
+        </p>
+        <h3 
+          className="font-semibold text-sm mb-2 text-gray-800 group-hover:text-indigo-600 transition-colors"
+          style={{ 
+            height: '38px',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            textOverflow: 'ellipsis',
+            lineHeight: '1.3'
+          }}
+          title={product.name}
+        >
           {product.name}
         </h3>
-        <p className="text-xs text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-        <p className="text-lg font-bold text-gray-900 mb-3">${product.price.toFixed(2)}</p>
+        <p 
+          className="text-xs text-gray-600 mb-3"
+          style={{ 
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            textOverflow: 'ellipsis',
+            minHeight: '32px',
+            maxHeight: '32px'
+          }}
+        >
+          {product.description || 'Không có mô tả'}
+        </p>
+        <p className="text-lg font-bold text-gray-900 mb-2" style={{ height: '24px' }}>${product.price.toFixed(2)}</p>
         
         {/* Action Buttons */}
         <div className="flex gap-2">
@@ -136,6 +279,8 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
           Add to Cart
         </button>
       </div>
+      {/* Fixed height spacer to ensure all cards are same height */}
+      <div className="flex-1"></div>
     </div>
   );
 }

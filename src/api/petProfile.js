@@ -21,6 +21,8 @@ export const getMyPets = async () => {
   } catch (error) {
     if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    if (error.response?.status === 502) throw new Error("Máy chủ đang quá tải. Vui lòng thử lại sau vài giây.");
+    if (error.response?.status === 503) throw new Error("Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.");
     throw error;
   }
 };
@@ -61,6 +63,42 @@ export const deletePetProfile = async (id) => {
     if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     if (error.response?.status === 403) throw new Error("Bạn không có quyền xóa hồ sơ thú cưng này.");
     if (error.response?.status === 404) throw new Error("Không tìm thấy hồ sơ thú cưng để xóa.");
+    throw error;
+  }
+};
+
+// 👥 Lấy hồ sơ thú cưng theo User ID
+export const getPetProfilesByUserId = async (userId) => {
+  try {
+    const res = await axiosInstance.get(`/pet-profiles/user/${userId}`);
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    throw error;
+  }
+};
+
+// 🐕 Lấy hồ sơ thú cưng theo loại
+export const getPetProfilesByType = async (petType) => {
+  try {
+    const res = await axiosInstance.get(`/pet-profiles/type/${petType}`);
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Bạn không có quyền xem hồ sơ thú cưng.");
+    throw error;
+  }
+};
+
+// 📋 Lấy tất cả hồ sơ thú cưng (Admin only)
+export const getAllPetProfiles = async () => {
+  try {
+    const res = await axiosInstance.get("/pet-profiles/getAll");
+    return res.data;
+  } catch (error) {
+    if (error.response?.status === 401) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    if (error.response?.status === 403) throw new Error("Chỉ admin mới có quyền xem tất cả hồ sơ thú cưng.");
     throw error;
   }
 };

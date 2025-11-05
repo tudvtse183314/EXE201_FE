@@ -1,0 +1,332 @@
+/* AI Chat Floating Bot Styles */
+.ai-chat-bot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.ai-chat-bot-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ai-chat-bot-label {
+  background: var(--pv-primary, #eda274);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(237, 162, 116, 0.35);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.ai-chat-bot-container:hover .ai-chat-bot-label {
+  background: var(--pv-accent, #ffb07c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(237, 162, 116, 0.5);
+}
+
+/* Pulse effect around the bot */
+.ai-chat-bot-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(237, 162, 116, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* From Uiverse.io by Subaashbala */
+.loader {
+  position: relative;
+  z-index: 1;
+  width: 14rem;
+  height: 14rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.eva {
+  --EVA-ROTATION-DURATION: 4s;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  transform-style: preserve-3d;
+  animation: rotateRight var(--EVA-ROTATION-DURATION) linear infinite alternate;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.head {
+  position: relative;
+  width: 4.2rem;
+  height: 2.8rem;
+  border-radius: 48% 53% 45% 55% / 79% 79% 20% 22%;
+  background: linear-gradient(to right, white 45%, var(--pv-secondary, #d5956d));
+}
+
+.eyeChamber {
+  width: 3.15rem;
+  height: 1.925rem;
+  position: relative;
+  left: 50%;
+  top: 55%;
+  border-radius: 45% 53% 45% 48% / 62% 59% 35% 34%;
+  background-color: #0c203c;
+  box-shadow: 0px 0px 1.4px 1.4px white, inset 0px 0px 0px 1.4px black;
+  transform: translate(-50%, -50%);
+  animation: moveRight var(--EVA-ROTATION-DURATION) linear infinite alternate;
+}
+
+.eye {
+  width: 0.84rem;
+  height: 1.05rem;
+  position: absolute;
+  border-radius: 50%;
+}
+
+.eye:first-child {
+  left: 12px;
+  top: 50%;
+  background: repeating-linear-gradient(
+    65deg,
+    var(--pv-accent, #ffb07c) 0px,
+    var(--pv-accent, #ffb07c) 1px,
+    white 2px
+  );
+  box-shadow: inset 0px 0px 5px var(--pv-primary, #eda274), 
+            0px 0px 15px 1px var(--pv-accent, #ffb07c);
+  transform: translate(0, -50%) rotate(-65deg);
+}
+
+.eye:nth-child(2) {
+  right: 12px;
+  top: 50%;
+  background: repeating-linear-gradient(
+    -65deg,
+    var(--pv-accent, #ffb07c) 0px,
+    var(--pv-accent, #ffb07c) 1px,
+    white 2px
+  );
+  box-shadow: inset 0px 0px 5px var(--pv-primary, #eda274), 
+            0px 0px 15px 1px var(--pv-accent, #ffb07c);
+  transform: translate(0, -50%) rotate(65deg);
+}
+
+.body {
+  width: 4.2rem;
+  height: 5.6rem;
+  position: relative;
+  margin-block-start: 0.175rem;
+  border-radius: 47% 53% 45% 55% / 12% 9% 90% 88%;
+  background: linear-gradient(to right, white 35%, var(--pv-secondary, #d5956d));
+}
+
+.hand {
+  position: absolute;
+  left: -1.05rem;
+  top: 0.525rem;
+  width: 1.4rem;
+  height: 3.85rem;
+  border-radius: 40%;
+  background: linear-gradient(to left, white 15%, var(--pv-secondary, #d5956d));
+  box-shadow: 3.5px 0px 3.5px rgba(0, 0, 0, 0.25);
+  transform: rotateY(55deg) rotateZ(10deg);
+}
+
+.hand:first-child {
+  animation: compensateRotation var(--EVA-ROTATION-DURATION) linear infinite
+    alternate;
+}
+
+.hand:nth-child(2) {
+  left: 92%;
+  background: linear-gradient(to right, white 15%, var(--pv-secondary, #d5956d));
+  transform: rotateY(55deg) rotateZ(-10deg);
+  animation: compensateRotationRight var(--EVA-ROTATION-DURATION) linear
+    infinite alternate;
+}
+
+.scannerThing {
+  width: 0;
+  height: 0;
+  position: absolute;
+  left: 60%;
+  top: 10%;
+  border-top: 126px solid var(--pv-accent, #ffb07c);
+  border-left: 175px solid transparent;
+  border-right: 175px solid transparent;
+  transform-origin: top left;
+  mask: linear-gradient(to right, white, transparent 35%);
+  animation: glow 2s cubic-bezier(0.86, 0, 0.07, 1) infinite;
+}
+
+.scannerOrigin {
+  position: absolute;
+  width: 5.6px;
+  aspect-ratio: 1;
+  border-radius: 70%;
+  left: 60%;
+  top: 10%;
+  background: var(--pv-accent, #ffb07c);
+  box-shadow: inset 0px 0px 3.5px rgba(0, 0, 0, 0.5);
+  animation: moveRight var(--EVA-ROTATION-DURATION) linear infinite;
+}
+
+@keyframes rotateRight {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(25deg);
+  }
+}
+
+@keyframes moveRight {
+  from {
+    transform: translate(-50%, -50%);
+  }
+  to {
+    transform: translate(-40%, -50%);
+  }
+}
+
+@keyframes compensateRotation {
+  from {
+    transform: rotateY(55deg) rotateZ(10deg);
+  }
+  to {
+    transform: rotateY(30deg) rotateZ(10deg);
+  }
+}
+
+@keyframes compensateRotationRight {
+  from {
+    transform: rotateY(55deg) rotateZ(-10deg);
+  }
+  to {
+    transform: rotateY(70deg) rotateZ(-10deg);
+  }
+}
+
+@keyframes glow {
+  from {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  45% {
+    transform: rotate(-25deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .loader {
+    width: 12rem;
+    height: 12rem;
+  }
+  
+  .head {
+    width: 3.6rem;
+    height: 2.4rem;
+  }
+  
+  .body {
+    width: 3.6rem;
+    height: 4.8rem;
+  }
+  
+  .hand {
+    width: 1.2rem;
+    height: 3.2rem;
+    left: -0.9rem;
+  }
+  
+  .eyeChamber {
+    width: 2.7rem;
+    height: 1.68rem;
+  }
+  
+  .eye {
+    width: 0.72rem;
+    height: 0.9rem;
+  }
+  
+  .scannerThing {
+    border-top: 108px solid var(--pv-accent, #ffb07c);
+    border-left: 150px solid transparent;
+    border-right: 150px solid transparent;
+  }
+  
+  .scannerOrigin {
+    width: 4.8px;
+  }
+  
+  .ai-chat-bot-container {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .ai-chat-bot-label {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  
+  .ai-chat-bot-pulse {
+    width: 5rem;
+  }
+}
+

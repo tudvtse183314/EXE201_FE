@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PawPrint, Plus, Edit, Trash2, Heart, Calendar, Weight, Stethoscope, Camera } from "lucide-react";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getMyPets, createPetProfile, updatePetProfile, deletePetProfile } from "../../api/petProfile";
+import { message } from 'antd';
 
 export default function PetProfilePage() {
   const [pets, setPets] = useState([]);
@@ -19,29 +22,79 @@ export default function PetProfilePage() {
     imageUrl: ""
   });
 
+  // Ref để tránh gọi API liên tục
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
+  const isMountedRef = useRef(true);
+
   useEffect(() => {
-    fetchPets();
+    isMountedRef.current = true;
+    
+    // Session guard: tránh fetch lặp khi trang bị remount ngoài ý muốn
+    const sessionKey = 'pv-pets-loaded';
+    const alreadyLoaded = sessionStorage.getItem(sessionKey) === '1';
+
+    // Chỉ fetch nếu chưa load và không đang load
+    if (!hasLoadedRef.current && !isLoadingRef.current && !alreadyLoaded) {
+      fetchPets().finally(() => {
+        sessionStorage.setItem(sessionKey, '1');
+      });
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const fetchPets = async () => {
+    // Guard: tránh gọi nhiều lần
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    isLoadingRef.current = true;
+    
     try {
       setLoading(true);
-      const data = await getMyPets();
-      setPets(data);
       setError(null);
+      const data = await getMyPets();
+      
+      if (isMountedRef.current) {
+        setPets(Array.isArray(data) ? data : []);
+        setError(null);
+        hasLoadedRef.current = true;
+      }
     } catch (err) {
-      setError(err.message);
+      if (isMountedRef.current) {
+        // Xử lý lỗi 502 Bad Gateway
+        if (err?.response?.status === 502) {
+          setError("Máy chủ đang quá tải. Vui lòng thử lại sau vài giây.");
+        } else {
+          setError(err.message || "Không thể tải danh sách thú cưng. Vui lòng thử lại!");
+        }
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+      isLoadingRef.current = false;
     }
   };
 
   const handleSubmit = async () => {
     try {
+      if (!form.petName || !form.petType) {
+        message.error("Vui lòng nhập tên thú cưng và loại thú cưng!");
+        return;
+      }
+
       if (selectedPet) {
-        await updatePetProfile(selectedPet.petId, form);
+        const targetId = selectedPet.id || selectedPet.petId;
+        await updatePetProfile(targetId, form);
+        message.success("Cập nhật hồ sơ thú cưng thành công!");
       } else {
         await createPetProfile(form);
+        message.success("Thêm thú cưng thành công!");
       }
       setOpen(false);
       setSelectedPet(null);
@@ -54,19 +107,29 @@ export default function PetProfilePage() {
         healthNotes: "",
         imageUrl: ""
       });
-      fetchPets();
+      // Reset flag để fetch lại sau khi tạo/sửa
+      hasLoadedRef.current = false;
+      sessionStorage.removeItem('pv-pets-loaded');
+      fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
     } catch (err) {
       setError(err.message);
+      message.error(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa hồ sơ thú cưng này?")) {
       try {
-        await deletePetProfile(id);
-        fetchPets();
+        const targetId = id?.id || id?.petId || id;
+        await deletePetProfile(targetId);
+        message.success("Xóa hồ sơ thú cưng thành công!");
+        // Reset flag để fetch lại sau khi xóa
+        hasLoadedRef.current = false;
+        sessionStorage.removeItem('pv-pets-loaded');
+        fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
       } catch (err) {
         setError(err.message);
+        message.error(err.message || "Có lỗi xảy ra khi xóa!");
       }
     }
   };
@@ -74,13 +137,13 @@ export default function PetProfilePage() {
   const handleEdit = (pet) => {
     setSelectedPet(pet);
     setForm({
-      petName: pet.petName || "",
-      petType: pet.petType || "",
+      petName: pet.petName || pet.name || "",
+      petType: pet.petType || pet.type || "",
       breed: pet.breed || "",
-      birthDate: pet.birthDate || "",
-      weight: pet.weight || "",
-      healthNotes: pet.healthNotes || "",
-      imageUrl: pet.imageUrl || ""
+      birthDate: pet.birthDate || pet.dob || "",
+      weight: pet.weight || pet.weightKg || "",
+      healthNotes: pet.healthNotes || pet.notes || "",
+      imageUrl: pet.imageUrl || pet.image || ""
     });
     setOpen(true);
   };
@@ -253,10 +316,12 @@ export default function PetProfilePage() {
                   {/* Pet Image */}
                   <div className="relative h-48 overflow-hidden">
                     {pet.imageUrl ? (
-                      <img 
+                      <LazyLoadImage 
                         src={pet.imageUrl} 
                         alt={pet.petName}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        effect="blur"
+                        placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextElementSibling.style.display = 'flex';

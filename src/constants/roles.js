@@ -7,13 +7,13 @@ export const ROLES = {
   DOCTOR: "DOCTOR",
 };
 
-// Chỉ role quản lý mới vào dashboard; CUSTOMER về trang chủ "/"
+// Dashboard paths theo role
 export const dashboardPathByRole = {
   ADMIN: "/admin/dashboard", // 👈 ADMIN vào admin dashboard
-  MANAGER: "/manager/dashboard", // 👈 MANAGER có dashboard riêng
+  MANAGER: "/staff/dashboard", // MANAGER dùng chung layout staff hiện tại
   STAFF: "/staff/dashboard",
   DOCTOR: "/doctor/dashboard",
-  CUSTOMER: "/", // 👈 khách quay về Home
+  CUSTOMER: "/", // CUSTOMER về homepage sau login
 };
 
 export function getDashboardPathByRole(role) {

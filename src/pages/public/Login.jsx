@@ -30,8 +30,34 @@ export default function Login() {
   }, [user, navigate, from]);
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) setErrors({ ...errors, [field]: '' });
+    const nextData = { ...formData, [field]: value };
+    setFormData(nextData);
+
+    // Clear general and field errors when typing
+    const nextErrors = { ...errors, [field]: '' };
+
+    // Realtime inline validation per-field
+    if (field === 'phone') {
+      const v = value.trim();
+      if (!v) {
+        nextErrors.phone = 'Vui lòng nhập số điện thoại';
+      } else if (!/^[0-9]{10,11}$/.test(v)) {
+        nextErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
+      } else if (nextErrors.phone === 'Không tìm thấy tài khoản với số này') {
+        // Keep server-derived existence error until user changes drastically
+        nextErrors.phone = '';
+      }
+    }
+    if (field === 'password') {
+      const v = value;
+      if (!v) {
+        nextErrors.password = 'Vui lòng nhập mật khẩu';
+      } else if (v.length < 6) {
+        nextErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+    }
+
+    setErrors(nextErrors);
     if (generalError) setGeneralError(null);
     if (successMessage) setSuccessMessage('');
   };
@@ -94,13 +120,24 @@ export default function Login() {
       if (err?.message === 'TIMEOUT' || err?.code === 'ECONNABORTED') {
         msg = 'Máy chủ phản hồi chậm. Có thể do khởi động lần đầu trên Render. Vui lòng thử lại sau ít phút.';
       } else if (err.response?.status === 401) {
-        msg = 'Username or password invalid!';
+        msg = 'Số điện thoại hoặc mật khẩu không đúng.';
+        // Map 401 to inline field errors for real-time feedback
+        setErrors((prev) => ({
+          ...prev,
+          phone: prev.phone || 'Số điện thoại hoặc mật khẩu không đúng',
+          password: prev.password || 'Số điện thoại hoặc mật khẩu không đúng',
+        }));
       } else if (err.response?.status === 400) {
         msg = 'Thông tin đăng nhập không hợp lệ.';
       } else if (err.response?.status === 403) {
         msg = 'Tài khoản đã bị khóa. Vui lòng liên hệ admin.';
       } else if (err.response?.status === 404) {
         msg = 'Không tìm thấy tài khoản.';
+        // Highlight phone field when user/phone not found
+        setErrors((prev) => ({
+          ...prev,
+          phone: prev.phone || 'Không tìm thấy tài khoản với số này',
+        }));
       } else if (err.response?.status >= 500) {
         msg = 'Lỗi server. Vui lòng thử lại sau.';
       } else if (err.message) {
@@ -123,7 +160,7 @@ export default function Login() {
             <AIGradient className="text-8xl font-bold mb-4 drop-shadow-lg" animationSpeed={2}>
               Pawfect Match
             </AIGradient>
-            <p className="text-xl drop-shadow-md">Finding the perfect accessories for your furry friend, powered by AI.</p>
+            <p className="text-xl drop-shadow-md">Tìm phụ kiện hoàn hảo cho thú cưng của bạn, được hỗ trợ bởi AI.</p>
           </div>
           {/* ... giữ nguyên phần decor ... */}
         </div>
@@ -133,8 +170,8 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md bg-white rounded-3xl p-8 md:p-10">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-3">Welcome Back!</h2>
-            <p className="text-gray-600">Log in to find the perfect accessories for your furry friend.</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-3">Chào mừng trở lại!</h2>
+            <p className="text-gray-600">Đăng nhập để tìm phụ kiện hoàn hảo cho thú cưng của bạn.</p>
           </div>
 
           {successMessage && (
@@ -154,7 +191,7 @@ export default function Login() {
           {/* FORM */}
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Phone Number</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Số điện thoại</label>
               <input
                 type="tel"
                 autoComplete="tel"
@@ -171,12 +208,12 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Mật khẩu</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className={`w-full px-4 py-3 pr-12 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none`}
@@ -201,7 +238,7 @@ export default function Login() {
               disabled={isLoading}
               className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-indigo-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50"
             >
-              {isLoading ? 'Đang đăng nhập...' : 'Login'}
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </div>
 
@@ -210,15 +247,15 @@ export default function Login() {
               onClick={() => alert('Chức năng quên mật khẩu đang được phát triển')}
               className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
             >
-              Forgot Password?
+              Quên mật khẩu?
             </button>
           </div>
 
           <div className="text-center mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Chưa có tài khoản?{' '}
               <button onClick={() => navigate('/register')} className="text-indigo-600 hover:text-indigo-700 font-semibold">
-                Sign Up
+                Đăng ký ngay
               </button>
             </p>
           </div>
@@ -226,7 +263,7 @@ export default function Login() {
       </div>
 
       <div className="absolute bottom-6 left-6 text-sm text-gray-400">
-        Made with ❤️ <span className="font-semibold">Visily</span>
+        Được tạo bằng ❤️ <span className="font-semibold">Visily</span>
       </div>
     </div>
   );

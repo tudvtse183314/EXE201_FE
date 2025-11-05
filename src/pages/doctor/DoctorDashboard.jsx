@@ -39,8 +39,8 @@ export default function DoctorDashboard() {
             <div className="flex items-center">
               <div className="text-yellow-600 mr-3">⚠️</div>
               <div>
-                <h4 className="text-yellow-800 font-medium">Coming Soon</h4>
-                <p className="text-yellow-700 text-sm">Full veterinary features are under development.</p>
+                <h4 className="text-yellow-800 font-medium">Sắp ra mắt</h4>
+                <p className="text-yellow-700 text-sm">Tính năng thú y đầy đủ đang được phát triển.</p>
               </div>
             </div>
           </div>

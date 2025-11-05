@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, Row, Col, Button, Tag, Input, Select, Alert, Empty, Skeleton } from "antd";
 import { SearchOutlined, ShoppingCartOutlined, HeartOutlined } from "@ant-design/icons";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getAllCategories } from "../../services/categories";
 import { getAllProducts } from "../../services/products";
 import { dataManager } from "../../utils/dataManager";
@@ -184,7 +186,7 @@ export default function Shop() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     border: 'none'
                   }}
-                  bodyStyle={{ padding: '20px' }}
+                  styles={{ body: { padding: '20px' } }}
                   cover={
                     <Skeleton.Image style={{ width: '100%', height: '280px' }} />
                   }
@@ -225,7 +227,7 @@ export default function Shop() {
         borderRadius: '0 0 24px 24px',
         marginBottom: '32px'
       }}>
-        <img
+        <LazyLoadImage
           src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
           alt="Pet Shop Banner"
           style={{
@@ -234,7 +236,8 @@ export default function Shop() {
             objectFit: 'cover',
             filter: 'brightness(0.7)'
           }}
-          loading="lazy"
+          effect="blur"
+          placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
         />
         <div style={{
           position: 'absolute',
@@ -346,12 +349,10 @@ export default function Shop() {
         }}>
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             gap: '12px',
-            overflowX: 'auto',
             paddingBottom: '8px',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitScrollbar: { display: 'none' }
+            justifyContent: 'flex-start'
           }}>
             <Button
               type={activeCatId === "all" ? "primary" : "default"}
@@ -429,7 +430,7 @@ export default function Shop() {
           ) : (
             <Row gutter={[20, 24]}>
               {visibleProducts.map((product) => (
-                <Col xs={24} sm={12} md={8} lg={6} xl={4} xxl={4} key={product.id}>
+                <Col xs={24} sm={12} md={12} lg={6} xl={6} xxl={6} key={product.id}>
                   <Card
                     hoverable
                     style={{
@@ -441,7 +442,7 @@ export default function Shop() {
                       background: '#fff',
                       height: '100%'
                     }}
-                    bodyStyle={{ padding: '20px' }}
+                    styles={{ body: { padding: '20px' } }}
                     cover={
                       <div 
                         style={{ 
@@ -452,18 +453,75 @@ export default function Shop() {
                         }}
                         onClick={() => handleViewProduct(product)}
                       >
-                        <img
+                        <LazyLoadImage
                           alt={product.name}
-                          src={product.image || getFallbackImageByIndex(product.id)}
+                          src={(() => {
+                            // Sử dụng imageUrl (đã normalize từ getAllProducts)
+                            let src = product.imageUrl ?? product.image_url ?? product.image ?? null;
+                            
+                            // Debug log cho tất cả products (tạm thời để debug)
+                            console.log(`🖼️ Shop: Product ${product.id} (${product.name})`, {
+                              imageUrl: product.imageUrl,
+                              image_url: product.image_url,
+                              image: product.image,
+                              finalBeforeCheck: src,
+                              isNull: src === null,
+                              isEmpty: src === '',
+                              type: typeof src
+                            });
+                            
+                            // Nếu null hoặc empty string → dùng fallback
+                            if (!src || src === '' || src === 'null' || src === 'undefined') {
+                              const fallback = getFallbackImageByIndex(product.id);
+                              console.log(`🖼️ Shop: Product ${product.id} using fallback`, fallback);
+                              return fallback;
+                            }
+                            
+                            // Nếu đã là full URL (http/https) → dùng trực tiếp
+                            if (src.startsWith('http://') || src.startsWith('https://')) {
+                              console.log(`🖼️ Shop: Product ${product.id} using external URL`, src);
+                              return src;
+                            }
+                            
+                            // Build full URL nếu là relative path từ BE
+                            if (src.startsWith('/api/uploads/')) {
+                              const baseURL = process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api";
+                              const fullUrl = baseURL.replace('/api', '') + src;
+                              console.log(`🖼️ Shop: Product ${product.id} building BE URL`, { src, fullUrl });
+                              return fullUrl;
+                            }
+                            
+                            // Nếu không match pattern nào → dùng fallback
+                            console.warn(`🖼️ Shop: Product ${product.id} unmatched URL pattern, using fallback`, src);
+                            return getFallbackImageByIndex(product.id);
+                          })()}
+                          width="100%"
+                          height="280px"
                           style={{
                             width: '100%',
-                            height: '100%',
+                            height: '280px',
                             objectFit: 'cover',
-                            transition: 'transform 0.3s ease'
+                            display: 'block',
+                            transition: 'transform 0.3s ease',
+                            backgroundColor: '#f5f5f5' // Background để thấy khi loading
                           }}
-                          loading="lazy"
+                          effect="blur"
+                          placeholderSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"
                           onError={(e) => {
-                            e.target.src = getFallbackImageByIndex(product.id);
+                            console.error(`🖼️ Shop: Image load error for product ${product.id}`, {
+                              attemptedSrc: e.target.src,
+                              product: { id: product.id, name: product.name, imageUrl: product.imageUrl }
+                            });
+                            const fallback = getFallbackImageByIndex(product.id);
+                            if (e.target.src !== fallback) {
+                              console.log(`🖼️ Shop: Trying fallback for product ${product.id}`, fallback);
+                              e.target.src = fallback;
+                            } else {
+                              console.error(`🖼️ Shop: Fallback also failed for product ${product.id}`);
+                            }
+                          }}
+                          onLoad={() => {
+                            console.log(`🖼️ Shop: Image loaded successfully for product ${product.id}`);
                           }}
                           onMouseEnter={(e) => {
                             e.target.style.transform = 'scale(1.03)';
@@ -536,32 +594,44 @@ export default function Shop() {
                     <div style={{ textAlign: 'center' }}>
                       <h3 
                         style={{ 
-                          fontSize: '18px', 
-                          fontWeight: '700',
+                          fontSize: '15px', 
+                          fontWeight: '600',
                           color: '#362319',
                           margin: '0 0 8px 0',
                           cursor: 'pointer',
                           fontFamily: 'Poppins, Arial, sans-serif',
-                          lineHeight: '1.3'
+                          lineHeight: '1.3',
+                          height: '38px', // Fixed height for 2 lines (19px * 2)
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          textOverflow: 'ellipsis'
                         }}
                         onClick={() => handleViewProduct(product)}
+                        title={product.name}
                       >
                         {product.name}
                       </h3>
                       <div style={{ 
                         color: '#553d2d', 
-                        fontSize: '13px', 
-                        marginBottom: '12px',
-                        fontWeight: '500'
+                        fontSize: '12px', 
+                        marginBottom: '10px',
+                        fontWeight: '500',
+                        height: '18px',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis'
                       }}>
                         {product.category?.name}
                       </div>
                       <div style={{ 
-                        fontSize: '22px', 
-                        fontWeight: '800', 
+                        fontSize: '20px', 
+                        fontWeight: '700', 
                         color: '#eda274',
-                        marginBottom: '12px',
-                        fontFamily: 'Poppins, Arial, sans-serif'
+                        marginBottom: '10px',
+                        fontFamily: 'Poppins, Arial, sans-serif',
+                        height: '28px'
                       }}>
                         {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
                       </div>
@@ -569,11 +639,14 @@ export default function Shop() {
                         <Tag 
                           color={product.stock > 0 ? 'green' : 'red'}
                           style={{ 
-                            fontSize: '12px',
+                            fontSize: '11px',
                             fontWeight: '600',
-                            padding: '4px 12px',
-                            borderRadius: '12px',
-                            marginBottom: '12px'
+                            padding: '3px 10px',
+                            borderRadius: '10px',
+                            marginBottom: '12px',
+                            height: '22px',
+                            display: 'inline-flex',
+                            alignItems: 'center'
                           }}
                         >
                           {product.stock > 0 ? `Còn ${product.stock}` : 'Hết hàng'}

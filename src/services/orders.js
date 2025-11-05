@@ -27,7 +27,71 @@ export const getOrderById = async (orderId) => {
   }
 };
 
-// Get orders by account ID (User)
+// GET /api/orders/my - Lấy danh sách đơn hàng của user hiện tại (KHÔNG gửi userId)
+export const getMyOrders = async (params = {}) => {
+  try {
+    console.log("📦 Orders: Fetching my orders", params);
+    const queryParams = new URLSearchParams();
+    if (params.page !== undefined && params.page !== null) {
+      queryParams.append('page', params.page);
+    }
+    if (params.size !== undefined && params.size !== null) {
+      queryParams.append('size', params.size);
+    }
+    if (params.status) queryParams.append('status', params.status);
+    
+    const queryString = queryParams.toString();
+    const url = queryString ? `/orders/my?${queryString}` : '/orders/my';
+    
+    const res = await axiosInstance.get(url);
+    console.log("📦 Orders: Fetched my orders successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error fetching my orders:", e);
+    throw e;
+  }
+};
+
+// POST /api/orders/{id}/confirm-payment - Xác nhận thanh toán
+export const confirmPayment = async (orderId) => {
+  try {
+    console.log("📦 Orders: Confirming payment for order", { orderId });
+    const res = await axiosInstance.post(`/orders/${orderId}/confirm-payment`);
+    console.log("📦 Orders: Confirmed payment successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error confirming payment:", e);
+    throw e;
+  }
+};
+
+// PATCH /api/orders/{id}/payment-status - Cập nhật trạng thái thanh toán thủ công
+export const updatePaymentStatus = async (orderId, paymentStatus) => {
+  try {
+    console.log("📦 Orders: Updating payment status", { orderId, paymentStatus });
+    const res = await axiosInstance.patch(`/orders/${orderId}/payment-status`, { paymentStatus });
+    console.log("📦 Orders: Updated payment status successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error updating payment status:", e);
+    throw e;
+  }
+};
+
+// PATCH /api/orders/{id}/cancel - Hủy đơn hàng (chỉ khi status = PENDING)
+export const cancelOrder = async (orderId) => {
+  try {
+    console.log("📦 Orders: Cancelling order", { orderId });
+    const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
+    console.log("📦 Orders: Cancelled successfully", res.data);
+    return res.data;
+  } catch (e) {
+    console.error("📦 Orders: Error cancelling order:", e);
+    throw e;
+  }
+};
+
+// Get orders by account ID (User) - Legacy
 export const getOrdersByAccount = async (accountId) => {
   try {
     console.log("📦 Orders: Fetching orders by account", { accountId });
@@ -40,10 +104,10 @@ export const getOrdersByAccount = async (accountId) => {
   }
 };
 
-// Cancel order (User) - only if status = PENDING
-export const cancelOrder = async (orderId) => {
+// Cancel order (User) - Legacy (dùng POST thay vì PATCH)
+export const cancelOrderLegacy = async (orderId) => {
   try {
-    console.log("📦 Orders: Cancelling order", { orderId });
+    console.log("📦 Orders: Cancelling order (legacy)", { orderId });
     const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
     console.log("📦 Orders: Cancelled successfully", res.data);
     return res.data;
@@ -74,8 +138,12 @@ export const getAllOrders = async (params = {}) => {
     
     // Add query parameters
     if (params.status) queryParams.append('status', params.status);
-    if (params.page) queryParams.append('page', params.page);
-    if (params.size) queryParams.append('size', params.size);
+    if (params.page !== undefined && params.page !== null) {
+      queryParams.append('page', params.page);
+    }
+    if (params.size !== undefined && params.size !== null) {
+      queryParams.append('size', params.size);
+    }
     if (params.q) queryParams.append('q', params.q);
     
     const queryString = queryParams.toString();
@@ -161,34 +229,68 @@ export const validateOrderData = (orderData) => {
 export const formatOrderForDisplay = (order) => {
   return {
     ...order,
-    formattedTotalAmount: order.totalAmount?.toLocaleString('vi-VN') + ' VNĐ',
-    formattedCreatedAt: new Date(order.createdAt).toLocaleString('vi-VN'),
-    formattedUpdatedAt: new Date(order.updatedAt).toLocaleString('vi-VN'),
+    formattedTotalAmount: typeof order.totalAmount === 'number'
+      ? `${order.totalAmount.toLocaleString('vi-VN')} VNĐ`
+      : '--',
+    formattedCreatedAt: order.createdAt
+      ? new Date(order.createdAt).toLocaleString('vi-VN')
+      : '--',
+    formattedUpdatedAt: order.updatedAt
+      ? new Date(order.updatedAt).toLocaleString('vi-VN')
+      : '--',
     statusColor: getStatusColor(order.status),
-    statusText: getStatusText(order.status)
+    statusText: getStatusText(order.status),
+    paymentStatusColor: getPaymentStatusColor(order?.paymentInfo?.status),
+    paymentStatusText: getPaymentStatusText(order?.paymentInfo?.status)
   };
 };
 
 // Helper function to get status color
 export const getStatusColor = (status) => {
+  const normalized = (status || "").toUpperCase();
   const colors = {
-    'PENDING': 'orange',
-    'PAID': 'blue',
-    'PROCESSING': 'purple',
-    'COMPLETED': 'green',
-    'CANCELLED': 'red'
+    PENDING: 'orange',
+    PAID: 'blue',
+    SHIPPED: 'purple',
+    DELIVERED: 'green',
+    CANCELLED: 'red'
   };
-  return colors[status] || 'default';
+  return colors[normalized] || 'default';
 };
 
 // Helper function to get status text in Vietnamese
 export const getStatusText = (status) => {
+  const normalized = (status || "").toUpperCase();
   const texts = {
-    'PENDING': 'Chờ thanh toán',
-    'PAID': 'Đã thanh toán',
-    'PROCESSING': 'Đang xử lý',
-    'COMPLETED': 'Hoàn thành',
-    'CANCELLED': 'Đã hủy'
+    PENDING: 'Chờ thanh toán',
+    PAID: 'Đã thanh toán',
+    SHIPPED: 'Đang giao',
+    DELIVERED: 'Đã giao',
+    CANCELLED: 'Đã hủy'
   };
-  return texts[status] || status;
+  return texts[normalized] || status;
 };
+
+export const getPaymentStatusColor = (status) => {
+  const normalized = (status || "").toUpperCase();
+  const colors = {
+    UNPAID: 'orange',
+    PAID: 'green',
+    FAILED: 'red',
+    PENDING: 'orange'
+  };
+  return colors[normalized] || 'default';
+};
+
+export const getPaymentStatusText = (status) => {
+  const normalized = (status || "").toUpperCase();
+  const texts = {
+    UNPAID: 'Chưa thanh toán',
+    PAID: 'Đã thanh toán',
+    FAILED: 'Thanh toán thất bại',
+    PENDING: 'Đang chờ'
+  };
+  return texts[normalized] || status;
+};
+
+export const ORDER_STATUS_FLOW = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED'];

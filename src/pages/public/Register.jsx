@@ -17,12 +17,7 @@ export default function Register() {
     fullName: '',
     email: '',
     phone: '',
-    password: '',
-    // Pet fields
-    petName: '',
-    petAge: '',
-    petType: '',
-    petSize: '' // select
+    password: ''
   });
 
   // UI state
@@ -46,10 +41,8 @@ export default function Register() {
     if (!/^\d{10,11}$/.test(formData.phone.trim())) newErrors.phone = 'Số điện thoại phải có 10-11 chữ số';
     if (!formData.password || formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
 
-    // Pet (bắt buộc theo form hiện tại)
-    if (!formData.petName.trim()) newErrors.petName = 'Vui lòng nhập tên thú cưng';
-    if (!formData.petType.trim()) newErrors.petType = 'Vui lòng chọn loại thú cưng';
-    if (!formData.petSize.trim()) newErrors.petSize = 'Vui lòng chọn kích cỡ';
+    // Pet fields là optional - user có thể tạo pet profile sau khi đăng ký qua trang "My Pets"
+    // Không validate pet fields vì API register không nhận các field này
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -75,19 +68,18 @@ export default function Register() {
         throw new Error('Đăng nhập tự động thất bại. Vui lòng đăng nhập lại.');
       }
 
-      // 3) Map userData giống trang Login (đang hoạt động ổn)
+      // 3) Map userData từ response (API không trả về pet fields nữa)
       const userData = {
         id: data.id,
         name: data.fullName || data.name,
         email: data.email,
         phone: data.phone,
         role: data.role,
-        accountId: data.accountId || data.id,
-        petName: data.petName,
-        petAge: data.petAge,
-        petType: data.petType,
-        petSize: data.petSize
+        accountId: data.accountId || data.id
       };
+      
+      // Lưu ý: Pet fields không được gửi lên API register nữa
+      // User có thể tạo pet profile sau khi đăng ký qua trang "My Pets"
 
       // 4) Lưu session & điều hướng
       loginUser(userData, data.token);
@@ -134,7 +126,7 @@ export default function Register() {
               <span className="text-4xl">🐾</span>
             </div>
             <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
-            <p className="text-lg drop-shadow-md text-center">Join our community of pet lovers</p>
+            <p className="text-lg drop-shadow-md text-center">Tham gia cộng đồng những người yêu thú cưng của chúng tôi</p>
           </div>
         </div>
       </RegisterBackground>
@@ -142,8 +134,8 @@ export default function Register() {
       {/* Right Side - Form (2/3) */}
       <div className="w-full lg:w-2/3 flex items-center justify-center p-6 sm:p-8">
         <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 sm:p-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Create your account</h2>
-          <p className="text-gray-500 mb-6">It only takes a minute to join us.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Tạo tài khoản của bạn</h2>
+          <p className="text-gray-500 mb-6">Chỉ mất một phút để tham gia cùng chúng tôi.</p>
 
           {/* Success */}
           {successMessage && (
@@ -168,16 +160,16 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Parent */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet&apos;s Parent</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Người chăm sóc thú cưng</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Full name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
                   <input
                     name="fullName"
                     autoComplete="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Nguyễn Văn A"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
@@ -192,7 +184,7 @@ export default function Register() {
                     name="email"
                     autoComplete="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="email.cua.ban@example.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
@@ -217,7 +209,7 @@ export default function Register() {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
                   <div className="relative">
                     <input
                       name="password"
@@ -242,89 +234,22 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Pet */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pet</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Pet name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pet&apos;s Name</label>
-                  <input
-                    name="petName"
-                    type="text"
-                    placeholder="Milo"
-                    value={formData.petName}
-                    onChange={(e) => handleInputChange('petName', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                  />
-                  {errors.petName && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petName}</p>}
-                </div>
-
-                {/* Pet type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <select
-                    name="petType"
-                    value={formData.petType}
-                    onChange={(e) => handleInputChange('petType', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petType ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
-                  >
-                    <option value="">Select type</option>
-                    <option value="DOG">Dog</option>
-                    <option value="CAT">Cat</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                  {errors.petType && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petType}</p>}
-                </div>
-
-                {/* Age */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                  <input
-                    name="petAge"
-                    type="text"
-                    placeholder="e.g. 2"
-                    value={formData.petAge}
-                    onChange={(e) => handleInputChange('petAge', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                {/* Size (select) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-                  <select
-                    name="petSize"
-                    value={formData.petSize}
-                    onChange={(e) => handleInputChange('petSize', e.target.value)}
-                    className={`w-full px-4 py-3 border ${errors.petSize ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white`}
-                  >
-                    <option value="">Select size</option>
-                    <option value="SMALL">Small</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="LARGE">Large</option>
-                  </select>
-                  {errors.petSize && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.petSize}</p>}
-                </div>
-              </div>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
               className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
             >
-              {isLoading ? 'Đang xử lý...' : 'Create account'}
+              {isLoading ? 'Đang xử lý...' : 'Tạo tài khoản'}
             </button>
 
             <p className="text-sm text-gray-600 text-center">
-              Already have an account?{' '}
+              Đã có tài khoản?{' '}
               <button
                 type="button"
                 onClick={() => navigate('/login')}
                 className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
               >
-                Log In
+                Đăng nhập
               </button>
             </p>
           </form>
