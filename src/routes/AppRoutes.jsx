@@ -22,13 +22,8 @@ import Contact from "../pages/public/Contact";
 import CustomerDashboard from "../pages/customer/Dashboard";
 import CustomerProfile from "../pages/customer/Profile";
 import PetProfilePage from "../pages/customer/PetProfilePage";
-import AccountProfilePage from "../pages/customer/AccountProfilePage";
-
-// User Pages
-import AIAnalysis from "../pages/AIAnalysis";
 
 // AI Pages
-import AIAnalysisNew from "../pages/ai/AIAnalysis";
 import SeasonalOutfits from "../pages/ai/SeasonalOutfits";
 import ChatBot from "../pages/ai/ChatBot";
 
@@ -66,6 +61,7 @@ import Wishlist from "../pages/public/Wishlist";
 import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
+import OrderDetail from "../pages/customer/OrderDetail.jsx";
 import Premium from "../pages/public/Premium";
 import ProductCardDemo from "../pages/public/ProductCardDemo";
 
@@ -243,7 +239,7 @@ export default function AppRoutes() {
           element={
             <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <UserOrders />
+                <OrderDetail />
               </MainLayout>
             </RoleGuard>
           }
@@ -304,7 +300,7 @@ export default function AppRoutes() {
           element={
             <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <UserOrders />
+                <OrderDetail />
               </MainLayout>
             </RoleGuard>
           }

@@ -1,202 +1,264 @@
 // src/pages/customer/Orders.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, 
-  Table, 
-  Tag, 
-  Button, 
-  Typography, 
+import {
+  Card,
+  Table,
+  Tag,
+  Button,
+  Typography,
   Space,
   Spin,
   Alert,
-  Empty
+  Empty,
+  Select
 } from 'antd';
-import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import {
+  getMyOrders,
+  getStatusColor,
+  getStatusText,
+  getPaymentStatusColor,
+  getPaymentStatusText
+} from '../../services/orders';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Option } = Select;
+
+const formatCurrency = (value) => {
+  if (typeof value !== 'number') return '--';
+  return `${value.toLocaleString('vi-VN')}đ`;
+};
+
+const normalizeOrdersResponse = (response) => {
+  if (Array.isArray(response)) {
+    return { data: response, total: response.length, pageIndex: 0 };
+  }
+
+  const candidates = response?.content || response?.items || response?.data || [];
+  const data = Array.isArray(candidates) ? candidates : [];
+  const total = response?.totalElements
+    ?? response?.total
+    ?? response?.count
+    ?? data.length;
+  const pageIndex = response?.number
+    ?? response?.page
+    ?? response?.pageable?.pageNumber
+    ?? 0;
+
+  return { data, total, pageIndex };
+};
 
 export default function Orders() {
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { showError } = useToast();
 
-  const loadOrders = useCallback(async () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+
+  const fetchOrders = useCallback(async (page = 1, pageSize = 10, status = statusFilter) => {
+    if (!user?.id) return;
+
     try {
       setLoading(true);
       setError(null);
-      console.log('📋 Orders: Loading orders from localStorage (DEMO MODE)');
-      
-      // Load orders from localStorage (demo mode)
-      const savedOrders = localStorage.getItem('orders');
-      let ordersData = [];
-      
-      if (savedOrders) {
-        try {
-          ordersData = JSON.parse(savedOrders);
-        } catch (error) {
-          console.error('Error parsing orders from localStorage:', error);
-          ordersData = [];
-        }
+
+      const query = {
+        page: Math.max(page - 1, 0),
+        size: pageSize
+      };
+
+      if (status && status !== 'ALL') {
+        query.status = status;
       }
-      
-      setOrders(ordersData);
-      console.log('📋 Orders: Loaded orders from localStorage', ordersData);
-      
-    } catch (e) {
-      console.error('📋 Orders: Error loading orders', e);
-      setError(e?.message || 'Không thể tải danh sách đơn hàng.');
+
+      const response = await getMyOrders(query);
+      const { data, total, pageIndex } = normalizeOrdersResponse(response);
+
+      setOrders(data);
+      setPagination({
+        current: (pageIndex ?? 0) + 1,
+        pageSize,
+        total
+      });
+    } catch (err) {
+      console.error('📋 Orders: Error loading orders', err);
+      const message = err?.response?.data?.message || err?.message || 'Không thể tải danh sách đơn hàng.';
+      setError(message);
+      showError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusFilter, user?.id, showError]);
 
   useEffect(() => {
     if (user?.id) {
-      loadOrders();
+      fetchOrders(1, pagination.pageSize, statusFilter);
     }
-  }, [loadOrders]);
+  }, [user?.id, statusFilter, fetchOrders, pagination.pageSize]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'orange';
-      case 'confirmed': return 'blue';
-      case 'shipped': return 'purple';
-      case 'delivered': return 'green';
-      case 'cancelled': return 'red';
-      default: return 'default';
-    }
+  const handleRefresh = () => {
+    fetchOrders(pagination.current, pagination.pageSize, statusFilter);
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Chờ xác nhận';
-      case 'confirmed': return 'Đã xác nhận';
-      case 'shipped': return 'Đang giao';
-      case 'delivered': return 'Đã giao';
-      case 'cancelled': return 'Đã hủy';
-      default: return status;
-    }
+  const handleTableChange = (pager) => {
+    fetchOrders(pager.current, pager.pageSize, statusFilter);
+  };
+
+  const handleStatusChange = (value) => {
+    setStatusFilter(value);
+    fetchOrders(1, pagination.pageSize, value);
+  };
+
+  const handleViewOrder = (orderId) => {
+    navigate(`/customer/orders/${orderId}`);
   };
 
   const columns = [
     {
       title: 'Mã đơn hàng',
-      dataIndex: 'orderNumber',
-      key: 'orderNumber',
-      render: (text) => <strong>{text}</strong>,
+      dataIndex: 'orderId',
+      key: 'orderId',
+      render: (text) => <Text strong>{text}</Text>,
     },
     {
-      title: 'Trạng thái',
+      title: 'Trạng thái đơn',
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {getStatusText(status)}
-        </Tag>
+        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
+    },
+    {
+      title: 'Thanh toán',
+      dataIndex: ['paymentInfo', 'status'],
+      key: 'paymentStatus',
+      render: (_, record) => {
+        const paymentStatus = record?.paymentInfo?.status;
+        return (
+          <Tag color={getPaymentStatusColor(paymentStatus)}>
+            {getPaymentStatusText(paymentStatus)}
+          </Tag>
+        );
+      }
     },
     {
       title: 'Tổng tiền',
-      dataIndex: 'total',
-      key: 'total',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
       render: (total) => (
-        <strong style={{ color: '#1890ff' }}>
-          {total.toLocaleString()}đ
-        </strong>
+        <Text strong style={{ color: '#1890ff' }}>{formatCurrency(total)}</Text>
       ),
     },
     {
-      title: 'Ngày đặt',
+      title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString('vi-VN'),
+      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '--',
+    },
+    {
+      title: 'Cập nhật',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '--',
     },
     {
       title: 'Hành động',
       key: 'actions',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => console.log('View order:', record.id)}
-          >
-            Xem chi tiết
-          </Button>
-        </Space>
+        <Button
+          type="link"
+          icon={<EyeOutlined />}
+          onClick={() => handleViewOrder(record.orderId)}
+        >
+          Xem chi tiết
+        </Button>
       ),
     },
   ];
 
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Spin size="large" />
-        <div style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
-          Đang tải danh sách đơn hàng...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert
-        message="Lỗi tải dữ liệu"
-        description={error}
-        type="error"
-        showIcon
-        style={{ margin: 20 }}
-      />
-    );
-  }
-
   return (
     <div style={{ padding: '20px' }}>
-      {/* Header */}
       <Card style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Title level={3} style={{ margin: 0 }}>
               📋 Đơn hàng của tôi
             </Title>
             <p style={{ margin: '8px 0 0 0', color: '#666' }}>
-              Quản lý và theo dõi các đơn hàng của bạn
+              Quản lý và theo dõi các đơn hàng cùng trạng thái thanh toán
             </p>
           </div>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={loadOrders}
-            loading={loading}
-          >
-            Làm mới
-          </Button>
+          <Space wrap>
+            <Select
+              value={statusFilter}
+              style={{ minWidth: 180 }}
+              onChange={handleStatusChange}
+              suffixIcon={<FilterOutlined />}
+              disabled={loading}
+            >
+              <Option value="ALL">Tất cả trạng thái</Option>
+              <Option value="PENDING">Chờ thanh toán</Option>
+              <Option value="PAID">Đã thanh toán</Option>
+              <Option value="SHIPPED">Đang giao</Option>
+              <Option value="DELIVERED">Đã giao</Option>
+              <Option value="CANCELLED">Đã hủy</Option>
+            </Select>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+              loading={loading}
+            >
+              Làm mới
+            </Button>
+          </Space>
         </div>
       </Card>
 
-      {/* Orders Table */}
       <Card>
-        {orders.length === 0 ? (
-          <Empty
-            description="Bạn chưa có đơn hàng nào"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={orders}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => 
-                `${range[0]}-${range[1]} của ${total} đơn hàng`,
-            }}
+        {error && (
+          <Alert
+            message="Không thể tải danh sách đơn hàng"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
           />
         )}
+
+        <Table
+          columns={columns}
+          dataSource={orders}
+          rowKey={(record) => record.orderId || record.id}
+          loading={loading}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            locale: { items_per_page: '/ trang' },
+            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} đơn hàng`
+          }}
+          onChange={handleTableChange}
+          locale={{
+            emptyText: loading ? <Spin /> : (
+              <Empty
+                description={statusFilter === 'ALL'
+                  ? 'Bạn chưa có đơn hàng nào.'
+                  : 'Không có đơn hàng phù hợp trạng thái này.'
+                }
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )
+          }}
+        />
       </Card>
     </div>
   );
