@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
@@ -9,16 +9,18 @@ import { useWishlist } from '../../context/WishlistContext';
 import ShinyText from '../effects/ShinyText';
 import { DiscountGradient, HotGradient, SaleGradient } from '../effects/GradientText';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
+import ProductDetailModal from './ProductDetailModal';
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleViewDetail = () => {
-    // Navigate to product detail page
-    navigate(`/product/${product.id}`);
+    // Mở modal thay vì navigate
+    setModalOpen(true);
   };
 
   const handleAddToCart = async (e) => {
@@ -281,6 +283,13 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }) {
       </div>
       {/* Fixed height spacer to ensure all cards are same height */}
       <div className="flex-1"></div>
+      
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        productId={product.id}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }

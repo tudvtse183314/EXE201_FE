@@ -1,5 +1,5 @@
 // src/pages/public/Wishlist.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Row, Col, Button, Empty, message } from 'antd';
 import { HeartOutlined, ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -8,11 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
+import ProductDetailModal from '../../components/common/ProductDetailModal';
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleAddToCart = async (product) => {
     try {
@@ -29,7 +32,8 @@ export default function Wishlist() {
   };
 
   const handleViewProduct = (product) => {
-    navigate(`/product/${product.id}`);
+    setSelectedProductId(product.id);
+    setModalOpen(true);
   };
 
   return (
@@ -290,6 +294,16 @@ export default function Wishlist() {
           </>
         )}
       </div>
+      
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        productId={selectedProductId}
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedProductId(null);
+        }}
+      />
     </div>
   );
 }

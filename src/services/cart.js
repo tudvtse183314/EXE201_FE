@@ -238,7 +238,7 @@ export const addCartItem = async (productId, quantity, price = 0) => {
 export const getAllCarts = async () => {
   try {
     console.log("🛒 Cart: Fetching all carts");
-    const res = await axiosInstance.get("/carts/all");
+    const res = await axiosInstance.get("/carts/getAll");
     console.log("🛒 Cart: Fetched all carts successfully", res.data);
     return res.data;
   } catch (e) {

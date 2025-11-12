@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import {
-  getMyOrders,
+  getOrdersByAccount,
   getStatusColor,
   getStatusText,
   getPaymentStatusColor,
@@ -63,39 +63,60 @@ export default function Orders() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
 
   const fetchOrders = useCallback(async (page = 1, pageSize = 10, status = statusFilter) => {
-    if (!user?.id) return;
+    if (!user?.accountId && !user?.id) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const query = {
-        page: Math.max(page - 1, 0),
-        size: pageSize
-      };
-
+      // Dùng accountId hoặc id làm fallback
+      const accountId = user?.accountId || user?.id;
+      
+      // Gọi API GET /api/orders/account/{accountId}
+      const response = await getOrdersByAccount(accountId);
+      
+      // API trả về array trực tiếp, không có pagination
+      let orders = Array.isArray(response) ? response : [];
+      
+      // Lọc theo status nếu có
       if (status && status !== 'ALL') {
-        query.status = status;
+        orders = orders.filter(order => order.status?.toUpperCase() === status.toUpperCase());
       }
+      
+      // Tính toán pagination thủ công
+      const total = orders.length;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedOrders = orders.slice(startIndex, endIndex);
 
-      const response = await getMyOrders(query);
-      const { data, total, pageIndex } = normalizeOrdersResponse(response);
-
-      setOrders(data);
+      setOrders(paginatedOrders);
       setPagination({
-        current: (pageIndex ?? 0) + 1,
+        current: page,
         pageSize,
         total
       });
     } catch (err) {
       console.error('📋 Orders: Error loading orders', err);
-      const message = err?.response?.data?.message || err?.message || 'Không thể tải danh sách đơn hàng.';
+      
+      // Xử lý lỗi theo từng loại
+      let message = 'Không thể tải danh sách đơn hàng.';
+      
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        message = 'Bạn cần đăng nhập hoặc không đủ quyền.';
+      } else if (err?.response?.status === 404) {
+        message = 'Không tìm thấy đơn hàng nào.';
+      } else if (err?.response?.status >= 500) {
+        message = 'Đã có lỗi hệ thống. Vui lòng thử lại sau.';
+      } else {
+        message = err?.response?.data?.message || err?.message || message;
+      }
+      
       setError(message);
       showError(message);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, user?.id, showError]);
+  }, [statusFilter, user?.accountId, user?.id, showError]);
 
   useEffect(() => {
     if (user?.id) {

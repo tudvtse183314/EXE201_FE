@@ -120,13 +120,14 @@ export default function Login() {
       if (err?.message === 'TIMEOUT' || err?.code === 'ECONNABORTED') {
         msg = 'Máy chủ phản hồi chậm. Có thể do khởi động lần đầu trên Render. Vui lòng thử lại sau ít phút.';
       } else if (err.response?.status === 401) {
-        msg = 'Số điện thoại hoặc mật khẩu không đúng.';
+        // Lấy message từ server nếu có, hoặc dùng message mặc định
+        const serverMsg = err.response?.data?.message || 'Số điện thoại hoặc mật khẩu không đúng.';
+        msg = serverMsg;
         // Map 401 to inline field errors for real-time feedback
-        setErrors((prev) => ({
-          ...prev,
-          phone: prev.phone || 'Số điện thoại hoặc mật khẩu không đúng',
-          password: prev.password || 'Số điện thoại hoặc mật khẩu không đúng',
-        }));
+        setErrors({
+          phone: serverMsg,
+          password: serverMsg,
+        });
       } else if (err.response?.status === 400) {
         msg = 'Thông tin đăng nhập không hợp lệ.';
       } else if (err.response?.status === 403) {
@@ -182,9 +183,12 @@ export default function Login() {
           )}
 
           {generalError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
-              <p className="text-sm text-red-600 font-medium">{generalError}</p>
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl flex items-start animate-pulse">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-700 mb-1">Lỗi đăng nhập</p>
+                <p className="text-sm text-red-600">{generalError}</p>
+              </div>
             </div>
           )}
 
@@ -201,8 +205,9 @@ export default function Login() {
                 className={`w-full px-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-xl bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none`}
               />
               {errors.phone && (
-                <p className="text-sm text-red-500 mt-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" /> {errors.phone}
+                <p className="text-sm text-red-600 mt-2 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" /> 
+                  <span>{errors.phone}</span>
                 </p>
               )}
             </div>
@@ -227,8 +232,9 @@ export default function Login() {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-500 mt-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" /> {errors.password}
+                <p className="text-sm text-red-600 mt-2 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                  <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" /> 
+                  <span>{errors.password}</span>
                 </p>
               )}
             </div>

@@ -28,6 +28,13 @@ export default function Register() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear errors when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    if (generalError) {
+      setGeneralError(null);
+    }
   };
 
   const validateForm = () => {
@@ -90,18 +97,43 @@ export default function Register() {
     } catch (error) {
       console.error('🔐 Register: Registration failed:', error);
 
+      // Reset errors
+      const newErrors = {};
+
       if (error.response?.data?.message) {
-        setGeneralError(error.response.data.message);
+        const serverMsg = error.response.data.message;
+        setGeneralError(serverMsg);
+        
+        // Map duplicate errors to specific fields
+        if (serverMsg.toLowerCase().includes('email') && (serverMsg.toLowerCase().includes('duplicate') || serverMsg.toLowerCase().includes('đã tồn tại') || serverMsg.toLowerCase().includes('already'))) {
+          newErrors.email = 'Email này đã được sử dụng. Vui lòng chọn email khác.';
+        }
+        if (serverMsg.toLowerCase().includes('phone') && (serverMsg.toLowerCase().includes('duplicate') || serverMsg.toLowerCase().includes('đã tồn tại') || serverMsg.toLowerCase().includes('already'))) {
+          newErrors.phone = 'Số điện thoại này đã được sử dụng. Vui lòng chọn số khác.';
+        }
       } else if (error.response?.status === 400) {
-        const errorText = String(error.response?.data || '');
-        if (errorText.includes('Duplicate entry') && errorText.includes('email')) {
-          setGeneralError('Email này đã được sử dụng.');
-        } else if (errorText.includes('Duplicate entry') && errorText.includes('phone')) {
-          setGeneralError('Số điện thoại này đã được sử dụng.');
+        const errorText = String(error.response?.data || '').toLowerCase();
+        if (errorText.includes('duplicate') || errorText.includes('đã tồn tại') || errorText.includes('already')) {
+          if (errorText.includes('email')) {
+            newErrors.email = 'Email này đã được sử dụng. Vui lòng chọn email khác.';
+            setGeneralError('Email này đã được sử dụng.');
+          } else if (errorText.includes('phone') || errorText.includes('số điện thoại')) {
+            newErrors.phone = 'Số điện thoại này đã được sử dụng. Vui lòng chọn số khác.';
+            setGeneralError('Số điện thoại này đã được sử dụng.');
+          } else {
+            setGeneralError('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
+          }
         } else {
           setGeneralError('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
         }
       } else if (error.response?.status === 409) {
+        const errorText = String(error.response?.data?.message || '').toLowerCase();
+        if (errorText.includes('email')) {
+          newErrors.email = 'Email này đã được sử dụng. Vui lòng chọn email khác.';
+        }
+        if (errorText.includes('phone') || errorText.includes('số điện thoại')) {
+          newErrors.phone = 'Số điện thoại này đã được sử dụng. Vui lòng chọn số khác.';
+        }
         setGeneralError('Email hoặc số điện thoại đã được sử dụng.');
       } else if (error.response?.status === 500) {
         setGeneralError('Lỗi server. Vui lòng thử lại sau.');
@@ -109,6 +141,11 @@ export default function Register() {
         setGeneralError('Không có kết nối mạng. Vui lòng kiểm tra lại.');
       } else {
         setGeneralError(error.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      }
+
+      // Set field-specific errors
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(prev => ({ ...prev, ...newErrors }));
       }
     } finally {
       setIsLoading(false);
@@ -149,10 +186,13 @@ export default function Register() {
 
           {/* Error */}
           {generalError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                <p className="text-sm text-red-600 font-medium">{generalError}</p>
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl animate-pulse">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-700 mb-1">Lỗi đăng ký</p>
+                  <p className="text-sm text-red-600">{generalError}</p>
+                </div>
               </div>
             </div>
           )}
@@ -174,7 +214,12 @@ export default function Register() {
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.fullName && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.fullName}</p>}
+                  {errors.fullName && (
+                    <p className="text-sm text-red-600 mt-1 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                      <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                      <span>{errors.fullName}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Email */}
@@ -189,7 +234,12 @@ export default function Register() {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.email && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-sm text-red-600 mt-1 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                      <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                      <span>{errors.email}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Phone */}
@@ -204,7 +254,12 @@ export default function Register() {
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     className={`w-full px-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                   />
-                  {errors.phone && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.phone}</p>}
+                  {errors.phone && (
+                    <p className="text-sm text-red-600 mt-1 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                      <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                      <span>{errors.phone}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Password */}
@@ -229,7 +284,12 @@ export default function Register() {
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.password && <p className="text-sm text-red-500 mt-1 flex items-center"><AlertCircle className="h-4 w-4 mr-1" />{errors.password}</p>}
+                  {errors.password && (
+                    <p className="text-sm text-red-600 mt-1 flex items-start font-medium bg-red-50 p-2 rounded border border-red-200">
+                      <AlertCircle className="h-4 w-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                      <span>{errors.password}</span>
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

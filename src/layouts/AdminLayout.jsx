@@ -11,7 +11,8 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined
+  MessageOutlined,
+  DollarOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -46,6 +47,12 @@ export default function AdminLayout() {
       label: 'Đơn hàng', 
       path: '/admin/orders', 
       icon: <FileTextOutlined /> 
+    },
+    { 
+      key: 'payments', 
+      label: 'Thanh toán', 
+      path: '/admin/payments', 
+      icon: <DollarOutlined /> 
     },
     { 
       key: 'carts', 

@@ -1,8 +1,7 @@
-// src/pages/public/ProductDetail.jsx
+// src/components/common/ProductDetailModal.jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, Tag, Skeleton, Alert, Row, Col, message, InputNumber, Space } from 'antd';
-import { ArrowLeftOutlined, ShoppingCartOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
+import { Modal, Card, Tag, Skeleton, Alert, Row, Col, message, InputNumber, Space, Button } from 'antd';
+import { ShoppingCartOutlined, HeartOutlined, HeartFilled, CloseOutlined } from '@ant-design/icons';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getProductById } from '../../services/products';
@@ -11,15 +10,13 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
-export default function ProductDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+export default function ProductDetailModal({ productId, open, onClose }) {
   const { user } = useAuth();
   const { addToCart, loading: cartLoading } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -30,32 +27,41 @@ export default function ProductDetail() {
   const lastLoadedIdRef = useRef(null);
   const mountedRef = useRef(true);
 
-  // Load product data
+  // Load product data khi modal mở
   useEffect(() => {
+    if (!open || !productId) {
+      setProduct(null);
+      setQuantity(1);
+      setError(null);
+      loadingRef.current = false;
+      lastLoadedIdRef.current = null;
+      return;
+    }
+
     // Convert id to number để so sánh chính xác
-    const productId = id ? Number(id) : null;
+    const id = productId ? Number(productId) : null;
     
-    if (!productId || isNaN(productId)) {
+    if (!id || isNaN(id)) {
       setError('ID sản phẩm không hợp lệ');
       setLoading(false);
       return;
     }
 
-    // Prevent duplicate calls
-    if (loadingRef.current) {
-      console.log('🛍️ ProductDetail: Already loading, skipping...', { id: productId });
+    // Skip nếu đã load cùng ID (không cần check product vì có thể thay đổi reference)
+    if (lastLoadedIdRef.current === id) {
+      console.log('🛍️ ProductDetailModal: Product already loaded for this ID, skipping...', { id });
       return;
     }
 
-    // Chỉ skip nếu đã load cùng ID (không check product vì có thể stale)
-    if (lastLoadedIdRef.current === productId) {
-      console.log('🛍️ ProductDetail: Product already loaded, skipping...', { id: productId });
+    // Prevent duplicate calls
+    if (loadingRef.current) {
+      console.log('🛍️ ProductDetailModal: Already loading, skipping...', { id });
       return;
     }
     
     mountedRef.current = true;
     loadingRef.current = true;
-    lastLoadedIdRef.current = productId;
+    lastLoadedIdRef.current = id;
     
     const loadProduct = async () => {
       try {
@@ -64,16 +70,21 @@ export default function ProductDetail() {
           setError(null);
         }
         
-        console.log('🛍️ ProductDetail: Loading product', { id: productId });
-        const productData = await getProductById(productId);
-        console.log('🛍️ ProductDetail: Product loaded', productData);
+        console.log('🛍️ ProductDetailModal: Loading product', { id });
+        const productData = await getProductById(id);
+        console.log('🛍️ ProductDetailModal: Product loaded', productData);
         
         if (mountedRef.current) {
-          setProduct(productData);
-          setLoading(false);
+          if (productData && productData.id) {
+            setProduct(productData);
+            setQuantity(1); // Reset quantity khi load product mới
+            setLoading(false);
+          } else {
+            throw new Error('Product data không hợp lệ');
+          }
         }
       } catch (e) {
-        console.error('🛍️ ProductDetail: Error loading product', e);
+        console.error('🛍️ ProductDetailModal: Error loading product', e);
         if (mountedRef.current) {
           setError(e?.message || 'Không thể tải thông tin sản phẩm');
           setLoading(false);
@@ -91,9 +102,9 @@ export default function ProductDetail() {
     return () => {
       mountedRef.current = false;
     };
-  }, [id]); // Chỉ depend on id, không depend on product
+  }, [open, productId]); // Depend on open và productId
 
-  // Memoized values (phải gọi trước early returns)
+  // Memoized values
   const imageUrl = useMemo(() => {
     if (!product) return null;
     
@@ -115,12 +126,11 @@ export default function ProductDetail() {
     return getFallbackImageByIndex(product.id);
   }, [product]);
 
-  // Check wishlist status - không dùng isInWishlist trong dependency vì nó thay đổi mỗi render
+  // Check wishlist status
   const inWishlist = useMemo(() => {
     if (!product?.id) return false;
-    // Gọi trực tiếp từ context, không dùng dependency
     return isInWishlist(product.id);
-  }, [product?.id]); // Chỉ depend on product.id
+  }, [product?.id]);
 
   // Handlers
   const handleAddToCart = async () => {
@@ -132,7 +142,7 @@ export default function ProductDetail() {
     // Kiểm tra đăng nhập
     if (!user) {
       message.warning('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
-      navigate('/login', { state: { from: `/product/${id}` } });
+      onClose();
       return;
     }
 
@@ -163,11 +173,13 @@ export default function ProductDetail() {
 
     setAddingToCart(true);
     try {
-      console.log('🛒 ProductDetail: Adding to cart', { productId: product.id, quantity });
+      console.log('🛒 ProductDetailModal: Adding to cart', { productId: product.id, quantity });
       await addToCart(product, quantity);
       message.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+      // Có thể đóng modal sau khi thêm vào giỏ hàng (tùy chọn)
+      // onClose();
     } catch (error) {
-      console.error('🛒 ProductDetail: Error adding to cart', error);
+      console.error('🛒 ProductDetailModal: Error adding to cart', error);
       const errorMsg = error?.response?.data?.message || error?.message || 'Không thể thêm vào giỏ hàng';
       message.error(errorMsg);
     } finally {
@@ -196,7 +208,7 @@ export default function ProductDetail() {
         message.info('Đã xóa khỏi danh sách yêu thích');
       }
     } catch (error) {
-      console.error('❤️ ProductDetail: Error toggling wishlist', error);
+      console.error('❤️ ProductDetailModal: Error toggling wishlist', error);
       message.error('Không thể cập nhật danh sách yêu thích');
     } finally {
       setTogglingWishlist(false);
@@ -220,105 +232,40 @@ export default function ProductDetail() {
     setQuantity(value);
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div style={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)',
-        fontFamily: 'Poppins, Arial, sans-serif',
-        padding: '40px 20px'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <Skeleton.Button style={{ width: '120px', height: '40px', marginBottom: '24px' }} />
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={900}
+      closeIcon={<CloseOutlined style={{ fontSize: '20px', color: '#362319' }} />}
+      styles={{
+        body: {
+          padding: '24px',
+          maxHeight: '90vh',
+          overflowY: 'auto'
+        }
+      }}
+    >
+      {loading ? (
+        <div style={{ padding: '20px' }}>
           <Row gutter={[32, 32]}>
             <Col xs={24} md={12}>
-              <Skeleton.Image style={{ width: '100%', height: '500px', borderRadius: '20px' }} />
+              <Skeleton.Image style={{ width: '100%', height: '400px', borderRadius: '20px' }} />
             </Col>
             <Col xs={24} md={12}>
               <Skeleton active paragraph={{ rows: 8 }} />
             </Col>
           </Row>
         </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error || !product) {
-    return (
-      <div style={{ 
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)',
-        fontFamily: 'Poppins, Arial, sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}>
-        <div style={{ maxWidth: '600px', width: '100%' }}>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate(-1)}
-            style={{
-              background: '#eda274',
-              borderColor: '#eda274',
-              color: '#fff',
-              fontWeight: '600',
-              marginBottom: '24px',
-              borderRadius: '8px',
-              height: '40px'
-            }}
-          >
-            Quay lại
-          </Button>
-          
-          <Alert
-            message="Không tìm thấy sản phẩm"
-            description={error || 'Sản phẩm không tồn tại hoặc đã bị xóa.'}
-            type="error"
-            showIcon
-            action={
-              <Button 
-                size="small" 
-                onClick={() => navigate('/shop')}
-                style={{ background: '#eda274', borderColor: '#eda274', color: '#fff' }}
-              >
-                Về cửa hàng
-              </Button>
-            }
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Main render
-  return (
-    <div style={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)',
-      fontFamily: 'Poppins, Arial, sans-serif',
-      padding: '40px 20px'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Back Button */}
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate(-1)}
-          style={{
-            background: '#eda274',
-            borderColor: '#eda274',
-            color: '#fff',
-            fontWeight: '600',
-            marginBottom: '32px',
-            borderRadius: '8px',
-            height: '40px'
-          }}
-        >
-          Quay lại
-        </Button>
-
+      ) : error || !product ? (
+        <Alert
+          message="Không tìm thấy sản phẩm"
+          description={error || 'Sản phẩm không tồn tại hoặc đã bị xóa.'}
+          type="error"
+          showIcon
+        />
+      ) : (
         <Row gutter={[32, 32]}>
           {/* Product Image */}
           <Col xs={24} md={12}>
@@ -387,7 +334,7 @@ export default function ProductDetail() {
 
               {/* Product Name */}
               <h1 style={{
-                fontSize: '36px',
+                fontSize: '28px',
                 fontWeight: '800',
                 color: '#362319',
                 margin: '0 0 16px 0',
@@ -398,7 +345,7 @@ export default function ProductDetail() {
 
               {/* Price */}
               <div style={{
-                fontSize: '32px',
+                fontSize: '28px',
                 fontWeight: '700',
                 color: '#eda274',
                 marginBottom: '24px'
@@ -460,22 +407,24 @@ export default function ProductDetail() {
               {/* Description */}
               {product.description && (
                 <div style={{
-                  marginBottom: '32px',
-                  padding: '20px',
+                  marginBottom: '24px',
+                  padding: '16px',
                   background: '#fff',
                   borderRadius: '12px',
-                  border: '1px solid #f0f0f0'
+                  border: '1px solid #f0f0f0',
+                  maxHeight: '150px',
+                  overflowY: 'auto'
                 }}>
                   <h3 style={{
-                    fontSize: '18px',
+                    fontSize: '16px',
                     fontWeight: '700',
                     color: '#362319',
-                    marginBottom: '12px'
+                    marginBottom: '8px'
                   }}>
                     Mô tả sản phẩm
                   </h3>
                   <p style={{
-                    fontSize: '16px',
+                    fontSize: '14px',
                     color: '#553d2d',
                     lineHeight: '1.6',
                     margin: 0,
@@ -511,7 +460,7 @@ export default function ProductDetail() {
               )}
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
                 <Button
                   type="primary"
                   icon={<ShoppingCartOutlined />}
@@ -562,7 +511,6 @@ export default function ProductDetail() {
               {/* Total Price */}
               {product.stock > 0 && quantity > 0 && (
                 <div style={{
-                  marginTop: '24px',
                   padding: '16px',
                   background: '#ffeadd',
                   borderRadius: '12px',
@@ -577,7 +525,7 @@ export default function ProductDetail() {
                     Thành tiền:
                   </div>
                   <div style={{
-                    fontSize: '28px',
+                    fontSize: '24px',
                     fontWeight: '700',
                     color: '#eda274'
                   }}>
@@ -588,7 +536,8 @@ export default function ProductDetail() {
             </Card>
           </Col>
         </Row>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 }
+

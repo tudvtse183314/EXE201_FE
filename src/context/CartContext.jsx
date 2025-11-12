@@ -160,43 +160,85 @@ export const CartProvider = ({ children }) => {
       });
       
       // Truyền price để tính total
-      await addCartItem(product.id, quantity, productPrice);
+      const addResult = await addCartItem(product.id, quantity, productPrice);
+      console.log('🛒 Cart: addCartItem result', addResult);
       
       // Reload cart sau khi thêm - xử lý lỗi 400 gracefully
       // Force reload để có data mới nhất
       try {
         const updatedCart = await getMyCart(true); // Force reload
         const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        // Nếu endpoint không tồn tại, getMyCart trả về empty array
-        // Trong trường hợp này, thêm item vào local state thay vì xóa tất cả
-        if (items.length === 0 && cartItems.length > 0) {
-          // Endpoint không tồn tại hoặc cart rỗng nhưng local state có items
-          // Thêm item mới vào local state
+        console.log('🛒 Cart: getMyCart result', { items, itemsLength: items.length, cartItemsLength: cartItems.length });
+        
+        // Nếu API trả về items, dùng items từ API
+        if (items.length > 0) {
+          setCartItems(items);
+        } else {
+          // Nếu API trả về empty (endpoint không tồn tại hoặc có vấn đề)
+          // Thêm item vào local state vì addCartItem đã thành công
           const newItem = {
-            id: Date.now(), // Temporary ID
+            id: addResult?.id || addResult?.data?.id || Date.now(), // Dùng ID từ response nếu có
             productId: product.id,
             quantity: quantity,
             total: productPrice * quantity,
             price: productPrice,
             product: product
           };
-          setCartItems(prevItems => [...prevItems, newItem]);
-        } else {
-          // Endpoint tồn tại và trả về dữ liệu thực
-          setCartItems(items || []);
+          
+          // Kiểm tra xem item đã tồn tại chưa (tránh duplicate)
+          setCartItems(prevItems => {
+            const existingIndex = prevItems.findIndex(
+              item => (item.productId || item.product?.id) === product.id
+            );
+            
+            if (existingIndex >= 0) {
+              // Item đã tồn tại, cập nhật quantity
+              const updated = [...prevItems];
+              updated[existingIndex] = {
+                ...updated[existingIndex],
+                quantity: updated[existingIndex].quantity + quantity,
+                total: (updated[existingIndex].quantity + quantity) * productPrice
+              };
+              return updated;
+            } else {
+              // Item mới, thêm vào
+              return [...prevItems, newItem];
+            }
+          });
         }
       } catch (reloadError) {
         // Các lỗi khác (401, 403, 500, ...) - fallback về local state
         if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
+          console.log('🛒 Cart: getMyCart error, adding to local state', reloadError);
           const newItem = {
-            id: Date.now(),
+            id: addResult?.id || addResult?.data?.id || Date.now(),
             productId: product.id,
             quantity: quantity,
             total: productPrice * quantity,
             price: productPrice,
             product: product
           };
-          setCartItems(prevItems => [...prevItems, newItem]);
+          
+          // Kiểm tra xem item đã tồn tại chưa (tránh duplicate)
+          setCartItems(prevItems => {
+            const existingIndex = prevItems.findIndex(
+              item => (item.productId || item.product?.id) === product.id
+            );
+            
+            if (existingIndex >= 0) {
+              // Item đã tồn tại, cập nhật quantity
+              const updated = [...prevItems];
+              updated[existingIndex] = {
+                ...updated[existingIndex],
+                quantity: updated[existingIndex].quantity + quantity,
+                total: (updated[existingIndex].quantity + quantity) * productPrice
+              };
+              return updated;
+            } else {
+              // Item mới, thêm vào
+              return [...prevItems, newItem];
+            }
+          });
         } else {
           throw reloadError;
         }
@@ -428,8 +470,16 @@ export const CartProvider = ({ children }) => {
 
   const getTotalPrice = () => {
     return cartItems.reduce((total, item) => {
-      // Tính từ item.price * quantity hoặc item.total
-      const itemTotal = item.total || (item.price || 0) * (item.quantity || 0);
+      // Tính từ item.total (ưu tiên) hoặc item.price * quantity
+      // Nếu có product.salePrice thì dùng salePrice thay vì price
+      const quantity = Number(item.quantity || 0);
+      if (item.total) {
+        return total + Number(item.total);
+      }
+      
+      // Tính từ price và quantity
+      const price = item.price || item.product?.price || item.product?.salePrice || 0;
+      const itemTotal = Number(price) * quantity;
       return total + itemTotal;
     }, 0);
   };

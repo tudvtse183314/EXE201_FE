@@ -66,10 +66,21 @@ export const confirmPayment = async (orderId) => {
 };
 
 // PATCH /api/orders/{id}/payment-status - Cập nhật trạng thái thanh toán thủ công
+// paymentStatus phải là một trong: "PENDING" | "COMPLETED" | "FAILED" | "EXPIRED" (chữ HOA)
 export const updatePaymentStatus = async (orderId, paymentStatus) => {
   try {
-    console.log("📦 Orders: Updating payment status", { orderId, paymentStatus });
-    const res = await axiosInstance.patch(`/orders/${orderId}/payment-status`, { paymentStatus });
+    // Validate paymentStatus
+    const validStatuses = ["PENDING", "COMPLETED", "FAILED", "EXPIRED"];
+    const normalizedStatus = (paymentStatus || "").toUpperCase();
+    
+    if (!validStatuses.includes(normalizedStatus)) {
+      throw new Error(`Invalid payment status. Must be one of: ${validStatuses.join(", ")}`);
+    }
+    
+    console.log("📦 Orders: Updating payment status", { orderId, paymentStatus: normalizedStatus });
+    const res = await axiosInstance.patch(`/orders/${orderId}/payment-status`, { 
+      paymentStatus: normalizedStatus 
+    });
     console.log("📦 Orders: Updated payment status successfully", res.data);
     return res.data;
   } catch (e) {
@@ -117,11 +128,22 @@ export const cancelOrderLegacy = async (orderId) => {
   }
 };
 
-// Update order status (Admin/Staff)
+// Update order status (Admin/Staff only)
+// Valid status flow: PENDING → PAID → SHIPPED → DELIVERED (hoặc → CANCELLED)
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    console.log("📦 Orders: Updating order status", { orderId, status });
-    const res = await axiosInstance.patch(`/orders/${orderId}/status`, { status });
+    // Validate status
+    const validStatuses = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];
+    const normalizedStatus = (status || "").toUpperCase();
+    
+    if (!validStatuses.includes(normalizedStatus)) {
+      throw new Error(`Invalid order status. Must be one of: ${validStatuses.join(", ")}`);
+    }
+    
+    console.log("📦 Orders: Updating order status", { orderId, status: normalizedStatus });
+    const res = await axiosInstance.patch(`/orders/${orderId}/status`, { 
+      status: normalizedStatus 
+    });
     console.log("📦 Orders: Updated status successfully", res.data);
     return res.data;
   } catch (e) {
@@ -274,10 +296,10 @@ export const getStatusText = (status) => {
 export const getPaymentStatusColor = (status) => {
   const normalized = (status || "").toUpperCase();
   const colors = {
-    UNPAID: 'orange',
-    PAID: 'green',
+    PENDING: 'orange',
+    COMPLETED: 'green',
     FAILED: 'red',
-    PENDING: 'orange'
+    EXPIRED: 'volcano'
   };
   return colors[normalized] || 'default';
 };
@@ -285,12 +307,27 @@ export const getPaymentStatusColor = (status) => {
 export const getPaymentStatusText = (status) => {
   const normalized = (status || "").toUpperCase();
   const texts = {
-    UNPAID: 'Chưa thanh toán',
-    PAID: 'Đã thanh toán',
+    PENDING: 'Đang chờ thanh toán',
+    COMPLETED: 'Đã thanh toán',
     FAILED: 'Thanh toán thất bại',
-    PENDING: 'Đang chờ'
+    EXPIRED: 'Hết hạn thanh toán'
   };
   return texts[normalized] || status;
 };
 
 export const ORDER_STATUS_FLOW = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED'];
+
+// Order status flow - cho phép chuyển tiếp tuần tự
+export const ORDER_NEXT_STATUS = {
+  PENDING: ["PAID", "CANCELLED"],
+  PAID: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: [],
+  CANCELLED: []
+};
+
+// Payment status options
+export const PAYMENT_STATUS_OPTIONS = ["PENDING", "COMPLETED", "FAILED", "EXPIRED"];
+
+// Order status options
+export const ORDER_STATUS_OPTIONS = ["PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"];

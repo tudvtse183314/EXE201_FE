@@ -12,6 +12,7 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { getFallbackImageByIndex } from "../../utils/imageUtils";
 import { message } from "antd";
+import ProductDetailModal from "../../components/common/ProductDetailModal";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -27,6 +28,8 @@ export default function Shop() {
   const [activeCatId, setActiveCatId] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Load data
   useEffect(() => {
@@ -115,7 +118,8 @@ export default function Shop() {
   };
 
   const handleViewProduct = (product) => {
-    navigate(`/product/${product.id}`);
+    setSelectedProductId(product.id);
+    setModalOpen(true);
   };
 
   const handleWishlist = (product) => {
@@ -701,6 +705,16 @@ export default function Shop() {
           )}
         </div>
       </div>
+      
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        productId={selectedProductId}
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedProductId(null);
+        }}
+      />
     </div>
   );
 }

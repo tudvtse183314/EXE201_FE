@@ -53,8 +53,23 @@ export const getAllProducts = async () => {
 export const getProductById = async (id) => {
   try {
     console.log("🛍️ Products: Fetching product by ID", { id });
-    const res = await axiosInstance.get(`/products/${id}`);
-    const normalized = normalizeProduct(res.data);
+    const res = await axiosInstance.get(`/products/getProductId/${id}`);
+    
+    // Unwrap response nếu có format {message, success, data} hoặc {message, success, id, ...}
+    let productData = res.data;
+    if (productData && typeof productData === 'object') {
+      // Nếu có field 'data' và 'success', lấy data (format: {message, success, data: {...}})
+      if (productData.success !== undefined && productData.data) {
+        productData = productData.data;
+      } else if (productData.success !== undefined && productData.id) {
+        // Format: {message, success, id, name, ...} - product fields trực tiếp
+        // Loại bỏ các field không phải product (message, success)
+        const { message, success, ...productFields } = productData;
+        productData = productFields;
+      }
+    }
+    
+    const normalized = normalizeProduct(productData);
     console.log("🛍️ Products: Fetched product successfully", normalized);
     return normalized;
   } catch (e) {

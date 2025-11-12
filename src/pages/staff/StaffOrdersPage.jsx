@@ -17,7 +17,8 @@ import {
   Modal,
   Descriptions,
   Badge,
-  Tooltip
+  Tooltip,
+  Divider
 } from 'antd';
 import { 
   ReloadOutlined,
@@ -28,7 +29,19 @@ import {
   CloseCircleOutlined,
   DollarOutlined
 } from '@ant-design/icons';
-import { getAllOrders, updateOrderStatus, getStatusText, getStatusColor } from '../../services/orders';
+import { 
+  getAllOrders, 
+  updateOrderStatus, 
+  updatePaymentStatus,
+  getStatusText, 
+  getStatusColor,
+  getPaymentStatusText,
+  getPaymentStatusColor,
+  ORDER_NEXT_STATUS,
+  PAYMENT_STATUS_OPTIONS,
+  ORDER_STATUS_OPTIONS
+} from '../../services/orders';
+import { useToast } from '../../context/ToastContext';
 import { dataManager } from '../../utils/dataManager';
 import { useSearchParams } from 'react-router-dom';
 
@@ -37,6 +50,7 @@ const { Search } = AntInput;
 const { Option } = Select;
 
 export default function StaffOrdersPage() {
+  const { showSuccess, showError } = useToast();
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +59,7 @@ export default function StaffOrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const loadOrders = async () => {
@@ -98,6 +113,7 @@ export default function StaffOrdersPage() {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
+      setUpdatingStatus(orderId);
       console.log("📦 StaffOrdersPage: Updating order status", { orderId, newStatus });
       await updateOrderStatus(orderId, newStatus);
       
@@ -105,10 +121,78 @@ export default function StaffOrdersPage() {
       dataManager.clear('orders');
       await loadOrders();
       
+      showSuccess(`Đã cập nhật trạng thái đơn hàng thành ${getStatusText(newStatus)}`);
       console.log("📦 StaffOrdersPage: Order status updated");
     } catch (error) {
       console.error("📦 StaffOrdersPage: Error updating order status", error);
+      
+      // Xử lý lỗi theo từng loại
+      let message = 'Không thể cập nhật trạng thái đơn hàng.';
+      
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        message = 'Bạn cần đăng nhập hoặc không đủ quyền.';
+      } else if (error?.response?.status === 400) {
+        const errorData = error?.response?.data;
+        if (errorData?.message?.toLowerCase().includes('không thể nhảy') || errorData?.message?.toLowerCase().includes('invalid')) {
+          message = 'Không thể nhảy trạng thái. Vui lòng chuyển trạng thái tuần tự.';
+        } else {
+          message = errorData?.message || 'Dữ liệu không hợp lệ.';
+        }
+      } else if (error?.response?.status >= 500) {
+        message = 'Đã có lỗi hệ thống. Vui lòng thử lại sau.';
+      } else {
+        message = error?.response?.data?.message || error?.message || message;
+      }
+      
+      showError(message);
+    } finally {
+      setUpdatingStatus(null);
     }
+  };
+
+  const handlePaymentStatusUpdate = async (orderId, newPaymentStatus) => {
+    try {
+      setUpdatingStatus(orderId);
+      console.log("📦 StaffOrdersPage: Updating payment status", { orderId, newPaymentStatus });
+      await updatePaymentStatus(orderId, newPaymentStatus);
+      
+      // Refresh data
+      dataManager.clear('orders');
+      await loadOrders();
+      
+      showSuccess(`Đã cập nhật trạng thái thanh toán thành ${getPaymentStatusText(newPaymentStatus)}`);
+      console.log("📦 StaffOrdersPage: Payment status updated");
+    } catch (error) {
+      console.error("📦 StaffOrdersPage: Error updating payment status", error);
+      
+      // Xử lý lỗi theo từng loại
+      let message = 'Không thể cập nhật trạng thái thanh toán.';
+      
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        message = 'Bạn cần đăng nhập hoặc không đủ quyền.';
+      } else if (error?.response?.status === 400) {
+        const errorData = error?.response?.data;
+        if (errorData?.message?.toLowerCase().includes('invalid') || errorData?.message?.toLowerCase().includes('giá trị')) {
+          message = 'Giá trị hợp lệ: PENDING, COMPLETED, FAILED, EXPIRED.';
+        } else {
+          message = errorData?.message || 'Dữ liệu không hợp lệ.';
+        }
+      } else if (error?.response?.status >= 500) {
+        message = 'Đã có lỗi hệ thống. Vui lòng thử lại sau.';
+      } else {
+        message = error?.response?.data?.message || error?.message || message;
+      }
+      
+      showError(message);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+  
+  // Lấy các trạng thái tiếp theo hợp lệ cho một đơn hàng
+  const getNextStatuses = (currentStatus) => {
+    const normalized = (currentStatus || '').toUpperCase();
+    return ORDER_NEXT_STATUS[normalized] || [];
   };
 
   const showOrderDetail = (order) => {
@@ -175,7 +259,7 @@ export default function StaffOrdersPage() {
       ),
     },
     {
-      title: 'Trạng thái',
+      title: 'Trạng thái đơn',
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
@@ -187,6 +271,22 @@ export default function StaffOrdersPage() {
           {getStatusText(status)}
         </Tag>
       ),
+    },
+    {
+      title: 'Trạng thái thanh toán',
+      dataIndex: ['paymentInfo', 'status'],
+      key: 'paymentStatus',
+      render: (_, record) => {
+        const paymentStatus = record?.paymentInfo?.status;
+        return (
+          <Tag 
+            color={getPaymentStatusColor(paymentStatus)}
+            style={{ borderRadius: '6px' }}
+          >
+            {getPaymentStatusText(paymentStatus)}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Ngày tạo',
@@ -202,52 +302,42 @@ export default function StaffOrdersPage() {
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 200,
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="Xem chi tiết">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              onClick={() => showOrderDetail(record)}
-              style={{ color: 'var(--pv-primary, #eda274)' }}
-            />
-          </Tooltip>
-          
-          {record.status === 'PENDING' && (
-            <Tooltip title="Xác nhận thanh toán">
+      width: 300,
+      render: (_, record) => {
+        const nextStatuses = getNextStatuses(record.status);
+        const isUpdating = updatingStatus === record.id;
+        
+        return (
+          <Space size="small" wrap>
+            <Tooltip title="Xem chi tiết">
               <Button
                 type="text"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'PAID')}
-                style={{ color: '#52c41a' }}
+                icon={<EyeOutlined />}
+                onClick={() => showOrderDetail(record)}
+                style={{ color: 'var(--pv-primary, #eda274)' }}
               />
             </Tooltip>
-          )}
-          
-          {record.status === 'PAID' && (
-            <Tooltip title="Bắt đầu xử lý">
-              <Button
-                type="text"
-                icon={<ClockCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'PROCESSING')}
-                style={{ color: '#1890ff' }}
-              />
-            </Tooltip>
-          )}
-          
-          {record.status === 'PROCESSING' && (
-            <Tooltip title="Hoàn thành">
-              <Button
-                type="text"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'COMPLETED')}
-                style={{ color: '#52c41a' }}
-              />
-            </Tooltip>
-          )}
-        </Space>
-      ),
+            
+            {/* Hiển thị các nút chuyển trạng thái tuần tự */}
+            {nextStatuses.map((nextStatus) => (
+              <Tooltip key={nextStatus} title={`Chuyển sang ${getStatusText(nextStatus)}`}>
+                <Button
+                  type="text"
+                  size="small"
+                  loading={isUpdating}
+                  onClick={() => handleStatusUpdate(record.id, nextStatus)}
+                  style={{ 
+                    color: nextStatus === 'CANCELLED' ? '#ff4d4f' : '#52c41a',
+                    fontSize: '12px'
+                  }}
+                >
+                  {getStatusText(nextStatus)}
+                </Button>
+              </Tooltip>
+            ))}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -333,8 +423,8 @@ export default function StaffOrdersPage() {
             >
               <Option value="PENDING">Chờ thanh toán</Option>
               <Option value="PAID">Đã thanh toán</Option>
-              <Option value="PROCESSING">Đang xử lý</Option>
-              <Option value="COMPLETED">Hoàn thành</Option>
+              <Option value="SHIPPED">Đang giao</Option>
+              <Option value="DELIVERED">Đã giao</Option>
               <Option value="CANCELLED">Đã hủy</Option>
             </Select>
           </Col>
@@ -403,12 +493,19 @@ export default function StaffOrdersPage() {
                   {selectedOrder.totalAmount?.toLocaleString('vi-VN')} VNĐ
                 </Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Trạng thái">
+              <Descriptions.Item label="Trạng thái đơn">
                 <Tag 
                   color={getStatusColor(selectedOrder.status)} 
                   icon={getStatusIcon(selectedOrder.status)}
                 >
                   {getStatusText(selectedOrder.status)}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái thanh toán">
+                <Tag 
+                  color={getPaymentStatusColor(selectedOrder?.paymentInfo?.status)}
+                >
+                  {getPaymentStatusText(selectedOrder?.paymentInfo?.status)}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Ngày tạo">
@@ -465,28 +562,58 @@ export default function StaffOrdersPage() {
             </Card>
 
             {/* Action Buttons */}
-            <div style={{ textAlign: 'right' }}>
-              <Space>
+            <div style={{ marginTop: '24px' }}>
+              <Card title="Cập nhật trạng thái" size="small">
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div>
+                    <Text strong>Trạng thái đơn hàng:</Text>
+                    <Space wrap style={{ marginTop: '8px' }}>
+                      {getNextStatuses(selectedOrder.status).map((nextStatus) => (
+                        <Button
+                          key={nextStatus}
+                          size="small"
+                          loading={updatingStatus === selectedOrder.id}
+                          onClick={() => {
+                            handleStatusUpdate(selectedOrder.id, nextStatus);
+                            setIsDetailModalOpen(false);
+                          }}
+                          danger={nextStatus === 'CANCELLED'}
+                        >
+                          {getStatusText(nextStatus)}
+                        </Button>
+                      ))}
+                      {getNextStatuses(selectedOrder.status).length === 0 && (
+                        <Text type="secondary">Không có trạng thái tiếp theo</Text>
+                      )}
+                    </Space>
+                  </div>
+                  <Divider style={{ margin: '12px 0' }} />
+                  <div>
+                    <Text strong>Trạng thái thanh toán:</Text>
+                    <Space wrap style={{ marginTop: '8px' }}>
+                      {PAYMENT_STATUS_OPTIONS.map((paymentStatus) => (
+                        <Button
+                          key={paymentStatus}
+                          size="small"
+                          loading={updatingStatus === selectedOrder.id}
+                          onClick={() => {
+                            handlePaymentStatusUpdate(selectedOrder.id, paymentStatus);
+                            setIsDetailModalOpen(false);
+                          }}
+                          type={selectedOrder?.paymentInfo?.status === paymentStatus ? 'primary' : 'default'}
+                        >
+                          {getPaymentStatusText(paymentStatus)}
+                        </Button>
+                      ))}
+                    </Space>
+                  </div>
+                </Space>
+              </Card>
+              <div style={{ textAlign: 'right', marginTop: '16px' }}>
                 <Button onClick={() => setIsDetailModalOpen(false)}>
                   Đóng
                 </Button>
-                {selectedOrder.status === 'PENDING' && (
-                  <Button 
-                    type="primary"
-                    icon={<CheckCircleOutlined />}
-                    onClick={() => {
-                      handleStatusUpdate(selectedOrder.id, 'PAID');
-                      setIsDetailModalOpen(false);
-                    }}
-                    style={{ 
-                      background: 'linear-gradient(135deg, var(--pv-primary, #eda274) 0%, var(--pv-accent, #ffb07c) 100%)',
-                      border: 'none'
-                    }}
-                  >
-                    Xác nhận thanh toán
-                  </Button>
-                )}
-              </Space>
+              </div>
             </div>
           </div>
         )}
