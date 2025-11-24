@@ -62,6 +62,7 @@ import Cart from "../pages/public/Cart.jsx";
 import Checkout from "../pages/public/Checkout.jsx";
 import UserOrders from "../pages/customer/Orders.jsx";
 import OrderDetail from "../pages/customer/OrderDetail.jsx";
+import PaymentPage from "../pages/customer/PaymentPage.jsx";
 import Premium from "../pages/public/Premium";
 import ProductCardDemo from "../pages/public/ProductCardDemo";
 
@@ -240,6 +241,18 @@ export default function AppRoutes() {
             <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
                 <OrderDetail />
+              </MainLayout>
+            </RoleGuard>
+          }
+        />
+        
+        {/* Payment Page */}
+        <Route
+          path="/customer/payment/:orderId"
+          element={
+            <RoleGuard roles={[ROLES.CUSTOMER]}>
+              <MainLayout>
+                <PaymentPage />
               </MainLayout>
             </RoleGuard>
           }

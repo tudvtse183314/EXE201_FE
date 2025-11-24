@@ -38,6 +38,7 @@ import {
 } from '../../services/orders';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 import { THEME } from '../../constants/theme';
+import AddressSelector from '../../components/AddressSelector';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -58,6 +59,7 @@ export default function Checkout() {
   const [confirming, setConfirming] = useState(false);
   const [refreshingQR, setRefreshingQR] = useState(false);
   const [order, setOrder] = useState(null);
+  const [addressData, setAddressData] = useState({});
 
   const totalPrice = useMemo(() => getTotalPrice(), [cartItems, getTotalPrice]);
 
@@ -75,9 +77,42 @@ export default function Checkout() {
       })
       .filter(Boolean);
 
+    // Format địa chỉ theo format: "Tỉnh/ Huyện/ Xã/ địa chỉ chi tiết/ Ghi chú"
+    const addressParts = [];
+    
+    // Thêm Tỉnh
+    if (addressData.provinceName) {
+      addressParts.push(addressData.provinceName);
+    }
+    
+    // Thêm Huyện
+    if (addressData.districtName) {
+      addressParts.push(addressData.districtName);
+    }
+    
+    // Thêm Xã
+    if (addressData.wardName) {
+      addressParts.push(addressData.wardName);
+    }
+    
+    // Thêm địa chỉ chi tiết (số nhà, tên đường)
+    if (values.addressDetail?.trim()) {
+      addressParts.push(values.addressDetail.trim());
+    }
+    
+    // Thêm ghi chú (nếu có)
+    if (values.note?.trim()) {
+      addressParts.push(values.note.trim());
+    }
+    
+    // Kết hợp tất cả bằng dấu "/"
+    const fullShippingAddress = addressParts.length > 0 
+      ? addressParts.join('/ ') 
+      : (values.address?.trim() || ''); // Fallback về địa chỉ cũ nếu không có AddressSelector
+
     return {
       accountId: Number(user?.id),
-      shippingAddress: values.address?.trim(),
+      shippingAddress: fullShippingAddress,
       phoneContact: values.phone?.trim(),
       note: values.note?.trim() || '',
       items
@@ -126,6 +161,11 @@ export default function Checkout() {
 
       setOrder(createdOrder);
       showSuccess('Đặt hàng thành công. Vui lòng quét mã QR để thanh toán.');
+      
+      // Redirect đến PaymentPage với order data
+      navigate(`/customer/payment/${createdOrder.orderId}`, {
+        state: { order: createdOrder }
+      });
       
       // KHÔNG xóa cart ngay - chỉ xóa sau khi thanh toán thành công
       // Cart sẽ được xóa trong handleConfirmPayment khi payment status = PAID
@@ -474,12 +514,31 @@ export default function Checkout() {
                 <Input placeholder="Nhập email (tùy chọn)" />
               </Form.Item>
 
+              {/* Địa chỉ giao hàng - Tỉnh/Huyện/Xã */}
+              <AddressSelector
+                value={addressData}
+                onChange={(newAddress) => {
+                  setAddressData(newAddress);
+                  // Cập nhật form field để validation
+                  form.setFieldsValue({
+                    province: newAddress.province,
+                    district: newAddress.district,
+                    ward: newAddress.ward
+                  });
+                }}
+                required={true}
+              />
+
+              {/* Địa chỉ chi tiết (số nhà, tên đường) */}
               <Form.Item
-                label="Địa chỉ giao hàng"
-                name="address"
-                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+                label="Địa chỉ chi tiết (Số nhà, tên đường)"
+                name="addressDetail"
+                rules={[{ required: true, message: 'Vui lòng nhập địa chỉ chi tiết' }]}
               >
-                <TextArea rows={3} placeholder="Nhập địa chỉ chi tiết" />
+                <TextArea 
+                  rows={2} 
+                  placeholder="Ví dụ: Số 123, Đường ABC" 
+                />
               </Form.Item>
 
               <Form.Item label="Ghi chú" name="note">
