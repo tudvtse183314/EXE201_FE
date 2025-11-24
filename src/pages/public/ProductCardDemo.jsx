@@ -5,7 +5,7 @@ import { getAllProducts } from '../../services/products';
 import ProductCard from '../../components/common/ProductCard';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { message } from 'antd';
+import { useToast } from '../../context/ToastContext';
 
 const { Title } = Typography;
 
@@ -14,6 +14,7 @@ export default function ProductCardDemo() {
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { toggleWishlist } = useWishlist();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     loadProducts();
@@ -26,7 +27,7 @@ export default function ProductCardDemo() {
       setProducts(data.slice(0, 6)); // Show first 6 products
     } catch (error) {
       console.error('Error loading products:', error);
-      message.error('Không thể tải sản phẩm');
+      showError('Không thể tải sản phẩm');
     } finally {
       setLoading(false);
     }
@@ -35,22 +36,22 @@ export default function ProductCardDemo() {
   const handleAddToCart = async (product) => {
     try {
       await addToCart(product, 1);
-      message.success(`Đã thêm ${product.name} vào giỏ hàng!`);
+      showSuccess(`Đã thêm ${product.name} vào giỏ hàng!`);
     } catch (error) {
-      message.error('Không thể thêm vào giỏ hàng');
+      showError('Không thể thêm vào giỏ hàng');
     }
   };
 
   const handleAddToWishlist = (product) => {
     toggleWishlist(product);
-    message.success(`Đã thêm ${product.name} vào wishlist!`);
+    showSuccess(`Đã thêm ${product.name} vào wishlist!`);
   };
 
   return (
     <div style={{ 
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)',
-      fontFamily: 'Poppins, Arial, sans-serif',
+      fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
       padding: '40px 20px'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

@@ -8,7 +8,6 @@ import {
   Input, 
   Space, 
   Popconfirm, 
-  message, 
   Card, 
   Typography, 
   Row, 
@@ -27,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import { getAllCategories, createCategory, updateCategory, deleteCategory } from '../../../services/categories';
 import { dataManager } from '../../../utils/dataManager';
+import { useToast } from '../../../context/ToastContext';
 
 const { Title, Text } = Typography;
 const { Search } = AntInput;
@@ -40,6 +40,7 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form] = Form.useForm();
+  const { showSuccess, showError } = useToast();
 
   const loadCategories = async () => {
     try {
@@ -82,11 +83,11 @@ export default function CategoriesPage() {
     try {
       if (editingCategory) {
         await updateCategory(editingCategory.id, values);
-        message.success('Đã cập nhật danh mục thành công!');
+        showSuccess('Đã cập nhật danh mục thành công!');
         console.log("📂 CategoriesPage: Category updated");
       } else {
         await createCategory(values);
-        message.success('Đã thêm danh mục mới thành công!');
+        showSuccess('Đã thêm danh mục mới thành công!');
         console.log("📂 CategoriesPage: Category created");
       }
       
@@ -99,7 +100,7 @@ export default function CategoriesPage() {
       form.resetFields();
     } catch (error) {
       console.error("📂 CategoriesPage: Error saving category", error);
-      message.error(error?.message || "Không thể lưu danh mục.");
+      showError(error?.message || "Không thể lưu danh mục.");
     }
   };
 
@@ -115,7 +116,7 @@ export default function CategoriesPage() {
   const handleDelete = async (categoryId, categoryName) => {
     try {
       await deleteCategory(categoryId);
-      message.success(`Đã xóa danh mục "${categoryName}" thành công!`);
+      showSuccess(`Đã xóa danh mục "${categoryName}" thành công!`);
       console.log("📂 CategoriesPage: Category deleted");
       
       // Refresh data
@@ -123,7 +124,7 @@ export default function CategoriesPage() {
       await loadCategories();
     } catch (error) {
       console.error("📂 CategoriesPage: Error deleting category", error);
-      message.error(error?.message || "Không thể xóa danh mục. Có thể danh mục này đang được sử dụng.");
+      showError(error?.message || "Không thể xóa danh mục. Có thể danh mục này đang được sử dụng.");
     }
   };
 

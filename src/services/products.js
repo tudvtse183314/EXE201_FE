@@ -53,8 +53,19 @@ export const getAllProducts = async () => {
 export const getProductById = async (id) => {
   try {
     console.log("🛍️ Products: Fetching product by ID", { id });
-    const res = await axiosInstance.get(`/products/${id}`);
-    const normalized = normalizeProduct(res.data);
+    // Backend endpoint: /api/products/getProductId/{id}
+    // Backend returns GetProductResponse directly (not wrapped in data field)
+    const res = await axiosInstance.get(`/products/getProductId/${id}`);
+    
+    // GetProductResponse structure: { message, success, id, name, description, price, imageUrl, type, stock, category }
+    // Response trả về trực tiếp GetProductResponse, không có field data
+    const responseData = res.data;
+    
+    // Nếu response có structure GetProductResponse, extract product data
+    // Nếu response đã là product object, dùng trực tiếp
+    const productData = responseData?.id ? responseData : (responseData?.data || responseData);
+    
+    const normalized = normalizeProduct(productData);
     console.log("🛍️ Products: Fetched product successfully", normalized);
     return normalized;
   } catch (e) {

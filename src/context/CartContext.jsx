@@ -32,6 +32,9 @@ export const CartProvider = ({ children }) => {
   const isLoadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
   const MIN_LOAD_INTERVAL = 1000; // Chỉ cho phép load lại sau 1 giây
+  
+  // Debounce timers cho quantity updates
+  const quantityUpdateTimersRef = useRef({});
 
   // Load cart from API khi user đăng nhập
   // Lưu ý: Không load tự động khi mount vì endpoint có thể chưa tồn tại
@@ -47,8 +50,21 @@ export const CartProvider = ({ children }) => {
     if (!user) {
       setCartItems([]);
       hasLoadedRef.current = false;
+      // Clear tất cả quantity update timers khi logout
+      const timers = quantityUpdateTimersRef.current;
+      Object.values(timers).forEach(t => clearTimeout(t));
+      quantityUpdateTimersRef.current = {};
     }
   }, [user]);
+
+  // Cleanup timers khi unmount provider để tránh memory leak
+  useEffect(() => {
+    return () => {
+      const timers = quantityUpdateTimersRef.current;
+      Object.values(timers).forEach(t => clearTimeout(t));
+      quantityUpdateTimersRef.current = {};
+    };
+  }, []);
 
   // Function để load cart manually (gọi từ Cart page hoặc khi cần)
   const loadCart = async (force = false) => {
@@ -123,20 +139,27 @@ export const CartProvider = ({ children }) => {
       hasLoadedRef.current = true;
       console.log('🛒 Cart Context: Loaded cart successfully', { count: items.length });
     } catch (e) {
-      // Xử lý lỗi 400 (endpoint không tồn tại) đã được getMyCart xử lý, không cần log thêm
-      if (e?.response?.status !== 400) {
-        console.error('🛒 Cart Context: Error loading cart', e);
-        setError(e?.message || 'Không thể tải giỏ hàng');
-        
-        // Các lỗi khác (trừ 401/403 đã được interceptor xử lý)
-        if (e?.response?.status !== 401 && e?.response?.status !== 403) {
-          showError('Không thể tải giỏ hàng. Vui lòng thử lại.');
-        }
-      } else {
-        // 400 đã được getMyCart xử lý, chỉ set empty cart
+      console.error('🛒 Cart Context: Error loading cart', e);
+      
+      // Xử lý lỗi 400 (endpoint không tồn tại) - không hiển thị lỗi, chỉ set empty cart
+      if (e?.response?.status === 400) {
         setCartItems([]);
         hasLoadedRef.current = true;
+        setError(null); // Clear error cho 400
+        return; // Không throw error cho 400
       }
+      
+      // Xử lý các lỗi khác
+      const errorMessage = e?.response?.data?.message || e?.message || 'Không thể tải giỏ hàng';
+      setError(errorMessage);
+      
+      // Hiển thị toast cho các lỗi (trừ 401/403 đã được interceptor xử lý)
+      if (e?.response?.status !== 401 && e?.response?.status !== 403) {
+        showError(errorMessage);
+      }
+      
+      // Throw error để component có thể xử lý thêm nếu cần
+      throw e;
     } finally {
       setLoading(false);
       isLoadingRef.current = false;
@@ -162,32 +185,16 @@ export const CartProvider = ({ children }) => {
       // Truyền price để tính total
       await addCartItem(product.id, quantity, productPrice);
       
-      // Reload cart sau khi thêm - xử lý lỗi 400 gracefully
-      // Force reload để có data mới nhất
+      // Reload cart sau khi thêm - dùng loadCart(true) để tận dụng hydrate products và throttle
+      // Không gọi getMyCart(true) trực tiếp để tránh hydrate products nhiều lần
       try {
-        const updatedCart = await getMyCart(true); // Force reload
-        const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        // Nếu endpoint không tồn tại, getMyCart trả về empty array
-        // Trong trường hợp này, thêm item vào local state thay vì xóa tất cả
-        if (items.length === 0 && cartItems.length > 0) {
-          // Endpoint không tồn tại hoặc cart rỗng nhưng local state có items
-          // Thêm item mới vào local state
-          const newItem = {
-            id: Date.now(), // Temporary ID
-            productId: product.id,
-            quantity: quantity,
-            total: productPrice * quantity,
-            price: productPrice,
-            product: product
-          };
-          setCartItems(prevItems => [...prevItems, newItem]);
-        } else {
-          // Endpoint tồn tại và trả về dữ liệu thực
-          setCartItems(items || []);
-        }
+        await loadCart(true); // Force reload với hydrate products
       } catch (reloadError) {
-        // Các lỗi khác (401, 403, 500, ...) - fallback về local state
-        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
+        // Nếu loadCart fail (400, 401, 403, ...), fallback về local state
+        if (reloadError?.response?.status !== 400 && 
+            reloadError?.response?.status !== 401 && 
+            reloadError?.response?.status !== 403) {
+          // Thêm item vào local state nếu không thể reload
           const newItem = {
             id: Date.now(),
             productId: product.id,
@@ -221,20 +228,15 @@ export const CartProvider = ({ children }) => {
         console.log('🛒 Cart: Item already exists, updating quantity instead');
         
         try {
-          // Reload cart để lấy item hiện tại - force reload
-          const currentCart = await getMyCart(true); // Force reload
-          const currentItems = Array.isArray(currentCart) ? currentCart : (currentCart?.items || []);
+          // Tìm item trong local state trước (tránh gọi API không cần thiết)
+          let existingItem = cartItems.find(
+            item => (item.productId || item.product?.id) === product.id
+          );
           
-          // Nếu endpoint không tồn tại, tìm trong local state
-          let existingItem = null;
-          if (currentItems.length === 0 && cartItems.length > 0) {
-            // Endpoint không tồn tại, tìm trong local state
+          // Nếu không tìm thấy trong local state, reload cart để sync với BE
+          if (!existingItem) {
+            await loadCart(true); // Force reload với hydrate products
             existingItem = cartItems.find(
-              item => (item.productId || item.product?.id) === product.id
-            );
-          } else {
-            // Endpoint tồn tại, tìm trong response
-            existingItem = currentItems.find(
               item => (item.productId || item.product?.id) === product.id
             );
           }
@@ -256,21 +258,8 @@ export const CartProvider = ({ children }) => {
             // Cập nhật số lượng
             await updateCartItemQuantity(itemId, newQuantity, price, productIdForUpdate);
             
-            // Reload cart sau khi cập nhật - force reload
-            const updatedCart = await getMyCart(true); // Force reload
-            const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-            // Nếu endpoint không tồn tại, update local state
-            if (items.length === 0 && cartItems.length > 0) {
-              setCartItems(prevItems => 
-                prevItems.map(item => 
-                  (item.id || item.itemId) === itemId 
-                    ? { ...item, quantity: newQuantity, total: price * newQuantity }
-                    : item
-                )
-              );
-            } else {
-              setCartItems(items || []);
-            }
+            // Reload cart sau khi cập nhật - dùng loadCart(true) để hydrate products
+            await loadCart(true);
             
             showSuccess(`Đã cập nhật số lượng ${product.name} trong giỏ hàng`);
             console.log('🛒 Cart: Updated existing item successfully');
@@ -299,108 +288,107 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Xóa item khỏi giỏ hàng
+  // Xóa item khỏi giỏ hàng - Optimistic update
   const removeFromCart = async (itemId) => {
-    setLoading(true);
-    try {
-      console.log('🛒 Cart: Removing item from cart', { itemId });
-      await deleteCartItem(itemId);
-      
-      // Reload cart sau khi xóa - xử lý lỗi 400 gracefully
-      // Force reload để có data mới nhất
-      try {
-        const updatedCart = await getMyCart(true); // Force reload
-        const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        // Nếu endpoint không tồn tại, update local state
-        if (items.length === 0 && cartItems.length > 0) {
-          // Endpoint không tồn tại, xóa từ local state
-          setCartItems(prevItems => 
-            prevItems.filter(item => (item.id || item.itemId) !== itemId)
-          );
-        } else {
-          setCartItems(items || []);
-        }
-      } catch (reloadError) {
-        // Các lỗi khác - fallback về local state
-        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
-          setCartItems(prevItems => 
-            prevItems.filter(item => (item.id || item.itemId) !== itemId)
-          );
-        } else {
-          throw reloadError;
-        }
+    // Lưu item để có thể rollback nếu lỗi
+    const itemToRemove = cartItems.find(item => (item.id || item.itemId) === itemId);
+    
+    // Optimistic update: Xóa ngay khỏi UI
+    setCartItems(prevItems => 
+      prevItems.filter(item => (item.id || item.itemId) !== itemId)
+    );
+    
+    // Gọi API ở background (không chờ)
+    deleteCartItem(itemId).catch((e) => {
+      console.error('🛒 Cart: Error removing item from API', e);
+      // Rollback nếu lỗi
+      if (itemToRemove) {
+        setCartItems(prevItems => [...prevItems, itemToRemove]);
+        showError('Không thể xóa sản phẩm. Vui lòng thử lại.');
       }
-      
-      showSuccess('Đã xóa sản phẩm khỏi giỏ hàng');
-      console.log('🛒 Cart: Removed item successfully');
-    } catch (e) {
-      console.error('🛒 Cart: Error removing item', e);
-      const errorMsg = e?.response?.data?.message || 'Không thể xóa sản phẩm';
-      showError(errorMsg);
-    } finally {
-      setLoading(false);
-    }
+    });
+    
+    showSuccess('Đã xóa sản phẩm khỏi giỏ hàng');
+    console.log('🛒 Cart: Removed item (optimistic)');
   };
 
-  // Cập nhật số lượng item
+  // Hàm private để schedule quantity update với debounce
+  const scheduleQuantityUpdate = (itemId, quantity, price, productId, oldQuantity) => {
+    if (!itemId) return;
+
+    // Clear timer cũ nếu có
+    const timers = quantityUpdateTimersRef.current;
+    if (timers[itemId]) {
+      clearTimeout(timers[itemId]);
+    }
+
+    // Đặt timer mới (600ms debounce)
+    timers[itemId] = setTimeout(async () => {
+      try {
+        console.log('🛒 Cart: Flushing quantity update to API', {
+          itemId,
+          quantity,
+          price,
+          productId,
+        });
+        await updateCartItemQuantity(itemId, quantity, price, productId);
+        console.log('🛒 Cart: Quantity updated successfully (debounced)');
+      } catch (e) {
+        console.error('🛒 Cart: Error updating quantity in API (debounced)', e);
+        // Rollback nếu lỗi
+        setCartItems(prevItems => 
+          prevItems.map(item => 
+            (item.id || item.itemId) === itemId 
+              ? { ...item, quantity: oldQuantity, total: price * oldQuantity }
+              : item
+          )
+        );
+        const errorMsg = e?.response?.data?.message || 'Không thể cập nhật số lượng. Có thể vượt quá số lượng tồn kho.';
+        showError(errorMsg);
+      } finally {
+        // Xóa timer sau khi gọi xong
+        delete timers[itemId];
+      }
+    }, 600); // debounce 600ms
+  };
+
+  // Cập nhật số lượng item - Optimistic update với debounce
   const updateQuantity = async (itemId, quantity) => {
     if (quantity <= 0) {
+      // Clear timer nếu có
+      const timers = quantityUpdateTimersRef.current;
+      if (timers[itemId]) {
+        clearTimeout(timers[itemId]);
+        delete timers[itemId];
+      }
       await removeFromCart(itemId);
       return;
     }
 
-    setLoading(true);
-    try {
-      // Tìm item trong cart để lấy price và productId
-      const currentItem = cartItems.find(item => (item.id || item.itemId) === itemId);
-      const price = currentItem?.price || currentItem?.product?.price || 0;
-      const productId = currentItem?.productId || currentItem?.product?.id || null;
-      
-      console.log('🛒 Cart: Updating item quantity', { itemId, quantity, price, productId });
-      await updateCartItemQuantity(itemId, quantity, price, productId);
-      
-      // Reload cart sau khi cập nhật - xử lý lỗi 400 gracefully
-      // Force reload để có data mới nhất
-      try {
-        const updatedCart = await getMyCart(true); // Force reload
-        const items = Array.isArray(updatedCart) ? updatedCart : (updatedCart?.items || []);
-        // Nếu endpoint không tồn tại, update local state
-        if (items.length === 0 && cartItems.length > 0) {
-          // Endpoint không tồn tại, update local state
-          setCartItems(prevItems => 
-            prevItems.map(item => 
-              (item.id || item.itemId) === itemId 
-                ? { ...item, quantity, total: price * quantity }
-                : item
-            )
-          );
-          console.log('🛒 Cart: Updated quantity in local state');
-        } else {
-          setCartItems(items || []);
-          console.log('🛒 Cart: Updated quantity successfully');
-        }
-      } catch (reloadError) {
-        // Các lỗi khác - fallback về local state
-        if (reloadError?.response?.status !== 401 && reloadError?.response?.status !== 403) {
-          setCartItems(prevItems => 
-            prevItems.map(item => 
-              (item.id || item.itemId) === itemId 
-                ? { ...item, quantity, total: price * quantity }
-                : item
-            )
-          );
-          console.log('🛒 Cart: Updated quantity in local state (error fallback)');
-        } else {
-          throw reloadError;
-        }
-      }
-    } catch (e) {
-      console.error('🛒 Cart: Error updating quantity', e);
-      const errorMsg = e?.response?.data?.message || 'Không thể cập nhật số lượng. Có thể vượt quá số lượng tồn kho.';
-      showError(errorMsg);
-    } finally {
-      setLoading(false);
+    // Tìm item trong cart để lấy price và productId
+    const currentItem = cartItems.find(item => (item.id || item.itemId) === itemId);
+    if (!currentItem) {
+      console.warn('🛒 Cart: Item not found for update', { itemId });
+      return;
     }
+
+    const price = currentItem?.price || currentItem?.product?.price || 0;
+    const productId = currentItem?.productId || currentItem?.product?.id || null;
+    const oldQuantity = currentItem.quantity || 1;
+    
+    // ✅ Optimistic update UI - cập nhật ngay lập tức
+    setCartItems(prevItems => 
+      prevItems.map(item => 
+        (item.id || item.itemId) === itemId 
+          ? { ...item, quantity, total: price * quantity }
+          : item
+      )
+    );
+    
+    console.log('🛒 Cart: Updated quantity (optimistic, debounced)', { itemId, quantity, price });
+    
+    // ✅ Debounce API call - chỉ gọi sau 600ms kể từ lần thay đổi cuối cùng
+    scheduleQuantityUpdate(itemId, quantity, price, productId, oldQuantity);
   };
 
   // Xóa tất cả items trong giỏ hàng

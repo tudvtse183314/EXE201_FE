@@ -10,8 +10,9 @@ import { dataManager } from "../../utils/dataManager";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
+import { useToast } from "../../context/ToastContext";
 import { getFallbackImageByIndex } from "../../utils/imageUtils";
-import { message } from "antd";
+import GradientText from "../../components/effects/GradientText";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -20,6 +21,7 @@ export default function Shop() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { showSuccess, showError, showInfo } = useToast();
   const [categories, setCategories] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,14 +105,75 @@ export default function Shop() {
     return filtered;
   }, [allProducts, activeCatId, searchTerm, sortBy]);
 
+  // Phân nhóm products theo type (string)
+  const productsByType = useMemo(() => {
+    const grouped = {};
+    
+    visibleProducts.forEach(product => {
+      // Normalize type: trim, uppercase, và xử lý null/undefined
+      let type = (product.type || '').toString().trim().toUpperCase();
+      
+      // Nếu type rỗng hoặc không hợp lệ, dùng 'OTHER'
+      if (!type || type === 'NULL' || type === 'UNDEFINED') {
+        type = 'OTHER';
+      }
+      
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(product);
+    });
+
+    // Sắp xếp các type theo thứ tự ưu tiên
+    const typeOrder = ['FOOD', 'TOY', 'ACCESSORY', 'CARE', 'BED', 'CLOTHING', 'OTHER'];
+    const sorted = {};
+    
+    // Thêm các type có trong typeOrder trước
+    typeOrder.forEach(type => {
+      if (grouped[type]) {
+        sorted[type] = grouped[type];
+      }
+    });
+    
+    // Thêm các type khác (không có trong typeOrder)
+    Object.keys(grouped).forEach(type => {
+      if (!typeOrder.includes(type)) {
+        sorted[type] = grouped[type];
+      }
+    });
+
+    return sorted;
+  }, [visibleProducts]);
+
+  // Lấy gradient colors dựa trên type
+  const getTypeGradient = (type) => {
+    const normalizedType = (type || '').toString().trim().toUpperCase();
+    
+    // Gradient colors cho các type phổ biến
+    const gradientMap = {
+      'FOOD': ["#ff6b6b", "#ee5a6f", "#ff8787", "#ff6b6b", "#ee5a6f"],
+      'TOY': ["#4ecdc4", "#44a08d", "#6bcfd4", "#4ecdc4", "#44a08d"],
+      'TOYS': ["#4ecdc4", "#44a08d", "#6bcfd4", "#4ecdc4", "#44a08d"],
+      'ACCESSORY': ["#feca57", "#ff9ff3", "#feca57", "#ff9ff3", "#feca57"],
+      'ACCESSORIES': ["#feca57", "#ff9ff3", "#feca57", "#ff9ff3", "#feca57"],
+      'CARE': ["#48dbfb", "#0abde3", "#6dd5ed", "#48dbfb", "#0abde3"],
+      'BED': ["#ff9ff3", "#feca57", "#ffb3f5", "#ff9ff3", "#feca57"],
+      'BEDS': ["#ff9ff3", "#feca57", "#ffb3f5", "#ff9ff3", "#feca57"],
+      'CLOTHING': ["#a29bfe", "#6c5ce7", "#b8b3ff", "#a29bfe", "#6c5ce7"],
+      'CLOTHES': ["#a29bfe", "#6c5ce7", "#b8b3ff", "#a29bfe", "#6c5ce7"],
+    };
+    
+    return gradientMap[normalizedType] || ["#eda274", "#d5956d", "#f0b890", "#eda274", "#d5956d"];
+  };
+
   const handleAddToCart = async (product) => {
     try {
       await addToCart(product, 1);
       console.log("🛒 Add to cart:", product);
-      message.success("Đã thêm vào giỏ hàng!");
+      showSuccess("Đã thêm vào giỏ hàng!");
     } catch (error) {
       console.error("🛒 Error adding to cart:", error);
-      message.error("Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
+      showError("Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
     }
   };
 
@@ -122,9 +185,9 @@ export default function Shop() {
     toggleWishlist(product);
     const isAdded = isInWishlist(product.id);
     if (isAdded) {
-      message.success("Đã thêm vào danh sách yêu thích!");
+      showSuccess("Đã thêm vào danh sách yêu thích!");
     } else {
-      message.info("Đã xóa khỏi danh sách yêu thích!");
+      showInfo("Đã xóa khỏi danh sách yêu thích!");
     }
   };
 
@@ -133,7 +196,7 @@ export default function Shop() {
       <div style={{ 
         minHeight: '100vh',
         background: '#fff',
-        fontFamily: 'Poppins, Arial, sans-serif'
+        fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
       }}>
         {/* Banner Skeleton */}
         <div style={{ 
@@ -219,6 +282,36 @@ export default function Shop() {
       background: '#fff',
       fontFamily: 'Poppins, Arial, sans-serif'
     }}>
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+          }
+          50% {
+            transform: translateY(-10px) scale(1.1);
+          }
+        }
+        
+        @keyframes shimmer {
+          0% {
+            background-position: -1000px 0;
+          }
+          100% {
+            background-position: 1000px 0;
+          }
+        }
+      `}</style>
       {/* Banner ảnh */}
       <div style={{ 
         position: 'relative',
@@ -396,7 +489,7 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Products Grid - Full Width */}
+        {/* Products Grid - Grouped by Type with Sections */}
         <div>
           {visibleProducts.length === 0 ? (
             <Card style={{ 
@@ -428,8 +521,124 @@ export default function Shop() {
               </Empty>
             </Card>
           ) : (
-            <Row gutter={[20, 24]}>
-              {visibleProducts.map((product) => (
+            <div>
+              {Object.entries(productsByType).map(([type, products], sectionIndex) => {
+                const gradientColors = getTypeGradient(type);
+                const displayType = type || 'OTHER';
+                
+                return (
+                  <div
+                    key={type}
+                    style={{
+                      marginBottom: '64px',
+                      animation: `fadeInUp 0.6s ease-out ${sectionIndex * 0.1}s both`
+                    }}
+                  >
+                    {/* Section Header với GradientText */}
+                    <div
+                      style={{
+                        position: 'relative',
+                        marginBottom: '32px',
+                        padding: '24px 32px',
+                        background: 'linear-gradient(135deg, rgba(237, 162, 116, 0.1) 0%, rgba(213, 149, 109, 0.1) 100%)',
+                        borderRadius: '20px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                        border: '2px solid rgba(237, 162, 116, 0.2)',
+                        overflow: 'hidden',
+                        transform: 'translateY(0)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.12)';
+                        e.currentTarget.style.borderColor = 'rgba(237, 162, 116, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                        e.currentTarget.style.borderColor = 'rgba(237, 162, 116, 0.2)';
+                      }}
+                    >
+                      {/* Decorative elements */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-50px',
+                          right: '-50px',
+                          width: '200px',
+                          height: '200px',
+                          background: 'rgba(237, 162, 116, 0.05)',
+                          borderRadius: '50%',
+                          filter: 'blur(40px)'
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '-30px',
+                          left: '-30px',
+                          width: '150px',
+                          height: '150px',
+                          background: 'rgba(237, 162, 116, 0.05)',
+                          borderRadius: '50%',
+                          filter: 'blur(30px)'
+                        }}
+                      />
+                      
+                      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                          <div>
+                            <h2
+                              style={{
+                                margin: 0,
+                                fontSize: '36px',
+                                fontWeight: '800',
+                                fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
+                                lineHeight: '1.2',
+                                display: 'inline-block'
+                              }}
+                            >
+                              <GradientText
+                                colors={gradientColors}
+                                animationSpeed={3}
+                                size="text-4xl"
+                                weight="font-extrabold"
+                              >
+                                {displayType}
+                              </GradientText>
+                            </h2>
+                            <p
+                              style={{
+                                margin: '8px 0 0 0',
+                                fontSize: '16px',
+                                color: '#666',
+                                fontWeight: '500'
+                              }}
+                            >
+                              {products.length} sản phẩm
+                            </p>
+                          </div>
+                        </div>
+                        <Tag
+                          style={{
+                            fontSize: '16px',
+                            fontWeight: '700',
+                            padding: '8px 20px',
+                            borderRadius: '20px',
+                            background: 'rgba(237, 162, 116, 0.15)',
+                            border: '2px solid rgba(237, 162, 116, 0.3)',
+                            color: '#362319',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+                          }}
+                        >
+                          {products.length} items
+                        </Tag>
+                      </div>
+                    </div>
+
+                    {/* Products Grid với stagger animation */}
+                    <Row gutter={[20, 24]}>
+                      {products.map((product, productIndex) => (
                 <Col xs={24} sm={12} md={12} lg={6} xl={6} xxl={6} key={product.id}>
                   <Card
                     hoverable
@@ -599,7 +808,7 @@ export default function Shop() {
                           color: '#362319',
                           margin: '0 0 8px 0',
                           cursor: 'pointer',
-                          fontFamily: 'Poppins, Arial, sans-serif',
+                          fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
                           lineHeight: '1.3',
                           height: '38px', // Fixed height for 2 lines (19px * 2)
                           overflow: 'hidden',
@@ -630,7 +839,7 @@ export default function Shop() {
                         fontWeight: '700', 
                         color: '#eda274',
                         marginBottom: '10px',
-                        fontFamily: 'Poppins, Arial, sans-serif',
+                        fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
                         height: '28px'
                       }}>
                         {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
@@ -694,10 +903,14 @@ export default function Shop() {
                         {product.stock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
                       </Button>
                     </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

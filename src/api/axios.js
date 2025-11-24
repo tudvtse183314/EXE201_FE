@@ -23,7 +23,7 @@ export function setGlobalNavigateFunction(navigateFn) {
 
 const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || "https://exe201-be-uhno.onrender.com/api",
-  timeout: 60000,
+  timeout: 90000, // Tăng timeout lên 90 giây cho các request có thể chậm (như register)
   withCredentials: false,
 });
 

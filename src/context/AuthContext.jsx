@@ -21,7 +21,24 @@ export const AuthProvider = ({ children }) => {
 
   // Đăng xuất: xoá localStorage và đưa user về null
   const logout = () => {
+    // Clear auth data
     ["accessToken", "user", "role"].forEach((k) => localStorage.removeItem(k));
+    
+    // Clear order data để tránh bug "dính đơn cũ"
+    // Clear tất cả keys liên quan đến order
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('currentOrder_') || key.startsWith('order_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Clear sessionStorage order data
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('currentOrder_') || key.startsWith('order_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    
     setUser(null);
   };
 

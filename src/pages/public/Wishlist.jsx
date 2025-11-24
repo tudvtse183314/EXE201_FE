@@ -1,31 +1,33 @@
 // src/pages/public/Wishlist.jsx
 import React from 'react';
-import { Card, Row, Col, Button, Empty, message } from 'antd';
+import { Card, Row, Col, Button, Empty } from 'antd';
 import { HeartOutlined, ShoppingCartOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
+import { useToast } from '../../context/ToastContext';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { showSuccess, showError, showInfo } = useToast();
 
   const handleAddToCart = async (product) => {
     try {
       await addToCart(product, 1);
-      message.success("Đã thêm vào giỏ hàng!");
+      showSuccess("Đã thêm vào giỏ hàng!");
     } catch (error) {
-      message.error("Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
+      showError("Không thể thêm vào giỏ hàng. Vui lòng thử lại!");
     }
   };
 
   const handleRemoveFromWishlist = (product) => {
     removeFromWishlist(product.id);
-    message.info("Đã xóa khỏi danh sách yêu thích!");
+    showInfo("Đã xóa khỏi danh sách yêu thích!");
   };
 
   const handleViewProduct = (product) => {
@@ -36,7 +38,7 @@ export default function Wishlist() {
     <div style={{ 
       minHeight: '100vh',
       background: '#fff',
-      fontFamily: 'Poppins, Arial, sans-serif'
+      fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
     }}>
       {/* Container */}
       <div style={{ 
@@ -69,7 +71,7 @@ export default function Wishlist() {
               fontSize: '32px',
               fontWeight: '800',
               color: '#362319',
-              fontFamily: 'Poppins, Arial, sans-serif'
+              fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
             }}>
               ❤️ Danh sách yêu thích
             </h1>
@@ -249,7 +251,7 @@ export default function Wishlist() {
                           color: '#362319',
                           margin: '0 0 8px 0',
                           cursor: 'pointer',
-                          fontFamily: 'Poppins, Arial, sans-serif',
+                          fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
                           lineHeight: '1.3'
                         }}
                         onClick={() => handleViewProduct(product)}
@@ -269,7 +271,7 @@ export default function Wishlist() {
                         fontWeight: '800', 
                         color: '#eda274',
                         marginBottom: '12px',
-                        fontFamily: 'Poppins, Arial, sans-serif'
+                        fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif"
                       }}>
                         {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
                       </div>

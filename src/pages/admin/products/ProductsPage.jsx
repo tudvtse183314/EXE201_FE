@@ -10,7 +10,6 @@ import {
   InputNumber,
   Space, 
   Popconfirm, 
-  message, 
   Card, 
   Typography, 
   Row, 
@@ -34,6 +33,7 @@ import {
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../../../services/products';
 import { getAllCategories } from '../../../services/categories';
 import { dataManager } from '../../../utils/dataManager';
+import { useToast } from '../../../context/ToastContext';
 
 const { Title, Text } = Typography;
 const { Search } = AntInput;
@@ -48,6 +48,7 @@ export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { showSuccess, showError } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [form] = Form.useForm();
 
@@ -116,11 +117,11 @@ export default function ProductsPage() {
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, submitData);
-        message.success('Đã cập nhật sản phẩm thành công!');
+        showSuccess('Đã cập nhật sản phẩm thành công!');
         console.log("📦 ProductsPage: Product updated");
       } else {
         await createProduct(submitData);
-        message.success('Đã thêm sản phẩm mới thành công!');
+        showSuccess('Đã thêm sản phẩm mới thành công!');
         console.log("📦 ProductsPage: Product created");
       }
       
@@ -133,7 +134,7 @@ export default function ProductsPage() {
       form.resetFields();
     } catch (error) {
       console.error("📦 ProductsPage: Error saving product", error);
-      message.error(error?.message || "Không thể lưu sản phẩm.");
+      showError(error?.message || "Không thể lưu sản phẩm.");
     }
   };
 
@@ -154,7 +155,7 @@ export default function ProductsPage() {
   const handleDelete = async (productId, productName) => {
     try {
       await deleteProduct(productId);
-      message.success(`Đã xóa sản phẩm "${productName}" thành công!`);
+      showSuccess(`Đã xóa sản phẩm "${productName}" thành công!`);
       console.log("📦 ProductsPage: Product deleted");
       
       // Refresh data
@@ -162,7 +163,7 @@ export default function ProductsPage() {
       await loadData();
     } catch (error) {
       console.error("📦 ProductsPage: Error deleting product", error);
-      message.error(error?.message || "Không thể xóa sản phẩm.");
+      showError(error?.message || "Không thể xóa sản phẩm.");
     }
   };
 

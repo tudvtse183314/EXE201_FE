@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AppRoutes from "./routes/AppRoutes";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { setGlobalLoadingState, setGlobalLogoutFunction, setGlobalNavigateFunction } from "./api/axios";
+import { antdThemeConfig } from "./config/antdTheme";
 
 function AppContent() {
   const [initialLoading, setInitialLoading] = useState(true);
@@ -50,27 +51,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          fontFamily: "Poppins, ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif",
-          fontFamilyCode: "source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace",
-        },
-        components: {
-          Typography: {
-            fontFamily: "Poppins, ui-sans-serif, system-ui",
-            titleMarginTop: 0,
-            titleMarginBottom: 8,
-          },
-          Button: {
-            fontWeight: 600,
-          },
-          Input: {
-            fontFamily: "Poppins, ui-sans-serif, system-ui",
-          },
-        },
-      }}
-    >
+    <ConfigProvider theme={antdThemeConfig}>
       <LoadingProvider>
         <AuthProvider>
           <ToastProvider>

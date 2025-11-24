@@ -11,7 +11,6 @@ import {
   Space,
   Avatar,
   Upload,
-  message,
   Divider,
   Alert,
   Spin,
@@ -28,12 +27,14 @@ import {
   KeyOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { updateAccount, resetPassword } from '../../services/auth';
 
 const { Title, Text } = Typography;
 
 export default function CustomerProfilePage() {
   const { user, updateUser } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [form] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -135,11 +136,11 @@ export default function CustomerProfilePage() {
       form.setFieldsValue(updatedProfileData);
       
       setIsEditing(false);
-      message.success('Cập nhật thông tin thành công!');
+      showSuccess('Cập nhật thông tin thành công!');
       console.log("👤 CustomerProfilePage: Profile updated successfully");
     } catch (error) {
       console.error("👤 CustomerProfilePage: Error saving profile", error);
-      message.error('Lỗi khi cập nhật thông tin: ' + (error?.response?.data?.message || error.message));
+      showError('Lỗi khi cập nhật thông tin: ' + (error?.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -159,11 +160,11 @@ export default function CustomerProfilePage() {
       
       setIsPasswordModalOpen(false);
       passwordForm.resetFields();
-      message.success('Đổi mật khẩu thành công!');
+      showSuccess('Đổi mật khẩu thành công!');
       console.log("👤 CustomerProfilePage: Password changed", result);
     } catch (error) {
       console.error("👤 CustomerProfilePage: Error changing password", error);
-      message.error('Lỗi khi đổi mật khẩu: ' + (error?.response?.data?.message || error.message));
+      showError('Lỗi khi đổi mật khẩu: ' + (error?.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -171,10 +172,10 @@ export default function CustomerProfilePage() {
 
   const handleAvatarUpload = (info) => {
     if (info.file.status === 'done') {
-      message.success('Cập nhật ảnh đại diện thành công!');
+      showSuccess('Cập nhật ảnh đại diện thành công!');
       setProfileData(prev => ({ ...prev, avatar: info.file.response?.url || info.file.thumbUrl }));
     } else if (info.file.status === 'error') {
-      message.error('Lỗi khi tải ảnh lên!');
+      showError('Lỗi khi tải ảnh lên!');
     }
   };
 
@@ -185,12 +186,12 @@ export default function CustomerProfilePage() {
     beforeUpload: (file) => {
       const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
       if (!isJpgOrPng) {
-        message.error('Chỉ hỗ trợ file JPG/PNG!');
+        showError('Chỉ hỗ trợ file JPG/PNG!');
         return false;
       }
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isLt2M) {
-        message.error('Kích thước ảnh không được vượt quá 2MB!');
+        showError('Kích thước ảnh không được vượt quá 2MB!');
         return false;
       }
       return true;
