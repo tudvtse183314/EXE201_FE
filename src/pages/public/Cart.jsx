@@ -1,5 +1,5 @@
 // src/pages/public/Cart.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -19,6 +19,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { useCart } from '../../context/CartContext';
+import { useToast } from '../../context/ToastContext';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
 const { Title, Text } = Typography;
@@ -36,31 +37,34 @@ export default function Cart() {
     error,
     loadCart
   } = useCart();
+  const { showError } = useToast();
 
-  // Guard để đảm bảo chỉ load cart một lần khi mount
-  const hasLoadedRef = useRef(false);
-  
   // Load cart khi vào trang Cart - chỉ load một lần khi mount
+  // Không reset hasLoadedRef khi unmount vì CartContext đã quản lý việc này
   useEffect(() => {
-    // Nếu đã load rồi thì không load lại
-    if (hasLoadedRef.current) {
-      console.log('🛒 Cart Page: Skipping load - already loaded');
-      return;
-    }
-    
     console.log('🛒 Cart Page: useEffect triggered, loading cart...');
-    hasLoadedRef.current = true;
-    loadCart();
+    
+    // Load cart và xử lý lỗi
+    loadCart().catch((err) => {
+      console.error('🛒 Cart Page: Error loading cart', err);
+      // Nếu loadCart không tự hiển thị toast (ví dụ lỗi 400 đã được xử lý im lặng)
+      // thì hiển thị toast ở đây
+      if (err?.response?.status !== 400 && err?.response?.status !== 401 && err?.response?.status !== 403) {
+        const errorMsg = err?.response?.data?.message || err?.message || 'Không thể tải giỏ hàng. Vui lòng thử lại.';
+        showError(errorMsg);
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Chỉ load 1 lần khi mount
-  
-  // Reset flag khi component unmount (để có thể load lại khi quay lại trang)
+
+  // Theo dõi error state từ context và hiển thị toast
   useEffect(() => {
-    return () => {
-      hasLoadedRef.current = false;
-      console.log('🛒 Cart Page: Component unmounted, reset load flag');
-    };
-  }, []);
+    if (error) {
+      console.error('🛒 Cart Page: Error state detected', error);
+      showError(error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
   
   // Debug: Log khi component re-render (chỉ trong development)
   useEffect(() => {
@@ -68,15 +72,14 @@ export default function Cart() {
       console.log('🛒 Cart Page: Component re-rendered', {
         cartItemsCount: cartItems.length,
         loading,
-        error,
-        hasLoaded: hasLoadedRef.current
+        error
       });
     }
   });
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
-    navigate('/checkout');
+    navigate('/customer/checkout');
   };
 
   const handleContinueShopping = () => {
@@ -117,10 +120,13 @@ export default function Cart() {
               {cartItems.map((item) => {
                 const itemId = item.id || item.itemId;
                 const productId = item.productId || item.product?.id || item.id;
+                
+                // Sử dụng product từ CartContext (đã được hydrate trong loadCart)
                 const product = item.product || {};
+                
                 const quantity = Number(item.quantity || 1);
                 const price = Number(
-                  item.price ?? product.price ?? item.unitPrice ?? item.productPrice ?? 0
+                  product.price ?? item.price ?? item.unitPrice ?? item.productPrice ?? 0
                 );
                 const name = product.name || item.productName || item.name || 'Unknown Product';
                 const categoryName = product.category?.name || item.categoryName || null;
@@ -149,9 +155,14 @@ export default function Cart() {
                             }}>{badge}</span>
                           )}
                           {/* Stock Status */}
-                          {stock <= 10 && (
+                          {stock <= 10 && stock > 0 && (
                             <span style={{position:'absolute',left:2,bottom:6,background:'#ef4444',color:'#fff',fontWeight:500,fontSize:11,borderRadius:6,padding:'2px 5px'}}>
                               Còn {stock} sp!
+                            </span>
+                          )}
+                          {stock === 0 && (
+                            <span style={{position:'absolute',left:2,bottom:6,background:'#999',color:'#fff',fontWeight:500,fontSize:11,borderRadius:6,padding:'2px 5px'}}>
+                              Hết hàng
                             </span>
                           )}
                         </div>
@@ -175,10 +186,15 @@ export default function Cart() {
                       <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
                         <InputNumber
                           min={1}
-                          max={stock}
+                          max={stock || 999}
                           value={quantity}
-                          onChange={(value) => updateQuantity(itemId, value)}
+                          onChange={(value) => {
+                            if (value !== null && value !== undefined) {
+                              updateQuantity(itemId, value);
+                            }
+                          }}
                           style={{ width: 64 }}
+                          disabled={loading}
                         />
                       </Col>
                       <Col xs={12} sm={3} md={4} lg={3} style={{textAlign:'center'}}>
@@ -193,7 +209,7 @@ export default function Cart() {
                           icon={<DeleteOutlined />}
                           onClick={() => removeFromCart(itemId)}
                           title="Xóa"
-                          loading={loading}
+                          disabled={loading}
                         />
                       </Col>
                     </Row>

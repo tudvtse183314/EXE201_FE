@@ -3,14 +3,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import fonts with Vietnamese subset */
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Caveat:wght@600&family=Poppins:wght@400;500;600&display=swap&subset=vietnamese');
+/* Import fonts with Vietnamese subset - Sans-serif fonts for Vietnamese */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap&subset=vietnamese');
 
 /* PetVibe Theme Variables */
 :root {
-  --font-primary: 'Poppins';
-  --font-display: 'Baloo 2';
-  --font-accent: 'Caveat';
+  --font-primary: 'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-accent: 'Inter', 'Noto Sans', sans-serif;
   
   --pv-primary: #eda274;
   --pv-secondary: #d5956d;
@@ -35,9 +35,10 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--font-primary), ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   background-color: var(--pv-light, #ffeadd);
   color: var(--pv-text-body, #553d2d);
   line-height: 1.75; /* leading-7 */

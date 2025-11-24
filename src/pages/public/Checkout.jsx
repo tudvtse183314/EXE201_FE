@@ -14,12 +14,15 @@ import {
   Alert,
   QRCode,
   Tag,
-  Spin
+  Spin,
+  List,
+  Image
 } from 'antd';
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  ShoppingCartOutlined
 } from '@ant-design/icons';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -33,6 +36,8 @@ import {
   getPaymentStatusColor,
   getPaymentStatusText
 } from '../../services/orders';
+import { getFallbackImageByIndex } from '../../utils/imageUtils';
+import { THEME } from '../../constants/theme';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -57,23 +62,24 @@ export default function Checkout() {
   const totalPrice = useMemo(() => getTotalPrice(), [cartItems, getTotalPrice]);
 
   const buildOrderPayload = (values) => {
+    // Backend chỉ nhận productId và quantity, không nhận price
+    // Backend sẽ tự tính price từ product.getPrice() * quantity
     const items = cartItems
       .map((item) => {
         const productId = item.productId || item.product?.id || item.id;
         if (!productId) return null;
         return {
-          productId,
-          quantity: item.quantity,
-          price: item.price || item.product?.price || 0
+          productId: Number(productId),
+          quantity: Number(item.quantity || 1)
         };
       })
       .filter(Boolean);
 
     return {
-      accountId: user?.id,
+      accountId: Number(user?.id),
       shippingAddress: values.address?.trim(),
       phoneContact: values.phone?.trim(),
-      note: values.note?.trim(),
+      note: values.note?.trim() || '',
       items
     };
   };
@@ -100,20 +106,29 @@ export default function Checkout() {
       setSubmitting(true);
       console.log('💳 Checkout: Creating order', payload);
       const response = await createOrder(payload);
+      // Backend returns OrderResponse directly with paymentInfo
       const createdOrder = response?.order || response;
 
       if (!createdOrder?.orderId) {
         throw new Error('Dữ liệu đơn hàng trả về không hợp lệ.');
       }
 
-      setOrder(createdOrder);
-      showSuccess('Đặt hàng thành công. Vui lòng hoàn tất thanh toán.');
-
-      try {
-        await clearCart();
-      } catch (clearError) {
-        console.warn('💳 Checkout: Không thể làm trống giỏ hàng sau khi tạo đơn', clearError);
+      // Đảm bảo paymentInfo có trong order
+      if (!createdOrder.paymentInfo && response?.paymentInfo) {
+        createdOrder.paymentInfo = response.paymentInfo;
       }
+
+      console.log('💳 Checkout: Order created with paymentInfo', {
+        orderId: createdOrder.orderId,
+        hasPaymentInfo: !!createdOrder.paymentInfo,
+        hasQRCode: !!createdOrder.paymentInfo?.qrCodeUrl
+      });
+
+      setOrder(createdOrder);
+      showSuccess('Đặt hàng thành công. Vui lòng quét mã QR để thanh toán.');
+      
+      // KHÔNG xóa cart ngay - chỉ xóa sau khi thanh toán thành công
+      // Cart sẽ được xóa trong handleConfirmPayment khi payment status = PAID
     } catch (error) {
       console.error('💳 Checkout: Error creating order', error);
       const message = error?.response?.data?.message || error?.message || 'Không thể tạo đơn hàng.';
@@ -129,19 +144,34 @@ export default function Checkout() {
     try {
       setConfirming(true);
       const response = await confirmPaymentApi(order.orderId);
-      setOrder((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          ...response,
-          status: response?.status || prev.status,
-          paymentInfo: {
-            ...(prev.paymentInfo || {}),
-            ...(response?.paymentInfo || {})
-          }
-        };
-      });
-      showSuccess('Thanh toán thành công (DEMO).');
+      const updatedOrder = {
+        ...order,
+        ...response,
+        status: response?.status || order.status,
+        paymentInfo: {
+          ...(order.paymentInfo || {}),
+          ...(response?.paymentInfo || {})
+        }
+      };
+      
+      setOrder(updatedOrder);
+      
+      // Kiểm tra nếu thanh toán thành công (PAID hoặc COMPLETED)
+      const paymentStatus = updatedOrder.paymentInfo?.status?.toUpperCase();
+      const orderStatus = updatedOrder.status?.toUpperCase();
+      
+      if (paymentStatus === 'PAID' || paymentStatus === 'COMPLETED' || orderStatus === 'PAID') {
+        // Xóa cart sau khi thanh toán thành công
+        try {
+          await clearCart();
+          console.log('💳 Checkout: Cart cleared after successful payment');
+        } catch (clearError) {
+          console.warn('💳 Checkout: Không thể làm trống giỏ hàng sau khi thanh toán', clearError);
+        }
+        showSuccess('Thanh toán thành công! Đơn hàng của bạn đã được xác nhận.');
+      } else {
+        showSuccess('Đã gửi yêu cầu xác nhận thanh toán. Vui lòng đợi xử lý.');
+      }
     } catch (error) {
       console.error('💳 Checkout: Error confirming payment', error);
       const message = error?.response?.data?.message || error?.message || 'Không thể xác nhận thanh toán.';
@@ -193,23 +223,81 @@ export default function Checkout() {
               Vui lòng quét mã QR bên dưới và chuyển khoản đúng số tiền, nội dung.
             </Text>
 
-            <div style={{ marginTop: 24 }}>
+            {/* Order Summary */}
+            <Card
+              type="inner"
+              title="Chi tiết đơn hàng"
+              style={{ 
+                marginTop: 32,
+                textAlign: 'left',
+                maxWidth: 800,
+                margin: '32px auto 0'
+              }}
+            >
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <div>
-                  <Text strong>Mã đơn hàng:</Text> <Text code>{order.orderId}</Text>
-                </div>
-                <div>
-                  <Text strong>Trạng thái đơn:</Text>{' '}
+                <Row justify="space-between">
+                  <Text strong>Mã đơn hàng:</Text>
+                  <Text code style={{ fontSize: 16 }}>{order.orderId}</Text>
+                </Row>
+                <Row justify="space-between">
+                  <Text strong>Trạng thái đơn:</Text>
                   <Tag color={getStatusColor(order.status)}>{getStatusText(order.status)}</Tag>
-                </div>
-                <div>
-                  <Text strong>Trạng thái thanh toán:</Text>{' '}
+                </Row>
+                <Row justify="space-between">
+                  <Text strong>Trạng thái thanh toán:</Text>
                   <Tag color={getPaymentStatusColor(paymentInfo.status)}>
                     {getPaymentStatusText(paymentInfo.status)}
                   </Tag>
+                </Row>
+                <Divider />
+                
+                {/* Order Items */}
+                <div>
+                  <Text strong style={{ fontSize: 16, display: 'block', marginBottom: 12 }}>
+                    Sản phẩm đã đặt ({order.items?.length || 0})
+                  </Text>
+                  <List
+                    dataSource={order.items || []}
+                    renderItem={(item) => {
+                      const itemTotal = (item.price || 0) * (item.quantity || 0);
+                      return (
+                        <List.Item style={{ padding: '12px 0' }}>
+                          <List.Item.Meta
+                            title={
+                              <Space>
+                                <Text strong>{item.productName || `Sản phẩm #${item.productId}`}</Text>
+                                <Tag>x{item.quantity}</Tag>
+                              </Space>
+                            }
+                            description={
+                              <Text type="secondary">
+                                Đơn giá: {formatCurrency(item.price || 0)}
+                              </Text>
+                            }
+                          />
+                          <Text strong style={{ color: THEME.colors.primary }}>
+                            {formatCurrency(itemTotal)}
+                          </Text>
+                        </List.Item>
+                      );
+                    }}
+                  />
                 </div>
+
+                <Divider />
+                
+                <Row justify="space-between" style={{ 
+                  padding: '12px',
+                  background: THEME.colors.backgroundLight,
+                  borderRadius: THEME.borderRadius.medium
+                }}>
+                  <Text strong style={{ fontSize: 18 }}>Tổng tiền:</Text>
+                  <Text strong style={{ fontSize: 20, color: THEME.colors.primary }}>
+                    {formatCurrency(order.totalAmount || totalPrice)}
+                  </Text>
+                </Row>
               </Space>
-            </div>
+            </Card>
 
             <div style={{ marginTop: 32 }}>
               <Title level={4}>Mã QR thanh toán</Title>
@@ -413,46 +501,114 @@ export default function Checkout() {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Tóm tắt đơn hàng">
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              {cartItems.map((item) => {
-                const productName = item.product?.name || item.name || 'Sản phẩm';
+          <Card 
+            title={
+              <Space>
+                <ShoppingCartOutlined />
+                <span>Tổng kết đơn hàng</span>
+              </Space>
+            }
+            style={{
+              position: 'sticky',
+              top: 20
+            }}
+          >
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 16 }}>Sản phẩm trong đơn ({cartItems.length})</Text>
+            </div>
+            
+            <List
+              dataSource={cartItems}
+              renderItem={(item) => {
+                const itemId = item.id || item.itemId;
+                const productId = item.productId || item.product?.id || item.id;
+                const product = item.product || {};
+                const productName = product.name || item.name || 'Sản phẩm';
                 const quantity = item.quantity || 0;
-                const lineTotal = item.total || (item.price || item.product?.price || 0) * quantity;
+                const price = item.price || product.price || 0;
+                const lineTotal = item.total || price * quantity;
+                const imageUrl = product.imageUrl || product.image || item.imageUrl || getFallbackImageByIndex(productId);
+                
                 return (
-                  <div key={item.id || item.itemId || `${productName}-${quantity}`}>
-                    <Row justify="space-between" align="middle">
-                      <Col>
-                        <Text>{productName}</Text>
-                        <br />
-                        <Text type="secondary">x{quantity}</Text>
-                      </Col>
-                      <Col>
-                        <Text strong>{formatCurrency(lineTotal)}</Text>
-                      </Col>
-                    </Row>
-                  </div>
+                  <List.Item
+                    key={itemId}
+                    style={{ 
+                      padding: '12px 0',
+                      borderBottom: `1px solid ${THEME.colors.border}`
+                    }}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Image
+                          src={imageUrl}
+                          alt={productName}
+                          fallback={getFallbackImageByIndex(productId)}
+                          style={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            borderRadius: THEME.borderRadius.medium
+                          }}
+                          preview={false}
+                        />
+                      }
+                      title={
+                        <Text strong style={{ fontSize: 14 }}>
+                          {productName}
+                        </Text>
+                      }
+                      description={
+                        <Space direction="vertical" size={4}>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Số lượng: {quantity}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            Đơn giá: {formatCurrency(price)}
+                          </Text>
+                        </Space>
+                      }
+                    />
+                    <div style={{ textAlign: 'right' }}>
+                      <Text strong style={{ fontSize: 14, color: THEME.colors.primary }}>
+                        {formatCurrency(lineTotal)}
+                      </Text>
+                    </div>
+                  </List.Item>
                 );
-              })}
+              }}
+            />
 
-              <Divider />
+            <Divider style={{ margin: '16px 0' }} />
 
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Row justify="space-between">
                 <Text>Tạm tính:</Text>
                 <Text>{formatCurrency(totalPrice)}</Text>
               </Row>
               <Row justify="space-between">
                 <Text>Phí vận chuyển:</Text>
-                <Text>Miễn phí</Text>
+                <Text type="success">Miễn phí</Text>
               </Row>
-              <Divider />
-              <Row justify="space-between">
-                <Text strong>Tổng cộng:</Text>
-                <Text strong style={{ fontSize: 18, color: '#1890ff' }}>
+              <Divider style={{ margin: '12px 0' }} />
+              <Row justify="space-between" style={{ 
+                padding: '12px',
+                background: THEME.colors.backgroundLight,
+                borderRadius: THEME.borderRadius.medium,
+                marginTop: 8
+              }}>
+                <Text strong style={{ fontSize: 16 }}>Tổng cộng:</Text>
+                <Text strong style={{ fontSize: 20, color: THEME.colors.primary }}>
                   {formatCurrency(totalPrice)}
                 </Text>
               </Row>
             </Space>
+
+            <Alert
+              message="Vui lòng kiểm tra lại thông tin đơn hàng"
+              type="info"
+              showIcon
+              style={{ marginTop: 16 }}
+            />
           </Card>
         </Col>
       </Row>

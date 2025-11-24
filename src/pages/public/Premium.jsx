@@ -80,7 +80,7 @@ export default function Premium() {
     <div style={{ 
       minHeight: '100vh',
       background: '#fff',
-      fontFamily: 'Poppins, Arial, sans-serif',
+      fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
       position: 'relative',
       overflow: 'hidden'
     }}>

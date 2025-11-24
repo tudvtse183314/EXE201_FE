@@ -8,7 +8,6 @@ import {
   Input, 
   Space, 
   Popconfirm, 
-  message, 
   Card, 
   Typography, 
   Row, 
@@ -24,11 +23,11 @@ import {
   EditOutlined, 
   DeleteOutlined, 
   ReloadOutlined,
-  SearchOutlined,
-  EyeOutlined
+  SearchOutlined
 } from '@ant-design/icons';
 import { getAllCategories, createCategory, updateCategory, deleteCategory } from '../../services/categories';
 import { dataManager } from '../../utils/dataManager';
+import { useToast } from '../../context/ToastContext';
 
 const { Title, Text } = Typography;
 const { Search } = AntInput;
@@ -42,6 +41,7 @@ export default function StaffCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form] = Form.useForm();
+  const { showSuccess, showError } = useToast();
 
   const loadCategories = async () => {
     try {
@@ -86,7 +86,7 @@ export default function StaffCategoriesPage() {
       const result = await createCategory(values);
       console.log("📂 StaffCategoriesPage: Category created", result);
       
-      message.success('Tạo danh mục thành công!');
+      showSuccess('Tạo danh mục thành công!');
       form.resetFields();
       setIsModalOpen(false);
       
@@ -94,7 +94,7 @@ export default function StaffCategoriesPage() {
       await loadCategories();
     } catch (error) {
       console.error("📂 StaffCategoriesPage: Error creating category", error);
-      message.error('Lỗi khi tạo danh mục: ' + (error?.message || 'Unknown error'));
+      showError('Lỗi khi tạo danh mục: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -104,7 +104,7 @@ export default function StaffCategoriesPage() {
       const result = await updateCategory(editingCategory.id, values);
       console.log("📂 StaffCategoriesPage: Category updated", result);
       
-      message.success('Cập nhật danh mục thành công!');
+      showSuccess('Cập nhật danh mục thành công!');
       form.resetFields();
       setIsModalOpen(false);
       setEditingCategory(null);
@@ -113,7 +113,7 @@ export default function StaffCategoriesPage() {
       await loadCategories();
     } catch (error) {
       console.error("📂 StaffCategoriesPage: Error updating category", error);
-      message.error('Lỗi khi cập nhật danh mục: ' + (error?.message || 'Unknown error'));
+      showError('Lỗi khi cập nhật danh mục: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -123,13 +123,13 @@ export default function StaffCategoriesPage() {
       const result = await deleteCategory(id);
       console.log("📂 StaffCategoriesPage: Category deleted", result);
       
-      message.success('Xóa danh mục thành công!');
+      showSuccess('Xóa danh mục thành công!');
       
       // Refresh data
       await loadCategories();
     } catch (error) {
       console.error("📂 StaffCategoriesPage: Error deleting category", error);
-      message.error('Lỗi khi xóa danh mục: ' + (error?.message || 'Unknown error'));
+      showError('Lỗi khi xóa danh mục: ' + (error?.message || 'Unknown error'));
     }
   };
 

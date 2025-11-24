@@ -132,7 +132,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', fontFamily: 'Poppins, Arial, sans-serif' }}>
+    <Layout style={{ minHeight: '100vh', fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" }}>
       <Sider 
         trigger={null} 
         collapsible 

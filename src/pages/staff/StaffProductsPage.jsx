@@ -10,7 +10,6 @@ import {
   InputNumber,
   Space, 
   Popconfirm, 
-  message, 
   Card, 
   Typography, 
   Row, 
@@ -38,6 +37,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../../services/products';
 import { getAllCategories } from '../../services/categories';
+import { useToast } from '../../context/ToastContext';
 import { dataManager } from '../../utils/dataManager';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 
@@ -57,6 +57,7 @@ export default function StaffProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const { showSuccess, showError } = useToast();
   const [form] = Form.useForm();
 
   const loadData = async () => {
@@ -129,11 +130,11 @@ export default function StaffProductsPage() {
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, submitData);
-        message.success('Đã cập nhật sản phẩm thành công!');
+        showSuccess('Đã cập nhật sản phẩm thành công!');
         console.log("📦 StaffProductsPage: Product updated");
       } else {
         await createProduct(submitData);
-        message.success('Đã thêm sản phẩm mới thành công!');
+        showSuccess('Đã thêm sản phẩm mới thành công!');
         console.log("📦 StaffProductsPage: Product created");
       }
       
@@ -148,7 +149,7 @@ export default function StaffProductsPage() {
       form.resetFields();
     } catch (error) {
       console.error("📦 StaffProductsPage: Error saving product", error);
-      message.error(error?.message || "Không thể lưu sản phẩm.");
+      showError(error?.message || "Không thể lưu sản phẩm.");
     }
   };
 
@@ -172,7 +173,7 @@ export default function StaffProductsPage() {
   const handleDelete = async (productId, productName) => {
     try {
       await deleteProduct(productId);
-      message.success(`Đã xóa sản phẩm "${productName}" thành công!`);
+      showSuccess(`Đã xóa sản phẩm "${productName}" thành công!`);
       console.log("📦 StaffProductsPage: Product deleted");
       
       // Refresh data
@@ -180,7 +181,7 @@ export default function StaffProductsPage() {
       await loadData();
     } catch (error) {
       console.error("📦 StaffProductsPage: Error deleting product", error);
-      message.error(error?.message || "Không thể xóa sản phẩm.");
+      showError(error?.message || "Không thể xóa sản phẩm.");
     }
   };
 
@@ -205,14 +206,14 @@ export default function StaffProductsPage() {
     // Check file type
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
-      message.error('Chỉ chấp nhận file ảnh!');
+      showError('Chỉ chấp nhận file ảnh!');
       return Upload.LIST_IGNORE;
     }
 
     // Check file size (5MB)
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error('Kích thước ảnh không được vượt quá 5MB!');
+      showError('Kích thước ảnh không được vượt quá 5MB!');
       return Upload.LIST_IGNORE;
     }
 
@@ -225,7 +226,7 @@ export default function StaffProductsPage() {
       form.setFieldsValue({ imageUrl: base64String });
     };
     reader.onerror = () => {
-      message.error('Lỗi khi đọc file ảnh');
+      showError('Lỗi khi đọc file ảnh');
     };
     reader.readAsDataURL(file);
 

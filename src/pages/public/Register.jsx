@@ -90,6 +90,19 @@ export default function Register() {
     } catch (error) {
       console.error('🔐 Register: Registration failed:', error);
 
+      // Xử lý timeout
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        setGeneralError('Kết nối đến server quá chậm. Vui lòng kiểm tra kết nối mạng và thử lại.');
+        return;
+      }
+
+      // Xử lý network error
+      if (error.code === 'NETWORK_ERROR' || !navigator.onLine || error.message?.includes('Network Error')) {
+        setGeneralError('Không có kết nối mạng. Vui lòng kiểm tra lại kết nối internet.');
+        return;
+      }
+
+      // Xử lý response từ server
       if (error.response?.data?.message) {
         setGeneralError(error.response.data.message);
       } else if (error.response?.status === 400) {
@@ -105,8 +118,8 @@ export default function Register() {
         setGeneralError('Email hoặc số điện thoại đã được sử dụng.');
       } else if (error.response?.status === 500) {
         setGeneralError('Lỗi server. Vui lòng thử lại sau.');
-      } else if (error.code === 'NETWORK_ERROR' || !navigator.onLine) {
-        setGeneralError('Không có kết nối mạng. Vui lòng kiểm tra lại.');
+      } else if (error.response?.status === 503) {
+        setGeneralError('Server đang bận. Vui lòng thử lại sau vài giây.');
       } else {
         setGeneralError(error.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       }

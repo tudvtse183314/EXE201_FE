@@ -4,7 +4,7 @@ import { PawPrint, Plus, Edit, Trash2, Heart, Calendar, Weight, Stethoscope, Cam
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getMyPets, createPetProfile, updatePetProfile, deletePetProfile } from "../../api/petProfile";
-import { message } from 'antd';
+import { useToast } from "../../context/ToastContext";
 
 export default function PetProfilePage() {
   const [pets, setPets] = useState([]);
@@ -12,6 +12,7 @@ export default function PetProfilePage() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showSuccess, showError } = useToast();
   const [form, setForm] = useState({
     petName: "",
     petType: "",
@@ -84,17 +85,17 @@ export default function PetProfilePage() {
   const handleSubmit = async () => {
     try {
       if (!form.petName || !form.petType) {
-        message.error("Vui lòng nhập tên thú cưng và loại thú cưng!");
+        showError("Vui lòng nhập tên thú cưng và loại thú cưng!");
         return;
       }
 
       if (selectedPet) {
         const targetId = selectedPet.id || selectedPet.petId;
         await updatePetProfile(targetId, form);
-        message.success("Cập nhật hồ sơ thú cưng thành công!");
+        showSuccess("Cập nhật hồ sơ thú cưng thành công!");
       } else {
         await createPetProfile(form);
-        message.success("Thêm thú cưng thành công!");
+        showSuccess("Thêm thú cưng thành công!");
       }
       setOpen(false);
       setSelectedPet(null);
@@ -113,7 +114,7 @@ export default function PetProfilePage() {
       fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
     } catch (err) {
       setError(err.message);
-      message.error(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
+      showError(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
     }
   };
 
@@ -122,14 +123,14 @@ export default function PetProfilePage() {
       try {
         const targetId = id?.id || id?.petId || id;
         await deletePetProfile(targetId);
-        message.success("Xóa hồ sơ thú cưng thành công!");
+        showSuccess("Xóa hồ sơ thú cưng thành công!");
         // Reset flag để fetch lại sau khi xóa
         hasLoadedRef.current = false;
         sessionStorage.removeItem('pv-pets-loaded');
         fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
       } catch (err) {
         setError(err.message);
-        message.error(err.message || "Có lỗi xảy ra khi xóa!");
+        showError(err.message || "Có lỗi xảy ra khi xóa!");
       }
     }
   };

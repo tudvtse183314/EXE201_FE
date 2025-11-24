@@ -9,7 +9,6 @@ import {
   Tag, 
   Input, 
   Select, 
-  message,
   Popconfirm,
   Row,
   Col,
@@ -24,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { getAllCarts, deleteCartItem } from '../../../services/cart';
 import { getAllProducts } from '../../../services/products';
+import { useToast } from '../../../context/ToastContext';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -36,6 +36,7 @@ export default function CartsPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [userIdFilter, setUserIdFilter] = useState('all');
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     loadData();
@@ -72,10 +73,10 @@ export default function CartsPage() {
       setLoading(true);
       await deleteCartItem(cartId);
       setCarts(prev => prev.filter(cart => cart.id !== cartId));
-      message.success('Đã xóa item khỏi giỏ hàng!');
+      showSuccess('Đã xóa item khỏi giỏ hàng!');
     } catch (e) {
       console.error('Error deleting cart item:', e);
-      message.error('Không thể xóa item. Vui lòng thử lại!');
+      showError('Không thể xóa item. Vui lòng thử lại!');
     } finally {
       setLoading(false);
     }
@@ -87,10 +88,10 @@ export default function CartsPage() {
       const deletePromises = carts.map(cart => deleteCartItem(cart.id));
       await Promise.all(deletePromises);
       setCarts([]);
-      message.success('Đã xóa tất cả giỏ hàng!');
+      showSuccess('Đã xóa tất cả giỏ hàng!');
     } catch (e) {
       console.error('Error clearing all carts:', e);
-      message.error('Không thể xóa tất cả giỏ hàng. Vui lòng thử lại!');
+      showError('Không thể xóa tất cả giỏ hàng. Vui lòng thử lại!');
     } finally {
       setLoading(false);
     }

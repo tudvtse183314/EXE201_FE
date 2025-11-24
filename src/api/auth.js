@@ -62,6 +62,11 @@ export const register = async (data) => {
       throw new Error(error.response.data.message);
     }
 
+    // Timeout
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      throw new Error("Kết nối đến server quá chậm. Vui lòng kiểm tra kết nối mạng và thử lại.");
+    }
+
     // Network
     if (error.code === "NETWORK_ERROR" || /Network Error/i.test(error.message)) {
       throw new Error("Không thể kết nối đến server. Vui lòng kiểm tra mạng và thử lại.");
