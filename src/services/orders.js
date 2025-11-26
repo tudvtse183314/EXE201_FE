@@ -319,7 +319,7 @@ export const cancelOrderLegacy = async (orderId) => {
 };
 
 /**
- * Cập nhật trạng thái đơn hàng (Admin/Staff)
+ * Cập nhật trạng thái đơn hàng (Admin only)
  * PATCH /api/orders/{orderId}/status
  */
 export const updateOrderStatus = async (orderId, status) => {
@@ -353,7 +353,7 @@ export const updateOrderStatus = async (orderId, status) => {
 };
 
 /**
- * Lấy tất cả đơn hàng (Admin/Staff)
+ * Lấy tất cả đơn hàng (Admin only)
  * GET /api/orders/all
  * 
  * Hỗ trợ nhiều kiểu response structure từ backend:
@@ -485,7 +485,7 @@ export const getAllOrders = async (params = {}) => {
   }
 };
 
-// Get orders by status (Admin/Staff)
+// Get orders by status (Admin only)
 export const getOrdersByStatus = async (status) => {
   try {
     console.log("📦 Orders: Fetching orders by status", { status });

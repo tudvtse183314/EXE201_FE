@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../constants/roles';
-import { chatHistoryApi } from '../../services/chatHistory';
+import { chatWithGemini } from '../../services/geminiDirect';
 import { useChatMessages } from '../../hooks/useChatMessages';
 import ChatWindow from '../../components/ai/ChatWindow';
 import { CloseOutlined } from '@ant-design/icons';
@@ -15,8 +15,8 @@ const AIChatFloatingBot = () => {
   
   // Chat logic states
   const [currentTab, setCurrentTab] = useState('general');
-  const [chatRecords, setChatRecords] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); // Default false, load on open
+  const [chatHistory, setChatHistory] = useState([]); // Lưu lịch sử chat local
+  const [isLoading, setIsLoading] = useState(false);
   
   const {
     messages,
@@ -27,7 +27,7 @@ const AIChatFloatingBot = () => {
     updateMessage,
     removeMessage,
     formatChatDate,
-  } = useChatMessages(chatRecords);
+  } = useChatMessages([]); // Không dùng chatRecords từ BE nữa
 
   // Only show for authenticated CUSTOMER users
   useEffect(() => {
@@ -39,33 +39,7 @@ const AIChatFloatingBot = () => {
     } else {
       setIsVisible(false);
     }
-  }, [user?.role, user?.id]); // Sử dụng user?.id thay vì isAuthenticated function
-
-  // Load chat history when opened or tab changes
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      if (!user?.userId || !isOpen) return;
-
-      setIsLoading(true);
-      try {
-        const records = await chatHistoryApi.getByUserIdAndType(user.userId, currentTab);
-        setChatRecords(records || []);
-      } catch (error) {
-        console.error('💬 AIChatFloatingBot: Error loading chat history', {
-          error: error.response?.data || error.message,
-          status: error.response?.status,
-          userId: user.userId,
-          chatType: currentTab,
-        });
-        // Silent error for floating bot - không hiển thị toast để tránh làm phiền user
-        // Chỉ log để debug
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadChatHistory();
-  }, [user?.userId, currentTab, isOpen]);
+  }, [user?.role, user?.id]);
 
   // Handle image upload
   const handleImageUpload = (imageData, fileName) => {
@@ -85,21 +59,21 @@ const AIChatFloatingBot = () => {
     toast.success('Đã gửi ảnh');
   };
 
-  // Handle sending a message
+  // Handle sending a message - Gọi Gemini trực tiếp
   const handleSendMessage = async (userMessage) => {
-    if (!user?.userId) {
-      toast.error('Vui lòng đăng nhập để sử dụng tính năng này');
-      return;
-    }
-
     if (isSending) return;
 
-    addMessage({
+    // Add user message
+    const userMsg = {
       id: `user-${Date.now()}`,
       role: 'user',
       text: userMessage,
       createdAt: new Date().toISOString(),
-    });
+    };
+    addMessage(userMsg);
+
+    // Cập nhật lịch sử chat local
+    setChatHistory(prev => [...prev, userMsg]);
 
     setIsSending(true);
     const pendingId = addPendingMessage('');
@@ -110,41 +84,33 @@ const AIChatFloatingBot = () => {
         timestamp: new Date().toISOString(),
       };
 
-      const response = await chatHistoryApi.chatWithAI({
-        userId: user.userId,
-        userMessage,
-        chatType: currentTab,
-        contextData,
+      // Gọi Gemini API trực tiếp (không qua backend)
+      const aiResponse = await chatWithGemini(userMessage, chatHistory, contextData);
+
+      // Tạo message từ AI
+      const aiMsg = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        text: aiResponse,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Update pending message with AI response
+      updateMessage(pendingId, {
+        text: aiResponse,
+        pending: false,
       });
 
-      // Response từ chatHistory.js đã được xử lý để trả về chatHistory object
-      if (response && response.aiResponse) {
-        updateMessage(pendingId, {
-          text: response.aiResponse,
-          pending: false,
-        });
-      } else {
-        throw new Error('Invalid response from AI: missing aiResponse');
-      }
+      // Cập nhật lịch sử chat local
+      setChatHistory(prev => [...prev, aiMsg]);
     } catch (error) {
       console.error('💬 AIChatFloatingBot: Error sending message', {
-        error: error.response?.data || error.message,
-        status: error.response?.status,
-        userId: user.userId,
-        chatType: currentTab,
+        error: error.message,
       });
       removeMessage(pendingId);
       
-      // Show error toast với thông tin chi tiết
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        toast.error('Kết nối timeout. Vui lòng thử lại.');
-      } else if (error.response?.data?.message) {
-        toast.error(`Lỗi: ${error.response.data.message}`);
-      } else {
-        toast.error('Không thể gửi tin nhắn. Vui lòng thử lại sau.');
-      }
+      // Show error toast
+      toast.error(error.message || 'Không thể gửi tin nhắn. Vui lòng thử lại sau.');
     } finally {
       setIsSending(false);
     }
@@ -181,21 +147,15 @@ const AIChatFloatingBot = () => {
             </button>
           </div>
           
-          {isLoading && chatRecords.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-            </div>
-          ) : (
-            <ChatWindow
-              messages={messages}
-              isSending={isSending}
-              onSendMessage={handleSendMessage}
-              currentTab={currentTab}
-              onTabChange={setCurrentTab}
-              formatChatDate={formatChatDate}
-              onImageUpload={handleImageUpload}
-            />
-          )}
+          <ChatWindow
+            messages={messages}
+            isSending={isSending}
+            onSendMessage={handleSendMessage}
+            currentTab={currentTab}
+            onTabChange={setCurrentTab}
+            formatChatDate={formatChatDate}
+            onImageUpload={handleImageUpload}
+          />
         </div>
       )}
 

@@ -31,29 +31,16 @@ import ChatBot from "../pages/ai/ChatBot";
 // Error Pages
 import Unauthorized from "../pages/Unauthorized";
 
-// Staff Pages
-import StaffLayout from "../layouts/StaffLayout";
-import StaffDashboard from "../pages/staff/StaffDashboard";
-import StaffCategoriesPage from "../pages/staff/StaffCategoriesPage";
-import StaffProductsPage from "../pages/staff/StaffProductsPage";
-import StaffOrdersPage from "../pages/staff/StaffOrdersPage";
-import StaffReviewsPage from "../pages/staff/StaffReviewsPage";
-import StaffProfilePage from "../pages/staff/StaffProfilePage";
-
 // Admin Pages
 import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
-import CartsPage from "../pages/admin/carts/CartsPage";
 import ChatHistory from "../pages/admin/ChatHistory";
-import CategoryTest from "../components/admin/CategoryTest";
-import ProductTest from "../components/admin/ProductTest";
-import APITestSummary from "../components/admin/APITestSummary";
-import OrdersTest from "../components/admin/OrdersTest";
 import AdminOrdersPage from "../pages/admin/orders/AdminOrdersPage";
 import AdminOrdersDebug from "../pages/admin/orders/AdminOrdersDebug";
 import AdminPaymentConfirmationPage from "../pages/admin/orders/AdminPaymentConfirmationPage";
+import AdminAccountsPage from "../pages/admin/accounts/AdminAccountsPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
@@ -142,7 +129,7 @@ export default function AppRoutes() {
         } />
         <Route path="/shop" element={
           <MainLayout>
-            <Shop/>
+            <Shop key="shop" />
           </MainLayout>
         } />
         <Route path="/product/:id" element={
@@ -364,24 +351,6 @@ export default function AppRoutes() {
         {/* Error Routes */}
         <Route path="/unauthorized" element={<Unauthorized />} />
         
-        {/* Staff Routes */}
-        <Route
-          path="/staff"
-          element={
-            <PrivateRoute roles={[ROLES.STAFF, ROLES.MANAGER]}>
-              <StaffLayout />
-            </PrivateRoute>
-          }
-        >
-          <Route index element={<StaffDashboard />} />
-          <Route path="dashboard" element={<StaffDashboard />} />
-          <Route path="categories" element={<StaffCategoriesPage />} />
-          <Route path="products" element={<StaffProductsPage />} />
-          <Route path="orders" element={<StaffOrdersPage />} />
-          <Route path="reviews" element={<StaffReviewsPage />} />
-          <Route path="profile" element={<StaffProfilePage />} />
-        </Route>
-        
         {/* Admin Routes */}
         <Route
           path="/admin"
@@ -398,16 +367,8 @@ export default function AppRoutes() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders-debug" element={<AdminOrdersDebug />} />
           <Route path="payment-confirmation" element={<AdminPaymentConfirmationPage />} />
-          <Route path="carts" element={<CartsPage />} />
           <Route path="chat-history" element={<ChatHistory />} />
-          <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
-            <h1>👥 Accounts Management</h1>
-            <p>Coming soon...</p>
-          </div>} />
-          <Route path="test" element={<CategoryTest />} />
-          <Route path="test-products" element={<ProductTest />} />
-          <Route path="api-summary" element={<APITestSummary />} />
-          <Route path="test-orders" element={<OrdersTest />} />
+          <Route path="accounts" element={<AdminAccountsPage />} />
         </Route>
         
         {/* Doctor Routes */}

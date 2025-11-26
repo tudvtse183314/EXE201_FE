@@ -237,7 +237,7 @@ export default function AdminPaymentConfirmationPage() {
       if (message.includes('Access Denied') || error?.response?.status === 403) {
         const token = localStorage.getItem('accessToken');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        message = `Không có quyền xác nhận thanh toán. Vui lòng kiểm tra:\n- Bạn đang đăng nhập với tài khoản ${user?.role || 'N/A'}\n- Token: ${token ? 'Có' : 'Không có'}\n- Yêu cầu quyền: ADMIN hoặc STAFF`;
+        message = `Không có quyền xác nhận thanh toán. Vui lòng kiểm tra:\n- Bạn đang đăng nhập với tài khoản ${user?.role || 'N/A'}\n- Token: ${token ? 'Có' : 'Không có'}\n- Yêu cầu quyền: ADMIN`;
       }
       
       showError(message);

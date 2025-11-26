@@ -21,7 +21,6 @@ export default function Breadcrumb() {
     '/chat': 'Chat',
     '/profile': 'Profile',
     '/customer/dashboard': 'Customer Dashboard',
-    '/staff/dashboard': 'Staff Dashboard',
     '/manager/dashboard': 'Manager Dashboard',
     '/doctor/dashboard': 'Doctor Dashboard',
     '/user/home': 'Home',

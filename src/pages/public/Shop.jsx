@@ -7,7 +7,7 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getAllCategories } from "../../services/categories";
 import { getAllProducts } from "../../services/products";
 import { dataManager } from "../../utils/dataManager";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useToast } from "../../context/ToastContext";
@@ -19,6 +19,7 @@ const { Option } = Select;
 
 export default function Shop() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { showSuccess, showError, showInfo } = useToast();
@@ -30,7 +31,17 @@ export default function Shop() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
 
-  // Load data
+  // Reset state when location changes
+  useEffect(() => {
+    // Reset filters and state when navigating to shop
+    if (location.pathname === '/shop') {
+      setActiveCatId("all");
+      setSearchTerm("");
+      setSortBy("name");
+    }
+  }, [location.pathname]);
+
+  // Load data - re-fetch when location changes
   useEffect(() => {
     let isMounted = true;
 
@@ -38,7 +49,7 @@ export default function Shop() {
       try {
         setLoading(true);
         setError(null);
-        console.log("🛒 Shop: Loading data...");
+        console.log("🛒 Shop: Loading data...", location.pathname);
         
         const [cats, prods] = await Promise.all([
           dataManager.get('categories', getAllCategories),
@@ -63,12 +74,15 @@ export default function Shop() {
       }
     };
 
-    loadData();
+    // Only load data if we're on the shop page
+    if (location.pathname === '/shop') {
+      loadData();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   // Filter and sort products
   const visibleProducts = useMemo(() => {

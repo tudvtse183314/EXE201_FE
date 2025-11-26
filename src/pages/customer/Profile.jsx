@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -6,6 +7,7 @@ import { updateAccount, resetPassword, deleteAccount, restoreAccount } from '../
 import { toast } from 'react-toastify';
 
 export default function CustomerProfile() {
+  const navigate = useNavigate();
   const { user, logout, login } = useAuth();
   const [edit, setEdit] = useState(false);
   const [fields, setFields] = useState({
@@ -83,6 +85,7 @@ export default function CustomerProfile() {
       await deleteAccount(user.id || user.accountId);
       toast.success('Đã xoá tài khoản!');
       logout();
+      navigate('/', { replace: true });
     } catch (e) {
       toast.error(e.message || 'Lỗi xoá tài khoản');
     }
@@ -149,7 +152,15 @@ export default function CustomerProfile() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">Thông tin tài khoản</h1>
-            <Button onClick={logout} variant="secondary">Đăng xuất</Button>
+            <Button 
+              onClick={() => {
+                logout();
+                navigate('/', { replace: true });
+              }} 
+              variant="secondary"
+            >
+              Đăng xuất
+            </Button>
           </div>
           <div className="space-y-8">
             {/* Thông tin tài khoản (editable) */}

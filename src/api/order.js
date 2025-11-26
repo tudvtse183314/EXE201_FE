@@ -76,7 +76,7 @@ export const getOrdersByAccount = async (accountId) => {
 };
 
 /**
- * Lấy tất cả đơn hàng (dành cho STAFF và MANAGER)
+ * Lấy tất cả đơn hàng (dành cho ADMIN)
  * @returns {Promise<Array>} - Danh sách tất cả đơn hàng
  */
 export const getAllOrders = async () => {
@@ -95,7 +95,7 @@ export const getAllOrders = async () => {
 };
 
 /**
- * Cập nhật trạng thái đơn hàng (dành cho STAFF và MANAGER)
+ * Cập nhật trạng thái đơn hàng (dành cho ADMIN)
  * @param {number} orderId - ID đơn hàng
  * @param {Object} updateData - Dữ liệu cập nhật
  * @param {string} updateData.status - Trạng thái mới

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
-import { chatHistoryApi } from '../../services/chatHistory';
+import { chatWithGemini } from '../../services/geminiDirect';
 import { useChatMessages } from '../../hooks/useChatMessages';
 import ChatWindow from '../../components/ai/ChatWindow';
 import { ROLES } from '../../constants/roles';
@@ -9,8 +9,8 @@ import { ROLES } from '../../constants/roles';
 const ChatBot = () => {
   const { user } = useAuth();
   const [currentTab, setCurrentTab] = useState('general');
-  const [chatRecords, setChatRecords] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [chatHistory, setChatHistory] = useState([]); // Lưu lịch sử chat local
+  const [isLoading, setIsLoading] = useState(false);
   const {
     messages,
     isSending,
@@ -20,36 +20,7 @@ const ChatBot = () => {
     updateMessage,
     removeMessage,
     formatChatDate,
-  } = useChatMessages(chatRecords);
-
-  // Load chat history when tab changes
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      if (!user?.userId) return;
-
-      setIsLoading(true);
-      try {
-        const records = await chatHistoryApi.getByUserIdAndType(user.userId, currentTab);
-        setChatRecords(records || []);
-      } catch (error) {
-        console.error('💬 ChatBot: Error loading chat history', {
-          error: error.response?.data || error.message,
-          status: error.response?.status,
-          userId: user.userId,
-          chatType: currentTab,
-        });
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-        } else {
-          toast.error('Không thể tải lịch sử chat. Vui lòng thử lại sau.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadChatHistory();
-  }, [user?.userId, currentTab]);
+  } = useChatMessages([]); // Không dùng chatRecords từ BE nữa
 
   // Handle image upload
   const handleImageUpload = (imageData, fileName) => {
@@ -70,22 +41,21 @@ const ChatBot = () => {
     toast.success('Đã gửi ảnh');
   };
 
-  // Handle sending a message
+  // Handle sending a message - Gọi Gemini trực tiếp
   const handleSendMessage = async (userMessage) => {
-    if (!user?.userId) {
-      toast.error('Vui lòng đăng nhập để sử dụng tính năng này');
-      return;
-    }
-
     if (isSending) return;
 
     // Add user message
-    addMessage({
+    const userMsg = {
       id: `user-${Date.now()}`,
       role: 'user',
       text: userMessage,
       createdAt: new Date().toISOString(),
-    });
+    };
+    addMessage(userMsg);
+
+    // Cập nhật lịch sử chat local
+    setChatHistory(prev => [...prev, userMsg]);
 
     setIsSending(true);
 
@@ -93,64 +63,45 @@ const ChatBot = () => {
     const pendingId = addPendingMessage('');
 
     try {
-      // Prepare context data (you can enhance this based on your app state)
+      // Prepare context data
       const contextData = {
         page: window.location.pathname,
         timestamp: new Date().toISOString(),
       };
 
-      // Call AI API
-      const response = await chatHistoryApi.chatWithAI({
-        userId: user.userId,
-        userMessage,
-        chatType: currentTab,
-        contextData,
-      });
+      // Gọi Gemini API trực tiếp (không qua backend)
+      const aiResponse = await chatWithGemini(userMessage, chatHistory, contextData);
+
+      // Tạo message từ AI
+      const aiMsg = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        text: aiResponse,
+        createdAt: new Date().toISOString(),
+      };
 
       // Update pending message with AI response
-      // Response từ chatHistory.js đã được xử lý để trả về chatHistory object
-      if (response && response.aiResponse) {
-        updateMessage(pendingId, {
-          text: response.aiResponse,
-          pending: false,
-        });
-        toast.success('Đã gửi tin nhắn thành công');
-      } else {
-        throw new Error('Invalid response from AI: missing aiResponse');
-      }
+      updateMessage(pendingId, {
+        text: aiResponse,
+        pending: false,
+      });
+
+      // Cập nhật lịch sử chat local
+      setChatHistory(prev => [...prev, aiMsg]);
     } catch (error) {
       console.error('💬 ChatBot: Error sending message', {
-        error: error.response?.data || error.message,
-        status: error.response?.status,
-        userId: user.userId,
-        chatType: currentTab,
+        error: error.message,
       });
       
       // Remove pending message on error
       removeMessage(pendingId);
       
-      // Show error toast với thông tin chi tiết
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        toast.error('Kết nối timeout. Vui lòng thử lại.');
-      } else if (error.response?.data?.message) {
-        toast.error(`Lỗi: ${error.response.data.message}`);
-      } else {
-        toast.error('Không thể gửi tin nhắn. Vui lòng thử lại sau.');
-      }
+      // Show error toast
+      toast.error(error.message || 'Không thể gửi tin nhắn. Vui lòng thử lại sau.');
     } finally {
       setIsSending(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
