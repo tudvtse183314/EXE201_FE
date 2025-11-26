@@ -85,7 +85,7 @@ export default function OrderDetail() {
     return index;
   }, [order?.status]);
 
-  const isCancelled = order?.status?.toUpperCase() === 'CANCELLED';
+  const isCancelled = order?.status?.toUpperCase() === 'CANCELLED' || order?.status?.toUpperCase() === 'CANCEL';
   const canConfirmPayment = paymentInfo?.status?.toUpperCase() !== 'PAID';
   const canCancelOrder = order?.status?.toUpperCase() === 'PENDING' && paymentInfo?.status?.toUpperCase() !== 'PAID';
 

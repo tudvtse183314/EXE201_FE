@@ -91,7 +91,15 @@ export default function Orders() {
   useEffect(() => {
     let filteredOrders = allOrdersData;
     if (statusFilter !== 'ALL') {
-      filteredOrders = allOrdersData.filter(order => order.status === statusFilter);
+      filteredOrders = allOrdersData.filter(order => {
+        const orderStatus = (order.status || "").toUpperCase();
+        const filterStatus = statusFilter.toUpperCase();
+        // Hỗ trợ cả CANCEL và CANCELLED
+        if (filterStatus === 'CANCELLED') {
+          return orderStatus === 'CANCELLED' || orderStatus === 'CANCEL';
+        }
+        return orderStatus === filterStatus;
+      });
     }
 
     const startIndex = (pagination.current - 1) * pagination.pageSize;
@@ -215,7 +223,7 @@ export default function Orders() {
               <Option value="PAID">Đã thanh toán</Option>
               <Option value="SHIPPED">Đang giao</Option>
               <Option value="DELIVERED">Đã giao</Option>
-              <Option value="CANCELLED">Đã hủy</Option>
+              <Option value="CANCELLED">Đã hủy (CANCEL/CANCELLED)</Option>
             </Select>
             <Button
               icon={<ReloadOutlined />}

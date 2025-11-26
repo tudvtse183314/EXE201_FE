@@ -106,7 +106,15 @@ export default function OrderStatusTab() {
   useEffect(() => {
     let filteredOrders = allOrdersData;
     if (statusFilter !== 'ALL') {
-      filteredOrders = allOrdersData.filter(order => order.status === statusFilter);
+      filteredOrders = allOrdersData.filter(order => {
+        const orderStatus = (order.status || "").toUpperCase();
+        const filterStatus = statusFilter.toUpperCase();
+        // Hỗ trợ cả CANCEL và CANCELLED
+        if (filterStatus === 'CANCELLED') {
+          return orderStatus === 'CANCELLED' || orderStatus === 'CANCEL';
+        }
+        return orderStatus === filterStatus;
+      });
     }
 
     const startIndex = (pagination.current - 1) * pagination.pageSize;
@@ -169,7 +177,7 @@ export default function OrderStatusTab() {
                     Trạng thái hiện tại
                   </Tag>
                 )}
-                {order.status === 'CANCELLED' && statusItem.status === 'PENDING' && (
+                {(order.status?.toUpperCase() === 'CANCELLED' || order.status?.toUpperCase() === 'CANCEL') && statusItem.status === 'PENDING' && (
                   <Tag color="red" style={{ marginLeft: 8 }}>
                     Đã hủy
                   </Tag>
@@ -273,7 +281,7 @@ export default function OrderStatusTab() {
               <Option value="PAID">Đã thanh toán</Option>
               <Option value="SHIPPED">Đang giao</Option>
               <Option value="DELIVERED">Đã giao</Option>
-              <Option value="CANCELLED">Đã hủy</Option>
+              <Option value="CANCELLED">Đã hủy (CANCEL/CANCELLED)</Option>
             </Select>
             <Button
               icon={<ReloadOutlined />}

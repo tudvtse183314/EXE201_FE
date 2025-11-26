@@ -580,7 +580,8 @@ export const getStatusColor = (status) => {
     PAID: 'blue',
     SHIPPED: 'purple',
     DELIVERED: 'green',
-    CANCELLED: 'red'
+    CANCELLED: 'red',
+    CANCEL: 'red' // Hỗ trợ cả CANCEL và CANCELLED
   };
   return colors[normalized] || 'default';
 };
@@ -593,7 +594,8 @@ export const getStatusText = (status) => {
     PAID: 'Đã thanh toán',
     SHIPPED: 'Đang giao',
     DELIVERED: 'Đã giao',
-    CANCELLED: 'Đã hủy'
+    CANCELLED: 'Đã hủy',
+    CANCEL: 'Đã hủy' // Hỗ trợ cả CANCEL và CANCELLED
   };
   return texts[normalized] || status;
 };
