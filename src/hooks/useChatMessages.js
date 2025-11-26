@@ -6,14 +6,53 @@ import { toUiMessages, generateMessageId, formatChatDate } from '../utils/chatUt
  * @param {Array} initialRecords - Initial ChatRecord array
  */
 export const useChatMessages = (initialRecords = []) => {
-  const [messages, setMessages] = useState(toUiMessages(initialRecords));
+  const [messages, setMessages] = useState(() => toUiMessages(initialRecords));
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const previousRecordsStringRef = useRef(null);
+  const isInitialMount = useRef(true);
 
-  // Update messages when initialRecords change
+  // Initialize previous records string on mount
   useEffect(() => {
-    setMessages(toUiMessages(initialRecords));
-  }, [initialRecords]);
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousRecordsStringRef.current = JSON.stringify(initialRecords);
+    }
+  }, []); // Only run once on mount
+
+  // Update messages when initialRecords change (deep comparison)
+  // Only update if initialRecords is not empty or if it actually changed
+  useEffect(() => {
+    // Skip if this is the initial mount (already handled above)
+    if (isInitialMount.current) {
+      return;
+    }
+
+    const currentRecordsString = JSON.stringify(initialRecords);
+    
+    // Only update if the content actually changed (deep comparison)
+    if (previousRecordsStringRef.current !== currentRecordsString) {
+      previousRecordsStringRef.current = currentRecordsString;
+      
+      // If initialRecords is empty, don't update (keep existing messages)
+      // This prevents clearing messages when empty array [] is passed repeatedly
+      if (initialRecords.length === 0) {
+        return;
+      }
+      
+      const newMessages = toUiMessages(initialRecords);
+      
+      // Only update if messages actually changed
+      setMessages(prev => {
+        const prevString = JSON.stringify(prev);
+        const newString = JSON.stringify(newMessages);
+        if (prevString !== newString) {
+          return newMessages;
+        }
+        return prev; // Return same reference to avoid re-render
+      });
+    }
+  }, [initialRecords]); // Only depend on initialRecords
 
   /**
    * Add a new message

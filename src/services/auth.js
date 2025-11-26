@@ -1,7 +1,7 @@
 // src/services/auth.js
 import axiosInstance from "../api/axios";
 
-// Get all accounts (Admin/Staff)
+// Get all accounts (Admin only)
 export const getAllAccounts = async () => {
   try {
     console.log("👥 Auth: Fetching all accounts");
@@ -59,19 +59,6 @@ export const resetPassword = async (passwordData) => {
       config: error.config,
     });
     throw error;
-  }
-};
-
-// Create staff account
-export const createStaff = async (staffData) => {
-  try {
-    console.log("👥 Auth: Creating staff account", staffData);
-    const res = await axiosInstance.post("/create-staff", staffData);
-    console.log("👥 Auth: Staff created successfully", res.data);
-    return res.data;
-  } catch (e) {
-    console.error("👥 Auth: Error creating staff:", e);
-    throw e;
   }
 };
 

@@ -40,7 +40,13 @@ export default function UserHeader() {
     { icon: MessageCircle, label: 'Chat', action: () => console.log('Chat clicked') }
   ];
 
-  const handleNavigation = (itemOrPath) => {
+  const handleNavigation = (itemOrPath, event) => {
+    // Ngăn chặn hành vi mặc định của button
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
     const item = typeof itemOrPath === 'string'
       ? userNavigationItems.find(i => i.path === itemOrPath) || { path: itemOrPath, requiresAuth: false }
       : itemOrPath;
@@ -55,9 +61,15 @@ export default function UserHeader() {
     setMobileMenuOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = (event) => {
+    // Ngăn chặn hành vi mặc định của button
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     logout();
-    navigate('/');
+    // Redirect về trang home (không đăng nhập)
+    navigate('/', { replace: true });
   };
 
   const isActive = (path) => {
@@ -90,7 +102,7 @@ export default function UserHeader() {
                   <SvgLogo 
                     size="medium"
                     variant="white"
-                    onClick={() => handleNavigation('/')}
+                    onClick={(e) => handleNavigation('/', e)}
                     className="hover:scale-110"
                   />
                 </motion.div>
@@ -101,7 +113,7 @@ export default function UserHeader() {
                 >
                   <span 
                     className="text-xl font-bold text-cyan-400 cursor-pointer"
-                    onClick={() => handleNavigation('/')}
+                    onClick={(e) => handleNavigation('/', e)}
                   >
                     Pawfect Match
                   </span>
@@ -132,13 +144,14 @@ export default function UserHeader() {
                 {userNavigationItems.map((item, index) => (
                   <motion.button
                     key={index}
+                    type="button"
                     whileHover={{ 
                       scale: 1.1, 
                       textShadow: "0 0 12px #38bdf8",
                       y: -2
                     }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleNavigation(item)}
+                    onClick={(e) => handleNavigation(item, e)}
                     className={`text-sm font-medium px-3 py-2 transition-all duration-300 rounded-lg ${
                       isActive(item.path)
                         ? 'text-cyan-400 bg-cyan-400/20 border border-cyan-400'
@@ -184,6 +197,7 @@ export default function UserHeader() {
 
                 {/* Logout Button */}
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05, backgroundColor: "#ef4444" }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLogout}
@@ -195,6 +209,7 @@ export default function UserHeader() {
 
               {/* Mobile Menu Button */}
               <motion.button 
+                type="button"
                 className="md:hidden"
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -235,9 +250,10 @@ export default function UserHeader() {
             {userNavigationItems.map((item, index) => (
               <motion.button
                 key={index}
+                type="button"
                 whileHover={{ x: 10, backgroundColor: "#1e40af" }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleNavigation(item)}
+                onClick={(e) => handleNavigation(item, e)}
                 className={`block w-full text-left px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                   isActive(item.path)
                     ? 'text-cyan-400 bg-cyan-400/20'
@@ -261,6 +277,7 @@ export default function UserHeader() {
                   </span>
                 </div>
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.05, backgroundColor: "#ef4444" }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLogout}

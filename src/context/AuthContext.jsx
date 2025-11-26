@@ -39,6 +39,15 @@ export const AuthProvider = ({ children }) => {
       }
     });
     
+    
+    // Clear wishlist data nếu có
+    try {
+      localStorage.removeItem('wishlist');
+      sessionStorage.removeItem('wishlist');
+    } catch (e) {
+      // Ignore errors
+    }
+    
     setUser(null);
   };
 

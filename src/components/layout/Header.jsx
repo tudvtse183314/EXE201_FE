@@ -71,7 +71,8 @@ export default function Header() {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    // Redirect về trang home (không đăng nhập)
+    navigate('/', { replace: true });
   };
 
   const isActive = (path) =>

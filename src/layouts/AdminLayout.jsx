@@ -55,12 +55,6 @@ export default function AdminLayout() {
       icon: <CheckCircleOutlined /> 
     },
     { 
-      key: 'carts', 
-      label: 'Giỏ hàng', 
-      path: '/admin/carts', 
-      icon: <ShoppingOutlined /> 
-    },
-    { 
       key: 'chat-history', 
       label: 'Chat History', 
       path: '/admin/chat-history', 
@@ -70,30 +64,6 @@ export default function AdminLayout() {
       key: 'accounts', 
       label: 'Tài khoản', 
       path: '/admin/accounts', 
-      icon: <UserOutlined /> 
-    },
-    { 
-      key: 'test', 
-      label: '🧪 Test Categories', 
-      path: '/admin/test', 
-      icon: <UserOutlined /> 
-    },
-    { 
-      key: 'test-products', 
-      label: '🧪 Test Products', 
-      path: '/admin/test-products', 
-      icon: <UserOutlined /> 
-    },
-    { 
-      key: 'api-summary', 
-      label: '📊 API Summary', 
-      path: '/admin/api-summary', 
-      icon: <UserOutlined /> 
-    },
-    { 
-      key: 'test-orders', 
-      label: '🧪 Test Orders', 
-      path: '/admin/test-orders', 
       icon: <UserOutlined /> 
     },
   ];
@@ -116,20 +86,34 @@ export default function AdminLayout() {
   };
 
   const handleLogout = () => {
+    // Clear tất cả auth data
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('role');
     navigate('/login');
+    
+    // Clear order data
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('currentOrder_') || key.startsWith('order_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Clear sessionStorage
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('currentOrder_') || key.startsWith('order_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    
+    // Redirect về trang home (không đăng nhập)
+    navigate('/', { replace: true });
+    
+    // Reload page để đảm bảo clear hết state
+    window.location.reload();
   };
 
-  const userMenuItems = [
-    {
-      key: 'profile',
-      label: 'Thông tin cá nhân',
-      icon: <UserOutlined />,
-    },
-    {
-      type: 'divider',
-    },
+  const userMenuItems = [   
     {
       key: 'logout',
       label: 'Đăng xuất',
@@ -190,7 +174,8 @@ export default function AdminLayout() {
           style={{
             background: 'var(--pv-dark, #362319)',
             border: 'none',
-            marginTop: '20px'
+            marginTop: '20px',
+            flex: 1
           }}
           items={menuItems.map(item => ({
             key: item.key,
@@ -198,6 +183,46 @@ export default function AdminLayout() {
             label: item.label,
           }))}
         />
+
+        {/* Logout Button */}
+        <div style={{
+          padding: '16px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          position: 'absolute',
+          bottom: collapsed ? '20px' : '60px',
+          left: 0,
+          right: 0
+        }}>
+          <Button
+            type="text"
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+            block
+            style={{
+              color: 'var(--pv-text-on-dark, #ffeadd)',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: '12px',
+              fontSize: '15px',
+              fontWeight: '500',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(237, 162, 116, 0.2)';
+              e.currentTarget.style.borderColor = 'var(--pv-primary, #eda274)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            {!collapsed && <span>Đăng xuất</span>}
+          </Button>
+        </div>
 
         {/* Footer */}
         {!collapsed && (
@@ -247,13 +272,7 @@ export default function AdminLayout() {
               }}>
                 {currentPage.label}
               </Title>
-              <Text style={{
-                color: 'var(--pv-text-muted, #7e5c48)',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                Quản lý hệ thống PetVibe
-              </Text>
+             
             </div>
           </div>
           
@@ -278,9 +297,6 @@ export default function AdminLayout() {
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--pv-text-heading, #2a1a10)' }}>
                     Administrator
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--pv-text-muted, #7e5c48)' }}>
-                    Online
                   </div>
                 </div>
               )}

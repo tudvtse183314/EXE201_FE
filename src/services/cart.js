@@ -232,9 +232,9 @@ export const addCartItem = async (productId, quantity, price = 0) => {
   }
 };
 
-// ===== Admin/Staff APIs (giữ lại cho tương thích) =====
+// ===== Admin APIs (giữ lại cho tương thích) =====
 
-// Get all carts (Admin/Staff)
+// Get all carts (Admin only)
 export const getAllCarts = async () => {
   console.log("🛒 Cart: Fetching all carts");
   
@@ -273,7 +273,7 @@ export const getAllCarts = async () => {
   }
 };
 
-// Get carts by user ID (Admin/Staff)
+// Get carts by user ID (Admin only)
 export const getCartsByUserId = async (userId) => {
   try {
     console.log("🛒 Cart: Fetching carts for user", { userId });

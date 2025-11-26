@@ -2,7 +2,6 @@
 export const ROLES = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
-  STAFF: "STAFF",
   CUSTOMER: "CUSTOMER",
   DOCTOR: "DOCTOR",
 };
@@ -10,8 +9,7 @@ export const ROLES = {
 // Dashboard paths theo role
 export const dashboardPathByRole = {
   ADMIN: "/admin/dashboard", // 👈 ADMIN vào admin dashboard
-  MANAGER: "/staff/dashboard", // MANAGER dùng chung layout staff hiện tại
-  STAFF: "/staff/dashboard",
+  MANAGER: "/admin/dashboard", // MANAGER dùng chung admin dashboard
   DOCTOR: "/doctor/dashboard",
   CUSTOMER: "/", // CUSTOMER về homepage sau login
 };
