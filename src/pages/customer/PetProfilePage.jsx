@@ -480,9 +480,6 @@ export default function PetProfilePage() {
                         <option value="">Chọn loại thú cưng</option>
                         <option value="dog">Chó</option>
                         <option value="cat">Mèo</option>
-                        <option value="bird">Chim</option>
-                        <option value="rabbit">Thỏ</option>
-                        <option value="other">Khác</option>
                       </select>
                     </div>
 

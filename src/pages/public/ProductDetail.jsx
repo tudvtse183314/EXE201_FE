@@ -51,10 +51,17 @@ const formatCurrency = (value) => {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { user } = useAuth();
   const { showSuccess, showError, showWarning } = useToast();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  
+  // Helper function to check if product is in cart
+  const isInCart = (productId) => {
+    return cartItems.some(item => 
+      (item.productId || item.product?.id) === productId
+    );
+  };
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -379,16 +386,29 @@ export default function ProductDetail() {
                   icon={<ShoppingCartOutlined />}
                   onClick={handleAddToCart}
                   loading={addingToCart}
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || (product && isInCart(product.id))}
                   style={{
                     flex: 1,
                     minWidth: 200,
-                    background: '#eda274',
-                    borderColor: '#eda274',
-                    height: 48
+                    background: isOutOfStock 
+                      ? '#ccc' 
+                      : (product && isInCart(product.id))
+                      ? '#8B4513' // Màu nâu đậm khi đã thêm vào giỏ
+                      : '#eda274', // Màu nâu nhạt khi chưa thêm
+                    borderColor: isOutOfStock 
+                      ? '#ccc' 
+                      : (product && isInCart(product.id))
+                      ? '#8B4513'
+                      : '#eda274',
+                    height: 48,
+                    cursor: (isOutOfStock || (product && isInCart(product.id))) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  Thêm vào giỏ hàng
+                  {isOutOfStock 
+                    ? 'Hết hàng' 
+                    : (product && isInCart(product.id))
+                    ? 'Đã thêm vào giỏ'
+                    : 'Thêm vào giỏ hàng'}
                 </Button>
                 <Button
                   size="large"
