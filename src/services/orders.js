@@ -144,15 +144,67 @@ export const confirmPayment = async (orderId) => {
 };
 
 // PATCH /api/orders/{id}/payment-status - Cập nhật trạng thái thanh toán thủ công
+// paymentStatus phải là một trong: "PENDING", "COMPLETED", "FAILED", "EXPIRED"
 export const updatePaymentStatus = async (orderId, paymentStatus) => {
   try {
-    console.log("📦 Orders: Updating payment status", { orderId, paymentStatus });
-    const res = await axiosInstance.patch(`/orders/${orderId}/payment-status`, { paymentStatus });
+    // Validate paymentStatus trước khi gửi
+    const validStatuses = ['PENDING', 'COMPLETED', 'FAILED', 'EXPIRED'];
+    const normalizedStatus = paymentStatus?.toUpperCase()?.trim();
+    
+    if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
+      throw new Error(`Trạng thái thanh toán không hợp lệ. Phải là một trong: ${validStatuses.join(', ')}`);
+    }
+    
+    console.log("📦 Orders: Updating payment status", { orderId, paymentStatus: normalizedStatus });
+    const res = await axiosInstance.patch(`/orders/${orderId}/payment-status`, { 
+      paymentStatus: normalizedStatus 
+    });
     console.log("📦 Orders: Updated payment status successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error updating payment status:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    const responseData = error.response?.data;
+    
+    // Xử lý error message
+    let errorMessage = error.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
+    
+    console.error("📦 Orders: Error updating payment status:", {
+      orderId,
+      paymentStatus,
+      status,
+      message: errorMessage,
+      responseData,
+      fullError: error
+    });
+    
+    if (status === 400) {
+      throw new Error(errorMessage || "Trạng thái thanh toán không hợp lệ. Phải là: PENDING, COMPLETED, FAILED, hoặc EXPIRED");
+    }
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error(errorMessage || "Bạn không có quyền cập nhật trạng thái thanh toán.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    
+    // Xử lý lỗi không có response (network error, CORS, etc.)
+    if (!error.response) {
+      throw new Error(errorMessage || "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    }
+    
+    throw new Error(errorMessage || "Không thể cập nhật trạng thái thanh toán. Vui lòng thử lại.");
   }
 };
 
