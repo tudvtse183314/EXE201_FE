@@ -38,15 +38,29 @@ export const createOrder = async (orderData) => {
  */
 export const getOrderById = async (orderId) => {
   try {
-    console.log("📦 Orders: Fetching order by ID", { orderId });
-    const res = await axiosInstance.get(`/orders/${orderId}`);
-    console.log("📦 Orders: Fetched order successfully", res.data);
+    console.log("📦 Orders: Fetching order by ID", { orderId, type: typeof orderId });
+    const url = `/orders/${orderId}`;
+    console.log("📦 Orders: Request URL", url);
+    
+    const res = await axiosInstance.get(url);
+    
+    console.log("📦 Orders: Fetched order successfully", {
+      orderId: res.data?.orderId,
+      status: res.data?.status,
+      hasPaymentInfo: !!res.data?.paymentInfo,
+      paymentInfo: res.data?.paymentInfo,
+      itemsCount: Array.isArray(res.data?.items) ? res.data.items.length : 0,
+      fullResponse: res.data
+    });
+    
     return res.data;
   } catch (error) {
     const status = error.response?.status;
     console.error("📦 Orders: Error fetching order by ID:", {
+      orderId,
       status,
       message: error.response?.data?.message || error.message,
+      response: error.response?.data,
       error
     });
     
@@ -321,31 +335,76 @@ export const cancelOrderLegacy = async (orderId) => {
 /**
  * Cập nhật trạng thái đơn hàng (Admin only)
  * PATCH /api/orders/{orderId}/status
+ * Request body: { "status": "SHIPPED" | "DELIVERED" }
  */
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    console.log("📦 Orders: Updating order status", { orderId, status });
-    const res = await axiosInstance.patch(`/orders/${orderId}/status`, { status });
-    console.log("📦 Orders: Updated status successfully", res.data);
-    return res.data;
-  } catch (error) {
-    const status = error.response?.status;
-    console.error("📦 Orders: Error updating order status:", {
-      status,
-      message: error.response?.data?.message || error.message,
-      error
+    // Validate status
+    const validStatuses = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    const normalizedStatus = status?.toUpperCase()?.trim();
+    
+    if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
+      throw new Error(`Trạng thái không hợp lệ: ${status}. Phải là một trong: ${validStatuses.join(', ')}`);
+    }
+    
+    const url = `/orders/${orderId}/status`;
+    const requestBody = { status: normalizedStatus };
+    
+    console.log("📦 Orders: Updating order status", {
+      orderId,
+      status: normalizedStatus,
+      url,
+      requestBody
     });
     
-    if (status === 401) {
+    const res = await axiosInstance.patch(url, requestBody, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log("📦 Orders: Updated status successfully", {
+      orderId: res.data?.orderId,
+      oldStatus: status,
+      newStatus: res.data?.status,
+      fullResponse: res.data
+    });
+    
+    return res.data;
+  } catch (error) {
+    const errorStatus = error.response?.status;
+    const errorCode = error.code;
+    
+    console.error("📦 Orders: Error updating order status:", {
+      orderId,
+      status,
+      errorStatus,
+      errorCode,
+      message: error.response?.data?.message || error.message,
+      response: error.response?.data,
+      request: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      },
+      fullError: error
+    });
+    
+    // Xử lý lỗi CORS/Network
+    if (errorCode === 'ERR_NETWORK' || error.message?.includes('CORS') || error.message?.includes('Network Error')) {
+      throw new Error("Lỗi kết nối: Backend chưa cấu hình CORS cho PATCH method. Vui lòng liên hệ admin để cập nhật CORS config (thêm 'PATCH' vào allowedMethods).");
+    }
+    
+    if (errorStatus === 401) {
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    if (status === 403) {
+    if (errorStatus === 403) {
       throw new Error("Bạn không có quyền cập nhật đơn hàng.");
     }
-    if (status === 404) {
+    if (errorStatus === 404) {
       throw new Error("Không tìm thấy đơn hàng.");
     }
-    if (status === 400) {
+    if (errorStatus === 400) {
       throw new Error(error.response?.data?.message || "Không thể cập nhật trạng thái đơn hàng ở trạng thái hiện tại.");
     }
     throw error;

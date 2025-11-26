@@ -14,16 +14,22 @@ import {
   Spin,
   Alert,
   QRCode,
-  Tooltip
+  Tooltip,
+  Modal,
+  Form,
+  Rate,
+  Input
 } from 'antd';
 import {
   ArrowLeftOutlined,
   ReloadOutlined,
   CheckOutlined,
   CloseCircleOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  StarOutlined
 } from '@ant-design/icons';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   getOrderById,
   confirmPayment,
@@ -35,6 +41,7 @@ import {
   getPaymentStatusText,
   ORDER_STATUS_FLOW
 } from '../../services/orders';
+import { createReview } from '../../services/reviews';
 
 const { Title, Text } = Typography;
 
@@ -46,6 +53,7 @@ const formatCurrency = (value) => {
 export default function OrderDetail() {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { showSuccess, showError, showWarning } = useToast();
 
   const [order, setOrder] = useState(null);
@@ -54,17 +62,44 @@ export default function OrderDetail() {
   const [confirming, setConfirming] = useState(false);
   const [refreshingQR, setRefreshingQR] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [selectedProductForReview, setSelectedProductForReview] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewForm] = Form.useForm();
   const previousStatusRef = useRef(null); // Lưu status cũ để phát hiện thay đổi
 
   const loadOrder = useCallback(async (silent = false) => {
-    if (!orderId) return;
+    // Validate orderId - có thể là string từ URL params
+    const currentOrderId = orderId ? String(orderId).trim() : null;
+    
+    if (!currentOrderId || currentOrderId === 'undefined' || currentOrderId === 'null') {
+      console.warn('📦 OrderDetail: No orderId provided', { orderId, currentOrderId });
+      if (!silent) {
+        setLoading(false);
+        setError('Không tìm thấy ID đơn hàng.');
+      }
+      return;
+    }
 
     try {
       if (!silent) {
         setLoading(true);
+        setError(null);
       }
-      setError(null);
-      const response = await getOrderById(orderId);
+      
+      console.log('📦 OrderDetail: Loading order', { orderId: currentOrderId, silent });
+      const response = await getOrderById(currentOrderId);
+      console.log('📦 OrderDetail: Order loaded successfully', { 
+        orderId: response?.orderId,
+        status: response?.status,
+        hasItems: Array.isArray(response?.items),
+        itemsCount: response?.items?.length
+      });
+      
+      // Validate response
+      if (!response) {
+        throw new Error('Không nhận được dữ liệu từ server.');
+      }
       
       // Phát hiện khi order bị cancel bởi admin
       if (!silent && previousStatusRef.current) {
@@ -79,11 +114,22 @@ export default function OrderDetail() {
       
       previousStatusRef.current = response.status;
       setOrder(response);
+      
+      if (!silent) {
+        setLoading(false);
+      }
     } catch (err) {
-      console.error('📦 Order Detail: Error fetching order', err);
+      console.error('📦 OrderDetail: Error fetching order', {
+        orderId: currentOrderId,
+        error: err,
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status
+      });
+      
       const message = err?.response?.data?.message || err?.message || 'Không thể tải thông tin đơn hàng.';
       setError(message);
-    } finally {
+      
       if (!silent) {
         setLoading(false);
       }
@@ -91,8 +137,19 @@ export default function OrderDetail() {
   }, [orderId, showWarning]);
 
   useEffect(() => {
-    loadOrder();
-  }, [loadOrder]);
+    // Chỉ load khi có orderId hợp lệ
+    const validOrderId = orderId ? String(orderId).trim() : null;
+    
+    if (validOrderId && validOrderId !== 'undefined' && validOrderId !== 'null') {
+      console.log('📦 OrderDetail: useEffect triggered', { orderId, validOrderId });
+      loadOrder();
+    } else {
+      console.warn('📦 OrderDetail: Invalid orderId in useEffect', { orderId, validOrderId });
+      setLoading(false);
+      setError('Không tìm thấy ID đơn hàng. Vui lòng kiểm tra lại URL.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]); // Chỉ phụ thuộc vào orderId
 
   // Auto-refresh mỗi 30 giây khi đang xem order detail
   useEffect(() => {
@@ -119,9 +176,15 @@ export default function OrderDetail() {
   }, [order?.status]);
 
   const isCancelled = order?.status?.toUpperCase() === 'CANCELLED' || order?.status?.toUpperCase() === 'CANCEL';
-  const isPaid = order?.status?.toUpperCase() === 'PAID' || paymentInfo?.status?.toUpperCase() === 'PAID';
-  const canConfirmPayment = !isPaid && paymentInfo?.status?.toUpperCase() !== 'PAID';
-  const canCancelOrder = order?.status?.toUpperCase() === 'PENDING' && !isPaid && paymentInfo?.status?.toUpperCase() !== 'PAID';
+  // Đơn hàng đã thanh toán nếu: status là PAID/SHIPPED/DELIVERED hoặc paymentInfo.status là PAID
+  const orderStatus = order?.status?.toUpperCase();
+  const isPaid = orderStatus === 'PAID' || 
+                 orderStatus === 'SHIPPED' || 
+                 orderStatus === 'DELIVERED' || 
+                 paymentInfo?.status?.toUpperCase() === 'PAID';
+  const isDelivered = orderStatus === 'DELIVERED';
+  const canConfirmPayment = !isPaid && orderStatus === 'PENDING' && paymentInfo?.status?.toUpperCase() !== 'PAID';
+  const canCancelOrder = orderStatus === 'PENDING' && !isPaid && paymentInfo?.status?.toUpperCase() !== 'PAID';
 
   const handleConfirmPayment = async () => {
     if (!order?.orderId) return;
@@ -251,7 +314,9 @@ export default function OrderDetail() {
             </Title>
             <Space size="small" wrap>
               <Tag color={getStatusColor(order.status)}>{getStatusText(order.status)}</Tag>
-              <Tag color={getPaymentStatusColor(paymentInfo.status)}>{getPaymentStatusText(paymentInfo.status)}</Tag>
+              {paymentInfo?.status && (
+                <Tag color={getPaymentStatusColor(paymentInfo.status)}>{getPaymentStatusText(paymentInfo.status)}</Tag>
+              )}
               <Tag color="blue">Tổng tiền: {formatCurrency(order.totalAmount)}</Tag>
             </Space>
           </Space>
@@ -394,7 +459,27 @@ export default function OrderDetail() {
             <List
               dataSource={order.items}
               renderItem={(item) => (
-                <List.Item>
+                <List.Item
+                  actions={
+                    isDelivered
+                      ? [
+                          <Button
+                            key="review"
+                            type="link"
+                            icon={<StarOutlined />}
+                            onClick={() => {
+                              setSelectedProductForReview(item);
+                              setReviewModalVisible(true);
+                              reviewForm.resetFields();
+                            }}
+                            style={{ color: 'var(--pv-primary, #eda274)' }}
+                          >
+                            Đánh giá
+                          </Button>
+                        ]
+                      : []
+                  }
+                >
                   <List.Item.Meta
                     title={
                       <Space size={12} wrap>
@@ -431,8 +516,98 @@ export default function OrderDetail() {
           {!canConfirmPayment && (
             <Tag color="green" icon={<CheckCircleOutlined />}>Đơn hàng đã thanh toán</Tag>
           )}
+          {isDelivered && (
+            <Tag color="blue" icon={<StarOutlined />}>Đơn hàng đã giao - Bạn có thể đánh giá sản phẩm</Tag>
+          )}
         </Space>
       </Space>
+
+      {/* Review Modal */}
+      <Modal
+        title={`Đánh giá sản phẩm: ${selectedProductForReview?.productName || selectedProductForReview?.product?.name || 'Sản phẩm'}`}
+        open={reviewModalVisible}
+        onCancel={() => {
+          setReviewModalVisible(false);
+          setSelectedProductForReview(null);
+          reviewForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={reviewForm}
+          layout="vertical"
+          onFinish={async (values) => {
+            if (!selectedProductForReview || !user) return;
+
+            try {
+              setSubmittingReview(true);
+              const reviewData = {
+                productId: selectedProductForReview.productId || selectedProductForReview.product?.id,
+                rating: values.rating,
+                comment: values.comment,
+                userId: user.id || user.userId
+              };
+              
+              await createReview(reviewData);
+              showSuccess('Đánh giá của bạn đã được gửi thành công!');
+              setReviewModalVisible(false);
+              setSelectedProductForReview(null);
+              reviewForm.resetFields();
+            } catch (err) {
+              console.error('⭐ OrderDetail: Error submitting review', err);
+              const message = err?.response?.data?.message || err?.message || 'Không thể gửi đánh giá.';
+              showError(message);
+            } finally {
+              setSubmittingReview(false);
+            }
+          }}
+        >
+          <Form.Item
+            name="rating"
+            label="Đánh giá của bạn (1-5 sao)"
+            rules={[{ required: true, message: 'Vui lòng chọn số sao từ 1-5' }]}
+          >
+            <Rate allowClear />
+          </Form.Item>
+          <Form.Item
+            name="comment"
+            label="Nhận xét"
+            rules={[
+              { required: true, message: 'Vui lòng nhập nhận xét' },
+              { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+              maxLength={500}
+              showCount
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submittingReview}
+                icon={<StarOutlined />}
+              >
+                Gửi đánh giá
+              </Button>
+              <Button
+                onClick={() => {
+                  setReviewModalVisible(false);
+                  setSelectedProductForReview(null);
+                  reviewForm.resetFields();
+                }}
+              >
+                Hủy
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

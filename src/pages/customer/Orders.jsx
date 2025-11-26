@@ -12,7 +12,7 @@ import {
   Empty,
   Select
 } from 'antd';
-import { EyeOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, FilterOutlined, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -181,6 +181,11 @@ export default function Orders() {
     navigate(`/customer/orders/${orderId}`);
   };
 
+  const handleReview = (orderId) => {
+    // Navigate to order detail page where user can review products
+    navigate(`/customer/orders/${orderId}`);
+  };
+
   const columns = [
     {
       title: 'Mã đơn hàng',
@@ -232,15 +237,33 @@ export default function Orders() {
     {
       title: 'Hành động',
       key: 'actions',
-      render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewOrder(record.orderId)}
-        >
-          Xem chi tiết
-        </Button>
-      ),
+      width: 250,
+      render: (_, record) => {
+        const isDelivered = record.status?.toUpperCase() === 'DELIVERED';
+        return (
+          <Space size="small" wrap>
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewOrder(record.orderId)}
+              size="small"
+            >
+              Xem chi tiết
+            </Button>
+            {isDelivered && (
+              <Button
+                type="link"
+                icon={<StarOutlined />}
+                onClick={() => handleReview(record.orderId)}
+                size="small"
+                style={{ color: 'var(--pv-primary, #eda274)' }}
+              >
+                Review
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

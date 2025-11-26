@@ -20,7 +20,6 @@ import Contact from "../pages/public/Contact";
 
 // Customer Pages
 import CustomerDashboard from "../pages/customer/Dashboard";
-import CustomerProfile from "../pages/customer/Profile";
 import CustomerProfilePage from "../pages/customer/CustomerProfilePage";
 import PetProfilePage from "../pages/customer/PetProfilePage";
 
@@ -42,6 +41,7 @@ import AdminPaymentConfirmationPage from "../pages/admin/orders/AdminPaymentConf
 import AdminAccountsPage from "../pages/admin/accounts/AdminAccountsPage";
 import AdminRevenuePage from "../pages/admin/revenue/AdminRevenuePage";
 import AdminPetProfilesPage from "../pages/admin/petProfiles/AdminPetProfilesPage";
+import AdminReviewsPage from "../pages/admin/reviews/AdminReviewsPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
@@ -370,6 +370,7 @@ export default function AppRoutes() {
           <Route path="payment-confirmation" element={<AdminPaymentConfirmationPage />} />
           <Route path="revenue" element={<AdminRevenuePage />} />
           <Route path="pet-profiles" element={<AdminPetProfilesPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="accounts" element={<AdminAccountsPage />} />
         </Route>
         

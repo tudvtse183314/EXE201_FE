@@ -89,3 +89,20 @@ export const getReviewById = async (reviewId) => {
   }
 };
 
+// Get all reviews (Admin only)
+export const getAllReviews = async () => {
+  try {
+    console.log("⭐ Reviews: Fetching all reviews");
+    const res = await axiosInstance.get("/reviews/getAll");
+    const reviews = Array.isArray(res.data) ? res.data : [];
+    console.log("⭐ Reviews: Fetched all reviews successfully", { count: reviews.length });
+    return reviews;
+  } catch (e) {
+    console.error("⭐ Reviews: Error fetching all reviews:", e);
+    if (e?.response?.status === 404) {
+      return [];
+    }
+    throw e;
+  }
+};
+

@@ -2,18 +2,19 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Breadcrumb, Typography, Avatar, Dropdown, Button, Space } from 'antd';
-import { 
-  DashboardOutlined, 
-  AppstoreOutlined, 
-  ShoppingOutlined, 
-  FileTextOutlined, 
+import {
+  DashboardOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
+  FileTextOutlined,
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CheckCircleOutlined,
   DollarOutlined,
-  HeartOutlined
+  HeartOutlined,
+  StarOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -61,17 +62,23 @@ export default function AdminLayout() {
       path: '/admin/revenue', 
       icon: <DollarOutlined /> 
     },
-    { 
-      key: 'pet-profiles', 
-      label: 'Hồ sơ thú cưng', 
-      path: '/admin/pet-profiles', 
-      icon: <HeartOutlined /> 
+    {
+      key: 'pet-profiles',
+      label: 'Hồ sơ thú cưng',
+      path: '/admin/pet-profiles',
+      icon: <HeartOutlined />
     },
-    { 
-      key: 'accounts', 
-      label: 'Tài khoản', 
-      path: '/admin/accounts', 
-      icon: <UserOutlined /> 
+    {
+      key: 'reviews',
+      label: 'Quản lý đánh giá',
+      path: '/admin/reviews',
+      icon: <StarOutlined />
+    },
+    {
+      key: 'accounts',
+      label: 'Tài khoản',
+      path: '/admin/accounts',
+      icon: <UserOutlined />
     },
   ];
 
