@@ -236,14 +236,40 @@ export const addCartItem = async (productId, quantity, price = 0) => {
 
 // Get all carts (Admin/Staff)
 export const getAllCarts = async () => {
+  console.log("🛒 Cart: Fetching all carts");
+  
   try {
-    console.log("🛒 Cart: Fetching all carts");
     const res = await axiosInstance.get("/carts/all");
-    console.log("🛒 Cart: Fetched all carts successfully", res.data);
-    return res.data;
-  } catch (e) {
-    console.error("🛒 Cart: Error fetching all carts:", e);
-    throw e;
+    console.log("🛒 Cart: Fetched all carts successfully", {
+      count: Array.isArray(res.data) ? res.data.length : 'unknown',
+    });
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    const status = error.response?.status;
+    const backendMessage = error.response?.data?.message;
+    
+    let message = 'Không thể tải danh sách giỏ hàng.';
+    
+    if (status === 400) {
+      message = backendMessage || 'Yêu cầu không hợp lệ. Vui lòng kiểm tra lại dữ liệu hoặc thử lại sau.';
+    } else if (status === 401) {
+      message = 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.';
+    } else if (status === 403) {
+      message = 'Bạn không có quyền xem danh sách giỏ hàng.';
+    } else if (status === 404) {
+      message = 'Không tìm thấy dữ liệu giỏ hàng.';
+    } else if (status >= 500) {
+      message = 'Hệ thống đang bận. Vui lòng thử lại sau.';
+    }
+    
+    console.error("🛒 Cart: Error fetching all carts:", {
+      status,
+      backendMessage,
+      fullError: error,
+    });
+    
+    // QUAN TRỌNG: chỉ throw 1 Error object, KHÔNG tự gọi lại API
+    throw new Error(message);
   }
 };
 

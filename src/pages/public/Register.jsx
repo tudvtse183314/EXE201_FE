@@ -131,18 +131,24 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Side - Image (1/3) */}
-      <RegisterBackground className="hidden lg:block lg:w-1/3 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent"></div>
-        <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-white">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-6 backdrop-blur-sm">
-              <span className="text-4xl">🐾</span>
-            </div>
-            <h1 className="text-4xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
-            <p className="text-lg drop-shadow-md text-center">Tham gia cộng đồng những người yêu thú cưng của chúng tôi</p>
-          </div>
-        </div>
-      </RegisterBackground>
+      <RegisterBackground className="hidden lg:block lg:w-1/3 h-screen relative overflow-hidden">
+  {/* overlay đen phủ full hình */}
+  <div className="absolute inset-0 bg-gradient-to-br from-black/1 via-black/20 to-transparent" />
+
+  {/* nội dung */}
+  <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 text-white">
+    <div className="text-center">
+      <div className="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-6 backdrop-blur-sm">
+        <span className="text-4xl">🐾</span>
+      </div>
+      <h1 className="text-7xl font-bold mb-4 drop-shadow-lg">Pawfect Match</h1>
+      <p className="text-lg drop-shadow-md text-center">
+        Tham gia cộng đồng những người yêu thú cưng của chúng tôi
+      </p>
+    </div>
+  </div>
+</RegisterBackground>
+
 
       {/* Right Side - Form (2/3) */}
       <div className="w-full lg:w-2/3 flex items-center justify-center p-6 sm:p-8">

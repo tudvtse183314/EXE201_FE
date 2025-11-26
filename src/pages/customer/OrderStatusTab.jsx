@@ -1,4 +1,4 @@
-// src/pages/customer/Orders.jsx
+// src/pages/customer/OrderStatusTab.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -10,11 +10,14 @@ import {
   Spin,
   Alert,
   Empty,
-  Select
+  Select,
+  Timeline,
+  Descriptions
 } from 'antd';
-import { EyeOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, FilterOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 import {
   getOrdersByAccount,
   getStatusColor,
@@ -22,7 +25,6 @@ import {
   getPaymentStatusColor,
   getPaymentStatusText
 } from '../../services/orders';
-import { toast } from 'react-toastify';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -32,7 +34,19 @@ const formatCurrency = (value) => {
   return `${value.toLocaleString('vi-VN')}đ`;
 };
 
-export default function Orders() {
+// Order status flow visualization
+const ORDER_STATUS_FLOW = [
+  { status: 'PENDING', label: 'Chờ thanh toán', color: 'orange' },
+  { status: 'PAID', label: 'Đã thanh toán', color: 'blue' },
+  { status: 'SHIPPED', label: 'Đang giao hàng', color: 'purple' },
+  { status: 'DELIVERED', label: 'Đã giao hàng', color: 'green' }
+];
+
+const getStatusIndex = (status) => {
+  return ORDER_STATUS_FLOW.findIndex(s => s.status === status.toUpperCase());
+};
+
+export default function OrderStatusTab() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -42,6 +56,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [allOrdersData, setAllOrdersData] = useState([]);
 
@@ -62,7 +77,7 @@ export default function Orders() {
 
       setAllOrdersData(sortedOrders);
     } catch (err) {
-      console.error('📋 Orders: Error loading orders', {
+      console.error('📋 OrderStatusTab: Error loading orders', {
         accountId,
         error: err.response?.data || err.message,
         status: err.response?.status,
@@ -127,12 +142,52 @@ export default function Orders() {
     navigate(`/customer/orders/${orderId}`);
   };
 
+  const handleViewStatus = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const renderStatusTimeline = (order) => {
+    const currentStatus = order.status?.toUpperCase();
+    const currentIndex = getStatusIndex(currentStatus);
+    
+    return (
+      <Timeline
+        items={ORDER_STATUS_FLOW.map((statusItem, index) => {
+          const isCompleted = index <= currentIndex;
+          const isCurrent = index === currentIndex;
+          
+          return {
+            color: isCompleted ? statusItem.color : 'gray',
+            dot: isCurrent ? <CheckCircleOutlined style={{ fontSize: '16px' }} /> : undefined,
+            children: (
+              <div>
+                <Text strong={isCurrent} style={{ color: isCompleted ? undefined : '#999' }}>
+                  {statusItem.label}
+                </Text>
+                {isCurrent && (
+                  <Tag color={statusItem.color} style={{ marginLeft: 8 }}>
+                    Trạng thái hiện tại
+                  </Tag>
+                )}
+                {order.status === 'CANCELLED' && statusItem.status === 'PENDING' && (
+                  <Tag color="red" style={{ marginLeft: 8 }}>
+                    Đã hủy
+                  </Tag>
+                )}
+              </div>
+            )
+          };
+        })}
+      />
+    );
+  };
+
   const columns = [
     {
       title: 'Mã đơn hàng',
       dataIndex: 'orderId',
       key: 'orderId',
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text) => <Text strong>#{text}</Text>,
     },
     {
       title: 'Trạng thái đơn',
@@ -170,36 +225,39 @@ export default function Orders() {
       render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '--',
     },
     {
-      title: 'Cập nhật',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '--',
-    },
-    {
       title: 'Hành động',
       key: 'actions',
       render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewOrder(record.orderId)}
-        >
-          Xem chi tiết
-        </Button>
+        <Space>
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewStatus(record)}
+          >
+            Xem trạng thái
+          </Button>
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewOrder(record.orderId)}
+          >
+            Chi tiết
+          </Button>
+        </Space>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <Card style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <Title level={3} style={{ margin: 0 }}>
-              📋 Đơn hàng của tôi
+            <Title level={4} style={{ margin: 0 }}>
+              📦 Trạng thái đơn hàng
             </Title>
             <p style={{ margin: '8px 0 0 0', color: '#666' }}>
-              Quản lý và theo dõi các đơn hàng cùng trạng thái thanh toán
+              Theo dõi trạng thái và tiến trình giao hàng
             </p>
           </div>
           <Space wrap>
@@ -227,6 +285,48 @@ export default function Orders() {
           </Space>
         </div>
       </Card>
+
+      {selectedOrder && (
+        <Card
+          title={`Chi tiết trạng thái đơn hàng #${selectedOrder.orderId}`}
+          extra={
+            <Button onClick={() => setSelectedOrder(null)}>Đóng</Button>
+          }
+          style={{ marginBottom: 24 }}
+        >
+          <Descriptions bordered column={2}>
+            <Descriptions.Item label="Mã đơn hàng">
+              #{selectedOrder.orderId}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">
+              <Tag color={getStatusColor(selectedOrder.status)}>
+                {getStatusText(selectedOrder.status)}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Thanh toán">
+              <Tag color={getPaymentStatusColor(selectedOrder?.paymentInfo?.status)}>
+                {getPaymentStatusText(selectedOrder?.paymentInfo?.status)}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Tổng tiền">
+              <Text strong style={{ color: '#1890ff' }}>
+                {formatCurrency(selectedOrder.totalAmount)}
+              </Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày tạo" span={2}>
+              {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString('vi-VN') : '--'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cập nhật lần cuối" span={2}>
+              {selectedOrder.updatedAt ? new Date(selectedOrder.updatedAt).toLocaleString('vi-VN') : '--'}
+            </Descriptions.Item>
+          </Descriptions>
+          
+          <div style={{ marginTop: 24 }}>
+            <Title level={5}>Tiến trình đơn hàng</Title>
+            {renderStatusTimeline(selectedOrder)}
+          </div>
+        </Card>
+      )}
 
       <Card>
         {error && (
@@ -270,3 +370,4 @@ export default function Orders() {
     </div>
   );
 }
+

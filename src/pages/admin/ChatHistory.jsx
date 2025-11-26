@@ -57,8 +57,18 @@ const ChatHistory = () => {
       setDataSource(chats || []);
       toast.success('Đã tải danh sách chat');
     } catch (error) {
-      console.error('Error loading chats:', error);
-      toast.error('Không thể tải danh sách chat');
+      console.error('💬 ChatHistory Admin: Error loading chats', {
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error('Không có quyền truy cập. Vui lòng đăng nhập lại.');
+      } else if (error.response?.data?.message) {
+        toast.error(`Lỗi: ${error.response.data.message}`);
+      } else {
+        toast.error('Không thể tải danh sách chat. Vui lòng thử lại sau.');
+      }
     } finally {
       setLoading(false);
     }
@@ -88,10 +98,11 @@ const ChatHistory = () => {
 
   // Handle update
   const handleUpdate = async () => {
+    let updateData = null;
     try {
       const values = await form.validateFields();
       
-      const updateData = {
+      updateData = {
         userMessage: values.userMessage,
         aiResponse: values.aiResponse,
         chatType: values.chatType,
@@ -104,8 +115,18 @@ const ChatHistory = () => {
       form.resetFields();
       loadChats();
     } catch (error) {
-      console.error('Error updating chat:', error);
-      toast.error('Cập nhật thất bại');
+      console.error('💬 ChatHistory Admin: Error updating chat', {
+        chatId: selectedRecord?.chatId,
+        updateData,
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      if (error.response?.data?.message) {
+        toast.error(`Lỗi cập nhật: ${error.response.data.message}`);
+      } else {
+        toast.error('Cập nhật thất bại. Vui lòng thử lại sau.');
+      }
     }
   };
 
@@ -116,17 +137,27 @@ const ChatHistory = () => {
       toast.success('Xóa thành công');
       loadChats();
     } catch (error) {
-      console.error('Error deleting chat:', error);
-      toast.error('Xóa thất bại');
+      console.error('💬 ChatHistory Admin: Error deleting chat', {
+        chatId,
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      if (error.response?.data?.message) {
+        toast.error(`Lỗi xóa: ${error.response.data.message}`);
+      } else {
+        toast.error('Xóa thất bại. Vui lòng thử lại sau.');
+      }
     }
   };
 
   // Handle create
   const handleCreate = async () => {
+    let newChat = null;
     try {
       const values = await createForm.validateFields();
       
-      const newChat = {
+      newChat = {
         userId: values.userId,
         userMessage: values.userMessage,
         aiResponse: values.aiResponse,
@@ -141,11 +172,16 @@ const ChatHistory = () => {
       createForm.resetFields();
       loadChats();
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('💬 ChatHistory Admin: Error creating chat', {
+        newChat,
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
       if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
+        toast.error(`Lỗi tạo: ${error.response.data.message}`);
       } else {
-        toast.error('Tạo thất bại');
+        toast.error('Tạo thất bại. Vui lòng thử lại sau.');
       }
     }
   };
