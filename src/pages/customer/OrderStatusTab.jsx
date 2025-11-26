@@ -59,12 +59,15 @@ export default function OrderStatusTab() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [allOrdersData, setAllOrdersData] = useState([]);
+  const [previousOrdersMap, setPreviousOrdersMap] = useState(new Map()); // Lưu status cũ để phát hiện thay đổi
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     if (!accountId) return;
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
       const allOrders = await getOrdersByAccount(accountId);
@@ -74,6 +77,30 @@ export default function OrderStatusTab() {
         const dateB = new Date(b.createdAt || 0);
         return dateB - dateA;
       });
+
+      // Phát hiện order bị cancel bởi admin
+      if (!silent && previousOrdersMap.size > 0) {
+        sortedOrders.forEach(order => {
+          const orderId = order.orderId || order.id;
+          const previousStatus = previousOrdersMap.get(orderId);
+          const currentStatus = (order.status || '').toUpperCase();
+          
+          // Nếu order chuyển từ PENDING sang CANCELLED/CANCEL
+          if (previousStatus === 'PENDING' && (currentStatus === 'CANCELLED' || currentStatus === 'CANCEL')) {
+            toast.warning(`Đơn hàng #${orderId} đã bị hủy bởi admin.`, {
+              autoClose: 5000,
+            });
+          }
+        });
+      }
+
+      // Cập nhật map status cũ
+      const newStatusMap = new Map();
+      sortedOrders.forEach(order => {
+        const orderId = order.orderId || order.id;
+        newStatusMap.set(orderId, (order.status || '').toUpperCase());
+      });
+      setPreviousOrdersMap(newStatusMap);
 
       setAllOrdersData(sortedOrders);
     } catch (err) {
@@ -88,9 +115,13 @@ export default function OrderStatusTab() {
         err?.message ||
         'Không thể tải danh sách đơn hàng.';
       setError(message);
-      toast.error(message);
+      if (!silent) {
+        toast.error(message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -101,6 +132,21 @@ export default function OrderStatusTab() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId]); // không cần fetchOrders trong deps
+
+  // Auto-refresh mỗi 30 giây khi component đang mount
+  useEffect(() => {
+    if (!accountId) return;
+
+    const intervalId = setInterval(() => {
+      // Silent refresh - không hiển thị loading spinner
+      fetchOrders(true);
+    }, 30000); // 30 giây
+
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId]);
 
   // Filter + paginate
   useEffect(() => {

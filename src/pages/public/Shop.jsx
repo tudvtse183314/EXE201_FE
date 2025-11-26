@@ -859,29 +859,12 @@ export default function Shop() {
                         fontSize: '20px', 
                         fontWeight: '700', 
                         color: '#eda274',
-                        marginBottom: '10px',
+                        marginBottom: '12px',
                         fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
                         height: '28px'
                       }}>
                         {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
                       </div>
-                      {product.stock !== undefined && (
-                        <Tag 
-                          color={product.stock > 0 ? 'green' : 'red'}
-                          style={{ 
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            padding: '3px 10px',
-                            borderRadius: '10px',
-                            marginBottom: '12px',
-                            height: '22px',
-                            display: 'inline-flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          {product.stock > 0 ? `Còn ${product.stock}` : 'Hết hàng'}
-                        </Tag>
-                      )}
                       
                       {/* Add to Cart Button */}
                       <Button

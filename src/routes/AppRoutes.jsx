@@ -36,11 +36,12 @@ import AdminLayout from "../layouts/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import CategoriesPage from "../pages/admin/categories/CategoriesPage";
 import ProductsPage from "../pages/admin/products/ProductsPage";
-import ChatHistory from "../pages/admin/ChatHistory";
 import AdminOrdersPage from "../pages/admin/orders/AdminOrdersPage";
 import AdminOrdersDebug from "../pages/admin/orders/AdminOrdersDebug";
 import AdminPaymentConfirmationPage from "../pages/admin/orders/AdminPaymentConfirmationPage";
 import AdminAccountsPage from "../pages/admin/accounts/AdminAccountsPage";
+import AdminRevenuePage from "../pages/admin/revenue/AdminRevenuePage";
+import AdminPetProfilesPage from "../pages/admin/petProfiles/AdminPetProfilesPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
@@ -367,7 +368,8 @@ export default function AppRoutes() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="orders-debug" element={<AdminOrdersDebug />} />
           <Route path="payment-confirmation" element={<AdminPaymentConfirmationPage />} />
-          <Route path="chat-history" element={<ChatHistory />} />
+          <Route path="revenue" element={<AdminRevenuePage />} />
+          <Route path="pet-profiles" element={<AdminPetProfilesPage />} />
           <Route path="accounts" element={<AdminAccountsPage />} />
         </Route>
         

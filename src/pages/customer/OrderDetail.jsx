@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Card,
@@ -54,27 +54,60 @@ export default function OrderDetail() {
   const [confirming, setConfirming] = useState(false);
   const [refreshingQR, setRefreshingQR] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const previousStatusRef = useRef(null); // Lưu status cũ để phát hiện thay đổi
 
-  const loadOrder = useCallback(async () => {
+  const loadOrder = useCallback(async (silent = false) => {
     if (!orderId) return;
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
       const response = await getOrderById(orderId);
+      
+      // Phát hiện khi order bị cancel bởi admin
+      if (!silent && previousStatusRef.current) {
+        const oldStatus = (previousStatusRef.current || '').toUpperCase();
+        const newStatus = (response.status || '').toUpperCase();
+        
+        // Nếu order chuyển từ PENDING sang CANCELLED/CANCEL
+        if (oldStatus === 'PENDING' && (newStatus === 'CANCELLED' || newStatus === 'CANCEL')) {
+          showWarning('Đơn hàng đã bị hủy bởi admin.');
+        }
+      }
+      
+      previousStatusRef.current = response.status;
       setOrder(response);
     } catch (err) {
       console.error('📦 Order Detail: Error fetching order', err);
       const message = err?.response?.data?.message || err?.message || 'Không thể tải thông tin đơn hàng.';
       setError(message);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
-  }, [orderId]);
+  }, [orderId, showWarning]);
 
   useEffect(() => {
     loadOrder();
   }, [loadOrder]);
+
+  // Auto-refresh mỗi 30 giây khi đang xem order detail
+  useEffect(() => {
+    if (!orderId) return;
+
+    const intervalId = setInterval(() => {
+      // Silent refresh - không hiển thị loading spinner
+      loadOrder(true);
+    }, 30000); // 30 giây
+
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   const paymentInfo = order?.paymentInfo || {};
 
@@ -86,8 +119,9 @@ export default function OrderDetail() {
   }, [order?.status]);
 
   const isCancelled = order?.status?.toUpperCase() === 'CANCELLED' || order?.status?.toUpperCase() === 'CANCEL';
-  const canConfirmPayment = paymentInfo?.status?.toUpperCase() !== 'PAID';
-  const canCancelOrder = order?.status?.toUpperCase() === 'PENDING' && paymentInfo?.status?.toUpperCase() !== 'PAID';
+  const isPaid = order?.status?.toUpperCase() === 'PAID' || paymentInfo?.status?.toUpperCase() === 'PAID';
+  const canConfirmPayment = !isPaid && paymentInfo?.status?.toUpperCase() !== 'PAID';
+  const canCancelOrder = order?.status?.toUpperCase() === 'PENDING' && !isPaid && paymentInfo?.status?.toUpperCase() !== 'PAID';
 
   const handleConfirmPayment = async () => {
     if (!order?.orderId) return;
@@ -252,63 +286,93 @@ export default function OrderDetail() {
             <Card
               title="Thông tin thanh toán"
               extra={
-                <Space>
-                  {canConfirmPayment && (
-                    <Tooltip title="Nhấn khi bạn đã chuyển khoản thành công">
-                      <Button
-                        type="primary"
-                        icon={<CheckOutlined />}
-                        loading={confirming}
-                        onClick={handleConfirmPayment}
-                      >
-                        Tôi đã chuyển khoản
-                      </Button>
-                    </Tooltip>
-                  )}
-                  <Button
-                    icon={<ReloadOutlined />}
-                    onClick={handleRefreshQR}
-                    loading={refreshingQR}
-                    disabled={!qrUrl}
-                  >
-                    Lấy lại mã QR
-                  </Button>
-                </Space>
+                !isPaid && (
+                  <Space>
+                    {canConfirmPayment && (
+                      <Tooltip title="Nhấn khi bạn đã chuyển khoản thành công">
+                        <Button
+                          type="primary"
+                          icon={<CheckOutlined />}
+                          loading={confirming}
+                          onClick={handleConfirmPayment}
+                        >
+                          Tôi đã chuyển khoản
+                        </Button>
+                      </Tooltip>
+                    )}
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={handleRefreshQR}
+                      loading={refreshingQR}
+                      disabled={!qrUrl}
+                    >
+                      Lấy lại mã QR
+                    </Button>
+                  </Space>
+                )
               }
             >
-              <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                <div style={{ textAlign: 'center' }}>
-                  {qrUrl ? (
-                    <QRCode value={qrUrl} size={220} />
-                  ) : (
-                    <Alert
-                      type="info"
-                      message="Mã QR chưa sẵn sàng"
-                      description="Vui lòng làm mới để lấy mã QR thanh toán mới."
-                      showIcon
-                    />
-                  )}
-                  <div style={{ marginTop: 12 }}>
-                    <Text type="secondary">
-                      Quét mã bằng app ngân hàng để chuyển khoản chính xác.
-                    </Text>
+              {isPaid ? (
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                  <Alert
+                    type="success"
+                    message="Đơn hàng đã thanh toán thành công"
+                    description={`Đơn hàng #${order.orderId} đã được thanh toán vào ${order.updatedAt ? new Date(order.updatedAt).toLocaleString('vi-VN') : 'N/A'}. Cảm ơn bạn đã mua sắm tại PetVibe!`}
+                    showIcon
+                    icon={<CheckCircleOutlined />}
+                  />
+                  <div>
+                    <Title level={5}>Thông tin thanh toán</Title>
+                    <Space direction="vertical" size={4}>
+                      <Text><Text strong>Tổng tiền đã thanh toán:</Text> {formatCurrency(order.totalAmount)}</Text>
+                      <Text><Text strong>Trạng thái:</Text> <Tag color="green">Đã thanh toán</Tag></Text>
+                      {paymentInfo.bankId && (
+                        <Text><Text strong>Ngân hàng:</Text> {paymentInfo.bankId}</Text>
+                      )}
+                      {paymentInfo.accountNo && (
+                        <Text><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo}</Text>
+                      )}
+                      {paymentInfo.description && (
+                        <Text><Text strong>Nội dung:</Text> {paymentInfo.description}</Text>
+                      )}
+                    </Space>
                   </div>
-                </div>
-
-                <div>
-                  <Title level={5}>Chi tiết chuyển khoản</Title>
-                  <Space direction="vertical" size={4}>
-                    <Text><Text strong>Ngân hàng:</Text> {paymentInfo.bankId || '---'}</Text>
-                    <Text><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo || '---'}</Text>
-                    <Text><Text strong>Tên tài khoản:</Text> {paymentInfo.accountName || '---'}</Text>
-                    <Text><Text strong>Số tiền:</Text> {formatCurrency(paymentInfo.amount ?? order.totalAmount)}</Text>
-                    <Text><Text strong>Nội dung:</Text> {paymentInfo.description || `Thanh toan don hang ${order.orderId}`}</Text>
-                    {paymentInfo.message && (
-                      <Text type="secondary">{paymentInfo.message}</Text>
+                </Space>
+              ) : (
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    {qrUrl ? (
+                      <QRCode value={qrUrl} size={220} />
+                    ) : (
+                      <Alert
+                        type="info"
+                        message="Mã QR chưa sẵn sàng"
+                        description="Vui lòng làm mới để lấy mã QR thanh toán mới."
+                        showIcon
+                      />
                     )}
-                  </Space>
-                </div>
-              </Space>
+                    <div style={{ marginTop: 12 }}>
+                      <Text type="secondary">
+                        Quét mã bằng app ngân hàng để chuyển khoản chính xác.
+                      </Text>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Title level={5}>Chi tiết chuyển khoản</Title>
+                    <Space direction="vertical" size={4}>
+                      <Text><Text strong>Ngân hàng:</Text> {paymentInfo.bankId || '---'}</Text>
+                      <Text><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo || '---'}</Text>
+                      <Text><Text strong>Tên tài khoản:</Text> {paymentInfo.accountName || '---'}</Text>
+                      <Text><Text strong>Số tiền:</Text> {formatCurrency(paymentInfo.amount ?? order.totalAmount)}</Text>
+                      <Text><Text strong>Nội dung:</Text> {paymentInfo.description || `Thanh toan don hang ${order.orderId}`}</Text>
+                      {paymentInfo.message && (
+                        <Text type="secondary">{paymentInfo.message}</Text>
+                      )}
+                    </Space>
+                  </div>
+                </Space>
+              )}
             </Card>
           </Col>
 

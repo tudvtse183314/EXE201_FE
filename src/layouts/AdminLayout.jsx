@@ -11,8 +11,9 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  DollarOutlined,
+  HeartOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -55,10 +56,16 @@ export default function AdminLayout() {
       icon: <CheckCircleOutlined /> 
     },
     { 
-      key: 'chat-history', 
-      label: 'Chat History', 
-      path: '/admin/chat-history', 
-      icon: <MessageOutlined /> 
+      key: 'revenue', 
+      label: 'Tổng doanh thu', 
+      path: '/admin/revenue', 
+      icon: <DollarOutlined /> 
+    },
+    { 
+      key: 'pet-profiles', 
+      label: 'Hồ sơ thú cưng', 
+      path: '/admin/pet-profiles', 
+      icon: <HeartOutlined /> 
     },
     { 
       key: 'accounts', 
