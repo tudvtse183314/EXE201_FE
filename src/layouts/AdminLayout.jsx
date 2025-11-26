@@ -11,7 +11,8 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined
+  MessageOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -46,6 +47,12 @@ export default function AdminLayout() {
       label: 'Đơn hàng', 
       path: '/admin/orders', 
       icon: <FileTextOutlined /> 
+    },
+    { 
+      key: 'payment-confirmation', 
+      label: 'Xác nhận thanh toán', 
+      path: '/admin/payment-confirmation', 
+      icon: <CheckCircleOutlined /> 
     },
     { 
       key: 'carts', 

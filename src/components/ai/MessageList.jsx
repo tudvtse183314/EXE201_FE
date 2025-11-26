@@ -5,15 +5,26 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import TypingLoader from './TypingLoader';
 import { formatChatDate, getChatTypeDisplayName, getChatTypeBadgeColor } from '../../utils/chatUtils';
 
-const MessageList = ({ messages, formatChatDate }) => {
+const MessageList = ({ messages, formatChatDate, currentTab }) => {
   if (!messages || messages.length === 0) {
+    let emptyMessage = "Bắt đầu cuộc trò chuyện với AI trợ lý PetVibe";
+    let emptyIcon = "💬";
+
+    if (currentTab === 'product_inquiry') {
+      emptyMessage = "Hỏi tôi về thức ăn, đồ chơi, hoặc phụ kiện cho thú cưng của bạn!";
+      emptyIcon = "🛍️";
+    } else if (currentTab === 'order_support') {
+      emptyMessage = "Bạn cần hỗ trợ gì về đơn hàng của mình?";
+      emptyIcon = "📦";
+    }
+
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="text-6xl mb-4">💬</div>
+          <div className="text-6xl mb-4">{emptyIcon}</div>
           <p className="text-gray-500 text-lg">Chưa có tin nhắn nào</p>
           <p className="text-gray-400 text-sm mt-2">
-            Bắt đầu cuộc trò chuyện với AI trợ lý PetVibe
+            {emptyMessage}
           </p>
         </div>
       </div>

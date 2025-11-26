@@ -26,9 +26,13 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  DollarOutlined
+  DollarOutlined,
+  TruckOutlined,
+  ShopOutlined
 } from '@ant-design/icons';
-import { getAllOrders, updateOrderStatus, getStatusText, getStatusColor } from '../../services/orders';
+import { getAllOrders, updateOrderStatus, updatePaymentStatus, confirmPayment, getStatusText, getStatusColor, getPaymentStatusText, getPaymentStatusColor, getOrderById } from '../../services/orders';
+import { useToast } from '../../context/ToastContext';
+import { App } from 'antd';
 import { dataManager } from '../../utils/dataManager';
 import { useSearchParams } from 'react-router-dom';
 
@@ -37,6 +41,9 @@ const { Search } = AntInput;
 const { Option } = Select;
 
 export default function StaffOrdersPage() {
+  const { modal } = App.useApp();
+  const { showSuccess, showError } = useToast();
+  
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +52,7 @@ export default function StaffOrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const loadOrders = async () => {
@@ -105,15 +113,64 @@ export default function StaffOrdersPage() {
       dataManager.clear('orders');
       await loadOrders();
       
+      showSuccess(`Đã cập nhật trạng thái đơn hàng thành ${getStatusText(newStatus)}`);
       console.log("📦 StaffOrdersPage: Order status updated");
     } catch (error) {
       console.error("📦 StaffOrdersPage: Error updating order status", error);
+      const message = error?.response?.data?.message || error?.message || 'Không thể cập nhật trạng thái đơn hàng.';
+      showError(message);
     }
   };
 
-  const showOrderDetail = (order) => {
-    setSelectedOrder(order);
-    setIsDetailModalOpen(true);
+  const handlePaymentStatusUpdate = async (orderId, paymentStatus) => {
+    try {
+      console.log("📦 StaffOrdersPage: Updating payment status", { orderId, paymentStatus });
+      await updatePaymentStatus(orderId, paymentStatus);
+      
+      // Refresh data
+      dataManager.clear('orders');
+      await loadOrders();
+      
+      showSuccess(`Đã cập nhật trạng thái thanh toán thành ${getPaymentStatusText(paymentStatus)}`);
+      console.log("📦 StaffOrdersPage: Payment status updated");
+    } catch (error) {
+      console.error("📦 StaffOrdersPage: Error updating payment status", error);
+      const message = error?.response?.data?.message || error?.message || 'Không thể cập nhật trạng thái thanh toán.';
+      showError(message);
+    }
+  };
+
+  // Xác nhận thanh toán (dùng confirmPayment API)
+  const handleConfirmPayment = async (orderId) => {
+    try {
+      console.log("📦 StaffOrdersPage: Confirming payment", { orderId });
+      await confirmPayment(orderId);
+      
+      // Refresh data
+      dataManager.clear('orders');
+      await loadOrders();
+      
+      showSuccess('Đã xác nhận thanh toán thành công!');
+      console.log("📦 StaffOrdersPage: Payment confirmed");
+    } catch (error) {
+      console.error("📦 StaffOrdersPage: Error confirming payment", error);
+      const message = error?.response?.data?.message || error?.message || 'Không thể xác nhận thanh toán.';
+      showError(message);
+    }
+  };
+
+  const showOrderDetail = async (order) => {
+    try {
+      // Load full order details with payment info
+      const fullOrder = await getOrderById(order.orderId || order.id);
+      setSelectedOrder(fullOrder);
+      setIsDetailModalOpen(true);
+    } catch (err) {
+      console.error("📦 StaffOrdersPage: Error loading order details", err);
+      // Fallback to basic order info
+      setSelectedOrder(order);
+      setIsDetailModalOpen(true);
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -219,7 +276,13 @@ export default function StaffOrdersPage() {
               <Button
                 type="text"
                 icon={<CheckCircleOutlined />}
-                onClick={() => handleStatusUpdate(record.id, 'PAID')}
+                onClick={() => {
+                  modal.confirm({
+                    title: 'Xác nhận thanh toán',
+                    content: `Bạn có chắc muốn xác nhận thanh toán cho đơn hàng #${record.id}?`,
+                    onOk: () => handleConfirmPayment(record.id),
+                  });
+                }}
                 style={{ color: '#52c41a' }}
               />
             </Tooltip>
@@ -475,7 +538,7 @@ export default function StaffOrdersPage() {
                     type="primary"
                     icon={<CheckCircleOutlined />}
                     onClick={() => {
-                      handleStatusUpdate(selectedOrder.id, 'PAID');
+                      handleConfirmPayment(selectedOrder.id);
                       setIsDetailModalOpen(false);
                     }}
                     style={{ 

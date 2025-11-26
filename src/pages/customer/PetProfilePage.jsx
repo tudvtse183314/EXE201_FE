@@ -20,7 +20,9 @@ export default function PetProfilePage() {
     birthDate: "",
     weight: "",
     healthNotes: "",
-    imageUrl: ""
+    imageUrl: "",
+    petAge: "",
+    petSize: ""
   });
 
   // Ref để tránh gọi API liên tục
@@ -89,12 +91,27 @@ export default function PetProfilePage() {
         return;
       }
 
+      // Prepare data for API - map form to backend format
+      const petData = {
+        petName: form.petName,
+        petType: form.petType,
+        breed: form.breed || null,
+        birthDate: form.birthDate || null,
+        weight: form.weight ? parseFloat(form.weight) : null,
+        healthNotes: form.healthNotes || null,
+        imageUrl: form.imageUrl || null,
+        petAge: form.petAge || null,
+        petSize: form.petSize || null
+      };
+
       if (selectedPet) {
         const targetId = selectedPet.id || selectedPet.petId;
-        await updatePetProfile(targetId, form);
+        console.log("🐾 PetProfilePage: Updating pet profile", { petId: targetId, data: petData });
+        await updatePetProfile(targetId, petData);
         showSuccess("Cập nhật hồ sơ thú cưng thành công!");
       } else {
-        await createPetProfile(form);
+        console.log("🐾 PetProfilePage: Creating pet profile", { data: petData });
+        await createPetProfile(petData);
         showSuccess("Thêm thú cưng thành công!");
       }
       setOpen(false);
@@ -106,7 +123,9 @@ export default function PetProfilePage() {
         birthDate: "",
         weight: "",
         healthNotes: "",
-        imageUrl: ""
+        imageUrl: "",
+        petAge: "",
+        petSize: ""
       });
       // Reset flag để fetch lại sau khi tạo/sửa
       hasLoadedRef.current = false;
@@ -144,7 +163,9 @@ export default function PetProfilePage() {
       birthDate: pet.birthDate || pet.dob || "",
       weight: pet.weight || pet.weightKg || "",
       healthNotes: pet.healthNotes || pet.notes || "",
-      imageUrl: pet.imageUrl || pet.image || ""
+      imageUrl: pet.imageUrl || pet.image || "",
+      petAge: pet.petAge || pet.age || "",
+      petSize: pet.petSize || pet.size || ""
     });
     setOpen(true);
   };
@@ -502,6 +523,36 @@ export default function PetProfilePage() {
                         className="w-full px-4 py-3 border border-[#e8d5c4] rounded-lg focus:ring-2 focus:ring-[#c47256] focus:border-transparent transition-all"
                         placeholder="Ví dụ: 5.5"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#34140e] mb-2">
+                        Tuổi thú cưng
+                      </label>
+                      <input
+                        type="text"
+                        value={form.petAge}
+                        onChange={(e) => setForm({ ...form, petAge: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#e8d5c4] rounded-lg focus:ring-2 focus:ring-[#c47256] focus:border-transparent transition-all"
+                        placeholder="Ví dụ: 2 tuổi, 6 tháng"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-[#34140e] mb-2">
+                        Kích thước
+                      </label>
+                      <select
+                        value={form.petSize}
+                        onChange={(e) => setForm({ ...form, petSize: e.target.value })}
+                        className="w-full px-4 py-3 border border-[#e8d5c4] rounded-lg focus:ring-2 focus:ring-[#c47256] focus:border-transparent transition-all"
+                      >
+                        <option value="">Chọn kích thước</option>
+                        <option value="small">Nhỏ</option>
+                        <option value="medium">Vừa</option>
+                        <option value="large">Lớn</option>
+                        <option value="extra-large">Rất lớn</option>
+                      </select>
                     </div>
 
                     <div>

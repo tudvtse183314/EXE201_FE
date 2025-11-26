@@ -1,29 +1,65 @@
 // src/services/orders.js
 import axiosInstance from "../api/axios";
 
-// Create new order (User)
+/**
+ * Tạo đơn hàng mới
+ * POST /api/orders
+ */
 export const createOrder = async (orderData) => {
   try {
     console.log("📦 Orders: Creating order", orderData);
     const res = await axiosInstance.post("/orders", orderData);
     console.log("📦 Orders: Created successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error creating order:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    console.error("📦 Orders: Error creating order:", {
+      status,
+      message: error.response?.data?.message || error.message,
+      error
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền tạo đơn hàng.");
+    }
+    if (status === 400) {
+      throw new Error(error.response?.data?.message || "Dữ liệu đơn hàng không hợp lệ.");
+    }
+    throw error;
   }
 };
 
-// Get order by ID (User/Admin)
+/**
+ * Lấy chi tiết đơn hàng theo ID
+ * GET /api/orders/{id}
+ */
 export const getOrderById = async (orderId) => {
   try {
     console.log("📦 Orders: Fetching order by ID", { orderId });
     const res = await axiosInstance.get(`/orders/${orderId}`);
     console.log("📦 Orders: Fetched order successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error fetching order by ID:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    console.error("📦 Orders: Error fetching order by ID:", {
+      status,
+      message: error.response?.data?.message || error.message,
+      error
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền xem đơn hàng này.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    throw error;
   }
 };
 
@@ -59,9 +95,51 @@ export const confirmPayment = async (orderId) => {
     const res = await axiosInstance.post(`/orders/${orderId}/confirm-payment`);
     console.log("📦 Orders: Confirmed payment successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error confirming payment:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    const responseData = error.response?.data;
+    
+    // Xử lý error message
+    let errorMessage = error.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
+    
+    console.error("📦 Orders: Error confirming payment:", {
+      orderId,
+      status,
+      message: errorMessage,
+      responseData,
+      fullError: error
+    });
+    
+    // Backend trả về 400 nếu order không ở trạng thái PENDING
+    if (status === 400) {
+      throw new Error(errorMessage || 'Đơn hàng không ở trạng thái PENDING. Không thể xác nhận thanh toán.');
+    }
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error(errorMessage || "Bạn không có quyền xác nhận thanh toán đơn hàng này. Vui lòng kiểm tra quyền truy cập.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    
+    // Xử lý lỗi không có response (network error, CORS, etc.)
+    if (!error.response) {
+      throw new Error(errorMessage || "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    }
+    
+    throw new Error(errorMessage || "Không thể xác nhận thanh toán. Vui lòng thử lại.");
   }
 };
 
@@ -78,29 +156,100 @@ export const updatePaymentStatus = async (orderId, paymentStatus) => {
   }
 };
 
-// PATCH /api/orders/{id}/cancel - Hủy đơn hàng (chỉ khi status = PENDING)
+/**
+ * Hủy đơn hàng (chỉ khi status = PENDING)
+ * PATCH /api/orders/{orderId}/cancel
+ */
 export const cancelOrder = async (orderId) => {
   try {
     console.log("📦 Orders: Cancelling order", { orderId });
     const res = await axiosInstance.patch(`/orders/${orderId}/cancel`);
     console.log("📦 Orders: Cancelled successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error cancelling order:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    const responseData = error.response?.data;
+    
+    // Xử lý error message
+    let errorMessage = error.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
+    
+    console.error("📦 Orders: Error cancelling order:", {
+      orderId,
+      status,
+      message: errorMessage,
+      responseData,
+      fullError: error
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error(errorMessage || "Bạn không có quyền hủy đơn hàng này. Vui lòng kiểm tra quyền truy cập.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    if (status === 400) {
+      throw new Error(errorMessage || "Không thể hủy đơn hàng ở trạng thái hiện tại.");
+    }
+    
+    // Xử lý lỗi không có response (network error, CORS, etc.)
+    if (!error.response) {
+      // CORS error hoặc network error
+      if (error.message?.includes('CORS') || error.message?.includes('blocked')) {
+        throw new Error("Lỗi CORS: Không thể kết nối đến server. Vui lòng kiểm tra cấu hình CORS trên backend.");
+      }
+      throw new Error(errorMessage || "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+    }
+    
+    throw new Error(errorMessage || "Không thể hủy đơn hàng. Vui lòng thử lại.");
   }
 };
 
-// Get orders by account ID (User) - Legacy
+/**
+ * Lấy tất cả đơn hàng của một tài khoản
+ * GET /api/orders/account/{id}
+ */
 export const getOrdersByAccount = async (accountId) => {
   try {
-    console.log("📦 Orders: Fetching orders by account", { accountId });
+    console.log("📦 Orders: Fetching orders by account ID", { accountId });
     const res = await axiosInstance.get(`/orders/account/${accountId}`);
-    console.log("📦 Orders: Fetched account orders successfully", res.data);
-    return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error fetching orders by account:", e);
-    throw e;
+    console.log("📦 Orders: Fetched orders by account ID successfully", { 
+      accountId, 
+      count: Array.isArray(res.data) ? res.data.length : 0,
+      data: res.data 
+    });
+    // API trả về array trực tiếp
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    const status = error.response?.status;
+    console.error("📦 Orders: Error fetching orders by account ID", {
+      accountId,
+      status,
+      message: error.response?.data?.message || error.message,
+      error
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền xem đơn hàng của tài khoản này.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng nào.");
+    }
+    throw error;
   }
 };
 
@@ -117,26 +266,63 @@ export const cancelOrderLegacy = async (orderId) => {
   }
 };
 
-// Update order status (Admin/Staff)
+/**
+ * Cập nhật trạng thái đơn hàng (Admin/Staff)
+ * PATCH /api/orders/{orderId}/status
+ */
 export const updateOrderStatus = async (orderId, status) => {
   try {
     console.log("📦 Orders: Updating order status", { orderId, status });
     const res = await axiosInstance.patch(`/orders/${orderId}/status`, { status });
     console.log("📦 Orders: Updated status successfully", res.data);
     return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error updating order status:", e);
-    throw e;
+  } catch (error) {
+    const status = error.response?.status;
+    console.error("📦 Orders: Error updating order status:", {
+      status,
+      message: error.response?.data?.message || error.message,
+      error
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền cập nhật đơn hàng.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    if (status === 400) {
+      throw new Error(error.response?.data?.message || "Không thể cập nhật trạng thái đơn hàng ở trạng thái hiện tại.");
+    }
+    throw error;
   }
 };
 
-// Get all orders (Admin/Staff)
+/**
+ * Lấy tất cả đơn hàng (Admin/Staff)
+ * GET /api/orders/all
+ * 
+ * Hỗ trợ nhiều kiểu response structure từ backend:
+ * - Array trực tiếp: [{orderId: 1, ...}, ...]
+ * - Object với orders: { orders: [...] }
+ * - Object với content (paging): { content: [...], totalElements, ... }
+ * - Object với data: { data: [...] }
+ * 
+ * @param {Object} params - Query parameters (tùy chọn, backend có thể không hỗ trợ)
+ * @param {string} params.status - Filter theo status
+ * @param {number} params.page - Page number
+ * @param {number} params.size - Page size
+ * @param {string} params.q - Search query
+ * @returns {Promise<Array>} - Danh sách tất cả đơn hàng
+ */
 export const getAllOrders = async (params = {}) => {
   try {
-    console.log("📦 Orders: Fetching all orders", params);
-    const queryParams = new URLSearchParams();
+    console.log("📦 Orders: Fetching all orders", { params });
     
-    // Add query parameters
+    // Build query string nếu có params
+    const queryParams = new URLSearchParams();
     if (params.status) queryParams.append('status', params.status);
     if (params.page !== undefined && params.page !== null) {
       queryParams.append('page', params.page);
@@ -149,12 +335,101 @@ export const getAllOrders = async (params = {}) => {
     const queryString = queryParams.toString();
     const url = queryString ? `/orders/all?${queryString}` : '/orders/all';
     
-    const res = await axiosInstance.get(url);
-    console.log("📦 Orders: Fetched all orders successfully", res.data);
-    return res.data;
-  } catch (e) {
-    console.error("📦 Orders: Error fetching all orders:", e);
-    throw e;
+    console.log("📦 Orders: Request URL", url);
+    const response = await axiosInstance.get(url);
+    
+    // 🔍 DEBUG: Log RAW response để kiểm tra structure
+    console.log("📦 getAllOrders RAW response:", {
+      hasResponse: !!response,
+      hasData: !!response?.data,
+      type: typeof response?.data,
+      isArray: Array.isArray(response?.data),
+      keys: response?.data && typeof response?.data === 'object' && !Array.isArray(response?.data) ? Object.keys(response?.data) : null,
+      dataLength: Array.isArray(response?.data) ? response.data.length : 'N/A',
+      firstItem: Array.isArray(response?.data) && response.data.length > 0 ? {
+        orderId: response.data[0].orderId,
+        status: response.data[0].status
+      } : null
+    });
+    
+    // ✅ Defensive check: đảm bảo response và response.data tồn tại
+    if (!response) {
+      console.error("📦 getAllOrders: No response received");
+      return [];
+    }
+    
+    if (!response.data) {
+      console.warn("📦 getAllOrders: response.data is null/undefined");
+      return [];
+    }
+    
+    let list = [];
+    
+    // Bắt nhiều kiểu response structure
+    if (Array.isArray(response.data)) {
+      // Case 1: BE trả thẳng array
+      list = response.data;
+      console.log("📦 getAllOrders: Detected direct array response, length:", list.length);
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.orders)) {
+      // Case 2: { orders: [...] }
+      list = response.data.orders;
+      console.log("📦 getAllOrders: Detected response.data.orders, length:", list.length);
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.content)) {
+      // Case 3: Paging structure { content: [...], totalElements, ... }
+      list = response.data.content;
+      console.log("📦 getAllOrders: Detected response.data.content (paging), length:", list.length);
+    } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.data)) {
+      // Case 4: { data: [...] }
+      list = response.data.data;
+      console.log("📦 getAllOrders: Detected response.data.data, length:", list.length);
+    } else {
+      // Fallback: trả về array rỗng nếu không match
+      console.warn("📦 getAllOrders: Unknown response structure, returning empty array", {
+        responseDataType: typeof response.data,
+        responseDataKeys: response.data && typeof response.data === 'object' && !Array.isArray(response.data) ? Object.keys(response.data) : null,
+        responseDataValue: response.data
+      });
+      list = [];
+    }
+    
+    console.log("📦 getAllOrders normalized list:", {
+      length: list.length,
+      sample: list.length > 0 ? {
+        orderId: list[0].orderId,
+        accountName: list[0].accountName,
+        status: list[0].status,
+        hasItems: Array.isArray(list[0].items),
+        hasPaymentInfo: !!list[0].paymentInfo
+      } : null
+    });
+    
+    // ✅ Đảm bảo luôn return array, không bao giờ return undefined
+    if (!Array.isArray(list)) {
+      console.warn("📦 getAllOrders: list is not array, returning empty array", { list });
+      return [];
+    }
+    
+    return list;
+  } catch (error) {
+    const status = error.response?.status;
+    console.error("📦 Orders: Error fetching all orders:", {
+      status,
+      message: error.response?.data?.message || error.message,
+      response: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL
+      }
+    });
+    
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền xem tất cả đơn hàng.");
+    }
+    throw error;
   }
 };
 
@@ -276,8 +551,10 @@ export const getPaymentStatusColor = (status) => {
   const colors = {
     UNPAID: 'orange',
     PAID: 'green',
+    COMPLETED: 'green',
     FAILED: 'red',
-    PENDING: 'orange'
+    PENDING: 'orange',
+    WAITING: 'orange'
   };
   return colors[normalized] || 'default';
 };
@@ -287,8 +564,10 @@ export const getPaymentStatusText = (status) => {
   const texts = {
     UNPAID: 'Chưa thanh toán',
     PAID: 'Đã thanh toán',
+    COMPLETED: 'Đã thanh toán thành công',
     FAILED: 'Thanh toán thất bại',
-    PENDING: 'Đang chờ'
+    PENDING: 'Đang chờ xác nhận',
+    WAITING: 'Đang chờ xác nhận'
   };
   return texts[normalized] || status;
 };

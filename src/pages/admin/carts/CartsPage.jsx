@@ -1,5 +1,5 @@
 // src/pages/admin/carts/CartsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Card, 
   Table, 
@@ -13,14 +13,18 @@ import {
   Row,
   Col,
   Statistic,
-  Alert
+  Alert,
+  Result,
+  Spin
 } from 'antd';
 import { 
   ReloadOutlined, 
   DeleteOutlined, 
   SearchOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  HomeOutlined
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { getAllCarts, deleteCartItem } from '../../../services/cart';
 import { getAllProducts } from '../../../services/products';
 import { useToast } from '../../../context/ToastContext';
@@ -30,6 +34,7 @@ const { Search } = Input;
 const { Option } = Select;
 
 export default function CartsPage() {
+  const navigate = useNavigate();
   const [carts, setCarts] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,35 +43,39 @@ export default function CartsPage() {
   const [userIdFilter, setUserIdFilter] = useState('all');
   const { showSuccess, showError } = useToast();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  // Chỉ định nghĩa 1 hàm loadData KHÔNG phụ thuộc vào error/carts
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      
       const [cartsData, productsData] = await Promise.all([
         getAllCarts(),
         getAllProducts()
       ]);
       
       // Map products to carts for better display
-      const cartsWithProducts = cartsData.map(cart => ({
+      const cartsWithProducts = (Array.isArray(cartsData) ? cartsData : []).map(cart => ({
         ...cart,
-        product: productsData.find(p => p.id === cart.productId)
+        product: (Array.isArray(productsData) ? productsData : []).find(p => p.id === cart.productId)
       }));
       
       setCarts(cartsWithProducts);
-      setProducts(productsData);
-    } catch (e) {
-      console.error('Error loading carts data:', e);
-      setError(e.message);
+      setProducts(Array.isArray(productsData) ? productsData : []);
+    } catch (err) {
+      console.error('Error loading carts data:', err);
+      const msg = err?.message || 'Không thể tải dữ liệu giỏ hàng.';
+      setError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  // useEffect chỉ chạy khi mount (và khi loadData change, nhưng loadData đã được memo)
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleDeleteCart = async (cartId) => {
     try {
@@ -214,19 +223,45 @@ export default function CartsPage() {
     },
   ];
 
+  const handleRetry = () => {
+    loadData();
+  };
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
+  // Nếu lỗi nghiêm trọng → show Result thân thiện
   if (error) {
     return (
-      <Alert
-        message="Lỗi tải dữ liệu"
-        description={error}
-        type="error"
-        showIcon
-        action={
-          <Button size="small" danger onClick={loadData}>
-            Thử lại
-          </Button>
-        }
-      />
+      <div style={{ padding: 24 }}>
+        <Card>
+          <Result
+            status="warning"
+            title="Không thể tải giỏ hàng"
+            subTitle={error}
+            extra={[
+              <Button
+                key="retry"
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={handleRetry}
+                loading={loading}
+              >
+                Thử lại
+              </Button>,
+              <Button
+                key="home"
+                icon={<HomeOutlined />}
+                onClick={handleGoHome}
+                type="link"
+              >
+                Về trang chủ
+              </Button>,
+            ]}
+          />
+        </Card>
+      </div>
     );
   }
 

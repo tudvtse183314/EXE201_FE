@@ -1,5 +1,5 @@
 // src/pages/customer/PaymentPage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Card,
@@ -14,23 +14,21 @@ import {
   Spin,
   Alert,
   Image,
-  Modal,
-  QRCode
+  QRCode,
+  App
 } from 'antd';
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   ReloadOutlined,
-  ShoppingOutlined,
-  CheckOutlined
+  ShoppingOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useCart } from '../../context/CartContext';
 import {
   getOrderById,
-  confirmPayment,
   cancelOrder,
   getStatusColor,
   getStatusText,
@@ -47,6 +45,7 @@ const formatCurrency = (value) => {
 };
 
 export default function PaymentPage() {
+  const { modal } = App.useApp();
   const { orderId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,9 +56,7 @@ export default function PaymentPage() {
   const [order, setOrder] = useState(location.state?.order || null);
   const [loading, setLoading] = useState(!order);
   const [error, setError] = useState(null);
-  const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  // Đã bỏ polling - chỉ check khi user click "Tôi đã chuyển khoản"
 
   // Load order từ API
   const loadOrder = useCallback(async () => {
@@ -114,133 +111,72 @@ export default function PaymentPage() {
     }
   }, [orderId, loadOrder, location.state]);
 
-  // Đã bỏ polling tự động - chỉ check status khi user click "Tôi đã chuyển khoản"
+  // Polling tự động để kiểm tra khi admin xác nhận thanh toán
+  const pollingIntervalRef = useRef(null);
 
-  // Xác nhận thanh toán
-  const handleConfirmPayment = async () => {
+  // Tự động bắt đầu polling khi order status = PENDING
+  useEffect(() => {
     if (!order?.orderId) return;
-
-    Modal.confirm({
-      title: 'Xác nhận thanh toán',
-      content: 'Bạn đã chuyển khoản thành công?',
-      okText: 'Đã thanh toán',
-      cancelText: 'Hủy',
-      onOk: async () => {
+    
+    const status = order.status?.toUpperCase();
+    const paymentStatus = order.paymentInfo?.status?.toUpperCase();
+    
+    // Chỉ polling khi order đang PENDING và chưa được thanh toán
+    if (status === 'PENDING' && paymentStatus !== 'COMPLETED' && paymentStatus !== 'PAID') {
+      console.log('💳 Payment: Starting automatic polling for payment confirmation', { orderId: order.orderId });
+      
+      pollingIntervalRef.current = setInterval(async () => {
         try {
-          setConfirming(true);
-          console.log('💳 Payment: Confirming payment', { orderId: order.orderId });
+          const updatedOrder = await getOrderById(order.orderId);
+          const updatedStatus = updatedOrder.status?.toUpperCase();
           
-          // Bước 1: Gọi API confirm payment
-          const response = await confirmPayment(order.orderId);
-          console.log('💳 Payment: Confirm payment response', {
-            fullResponse: response,
-            orderStatus: response?.status,
-            paymentStatus: response?.paymentInfo?.status,
-            paymentInfo: response?.paymentInfo,
-            hasOrder: !!response?.order,
-            orderId: response?.orderId
-          });
-          
-          // Xử lý response structure (có thể là response trực tiếp hoặc response.order)
-          const orderResponse = response?.order || response;
-          
-          // Kiểm tra response từ confirmPayment
-          const responseStatus = (orderResponse?.status || response?.status)?.toUpperCase();
-          const responsePaymentStatus = (orderResponse?.paymentInfo?.status || response?.paymentInfo?.status)?.toUpperCase();
-          
-          console.log('💳 Payment: Response status check', {
-            orderStatus: responseStatus,
-            paymentStatus: responsePaymentStatus,
-            isPaid: responseStatus === 'PAID' || responsePaymentStatus === 'PAID' || responsePaymentStatus === 'COMPLETED'
-          });
-          
-          // Nếu response đã có status đúng, dùng luôn
-          if (responseStatus === 'PAID' || responsePaymentStatus === 'PAID' || responsePaymentStatus === 'COMPLETED') {
-            console.log('💳 Payment: Using confirm payment response directly', {
-              responseStatus,
-              responsePaymentStatus
-            });
-            // Dùng orderResponse nếu có, nếu không dùng response
-            setOrder(orderResponse);
-            showSuccess('Xác nhận thanh toán thành công! Đơn hàng đang được xử lý.');
+          // Kiểm tra nếu admin đã xác nhận (status = PAID)
+          if (updatedStatus === 'PAID') {
+            console.log('💳 Payment: Payment confirmed by admin!');
+            setOrder(prev => ({
+              ...updatedOrder,
+              paymentInfo: {
+                ...prev?.paymentInfo,
+                status: 'COMPLETED'
+              }
+            }));
             
-            // Clear cart sau khi xác nhận thanh toán thành công
+            // Xóa cart sau khi admin xác nhận
             try {
               await clearCart();
-              console.log('💳 Payment: Cart cleared after payment confirmation');
+              console.log('💳 Payment: Cart cleared after admin confirmation');
             } catch (err) {
               console.error('💳 Payment: Error clearing cart', err);
             }
             
-            // Không cần stop polling vì đã bỏ polling tự động
-          } else {
-            // Nếu response chưa có status đúng, đợi một chút rồi verify lại
-            console.log('💳 Payment: Response status not updated, verifying after delay...');
+            showSuccess('Thanh toán đã được xác nhận! Đơn hàng đang được xử lý.');
             
-            // Đợi 1 giây để backend commit transaction
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Bước 2: Kiểm tra lại 1 lần nữa bằng cách gọi getOrderById để verify
-            console.log('💳 Payment: Verifying payment status...');
-            const verifiedOrder = await getOrderById(order.orderId);
-            
-            // Verify status đã được cập nhật đúng chưa
-            const verifiedStatus = verifiedOrder.status?.toUpperCase();
-            const verifiedPaymentStatus = verifiedOrder.paymentInfo?.status?.toUpperCase();
-            
-            console.log('💳 Payment: Verified status', {
-              orderStatus: verifiedStatus,
-              paymentStatus: verifiedPaymentStatus,
-              expectedStatus: 'PAID',
-              expectedPaymentStatus: 'COMPLETED'
-            });
-            
-            // Kiểm tra xem status đã được cập nhật đúng chưa
-            if (verifiedStatus === 'PAID' || verifiedPaymentStatus === 'PAID' || verifiedPaymentStatus === 'COMPLETED') {
-              // Status đã được cập nhật đúng
-              console.log('💳 Payment: Verified status is correct');
-              setOrder(verifiedOrder);
-              showSuccess('Xác nhận thanh toán thành công! Đơn hàng đang được xử lý.');
-            } else {
-              // Vẫn chưa cập nhật, dùng response từ confirmPayment (có thể backend đang xử lý)
-              console.warn('💳 Payment: Status still not updated, using confirm response', {
-                verifiedStatus,
-                verifiedPaymentStatus,
-                responseStatus,
-                responsePaymentStatus,
-                orderResponse
-              });
-              // Dùng orderResponse nếu có, nếu không dùng response
-              setOrder(orderResponse);
-              showSuccess('Đã gửi yêu cầu xác nhận thanh toán. Vui lòng đợi hệ thống xử lý.');
+            // Dừng polling
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
             }
-            
-            // Clear cart
-            try {
-              await clearCart();
-              console.log('💳 Payment: Cart cleared after payment confirmation');
-            } catch (err) {
-              console.error('💳 Payment: Error clearing cart', err);
-            }
-            
-            // Không cần stop polling vì đã bỏ polling tự động
           }
         } catch (err) {
-          console.error('💳 Payment: Error confirming payment', err);
-          const message = err?.response?.data?.message || err?.message || 'Không thể xác nhận thanh toán.';
-          showError(message);
-        } finally {
-          setConfirming(false);
+          console.error('💳 Payment: Error polling for payment confirmation', err);
         }
+      }, 3000); // Poll mỗi 3 giây
+    }
+    
+    // Cleanup khi component unmount hoặc order đã được thanh toán
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
-    });
-  };
+    };
+  }, [order?.orderId, order?.status, order?.paymentInfo?.status, clearCart, showSuccess]);
 
   // Hủy đơn hàng
   const handleCancelOrder = async () => {
     if (!order?.orderId) return;
 
-    Modal.confirm({
+    modal.confirm({
       title: 'Hủy đơn hàng',
       content: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
       okText: 'Hủy đơn',
@@ -357,8 +293,9 @@ export default function PaymentPage() {
   const paymentInfo = order.paymentInfo || {};
   const status = order.status?.toUpperCase();
   const paymentStatus = paymentInfo.status?.toUpperCase();
-  const isPending = status === 'PENDING' && (paymentStatus === 'PENDING' || paymentStatus === 'WAITING' || !paymentStatus);
-  const isPaid = status === 'PAID' || paymentStatus === 'PAID' || paymentStatus === 'COMPLETED';
+  // Backend: order.status = "PAID" và paymentInfo.status = "COMPLETED" khi đã thanh toán
+  const isPending = status === 'PENDING' && (paymentStatus !== 'COMPLETED' && paymentStatus !== 'PAID');
+  const isPaid = status === 'PAID' || paymentStatus === 'COMPLETED';
 
   return (
     <div style={{ padding: '20px', minHeight: '100vh', background: '#f5f5f5' }}>
@@ -453,7 +390,7 @@ export default function PaymentPage() {
               {isPending && (
                 <Alert
                   message="Chờ thanh toán"
-                  description="Vui lòng quét mã QR và chuyển khoản theo thông tin bên dưới."
+                  description="Vui lòng quét mã QR và chuyển khoản theo thông tin bên dưới. Sau khi chuyển khoản, quản trị viên sẽ xác nhận thanh toán."
                   type="warning"
                   showIcon
                 />
@@ -461,8 +398,8 @@ export default function PaymentPage() {
 
               {isPaid && (
                 <Alert
-                  message="Đã thanh toán"
-                  description="Thanh toán thành công! Đơn hàng đang được xử lý."
+                  message="Đã thanh toán thành công"
+                  description="Thanh toán đã được xác nhận! Đơn hàng đang được xử lý."
                   type="success"
                   showIcon
                 />
@@ -548,28 +485,16 @@ export default function PaymentPage() {
               {/* Actions */}
               <Space direction="vertical" style={{ width: '100%' }} size="middle">
                 {isPending && (
-                  <>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<CheckOutlined />}
-                      onClick={handleConfirmPayment}
-                      loading={confirming}
-                      block
-                    >
-                      Tôi đã chuyển khoản
-                    </Button>
-                    <Button
-                      danger
-                      size="large"
-                      icon={<CloseCircleOutlined />}
-                      onClick={handleCancelOrder}
-                      loading={cancelling}
-                      block
-                    >
-                      Hủy đơn
-                    </Button>
-                  </>
+                  <Button
+                    danger
+                    size="large"
+                    icon={<CloseCircleOutlined />}
+                    onClick={handleCancelOrder}
+                    loading={cancelling}
+                    block
+                  >
+                    Hủy đơn
+                  </Button>
                 )}
 
                 {isPaid && (

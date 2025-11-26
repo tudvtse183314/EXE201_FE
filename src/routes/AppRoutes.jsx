@@ -21,6 +21,7 @@ import Contact from "../pages/public/Contact";
 // Customer Pages
 import CustomerDashboard from "../pages/customer/Dashboard";
 import CustomerProfile from "../pages/customer/Profile";
+import CustomerProfilePage from "../pages/customer/CustomerProfilePage";
 import PetProfilePage from "../pages/customer/PetProfilePage";
 
 // AI Pages
@@ -50,6 +51,9 @@ import CategoryTest from "../components/admin/CategoryTest";
 import ProductTest from "../components/admin/ProductTest";
 import APITestSummary from "../components/admin/APITestSummary";
 import OrdersTest from "../components/admin/OrdersTest";
+import AdminOrdersPage from "../pages/admin/orders/AdminOrdersPage";
+import AdminOrdersDebug from "../pages/admin/orders/AdminOrdersDebug";
+import AdminPaymentConfirmationPage from "../pages/admin/orders/AdminPaymentConfirmationPage";
 
 // Doctor Pages
 import DoctorDashboard from "../pages/doctor/DoctorDashboard";
@@ -258,13 +262,13 @@ export default function AppRoutes() {
           }
         />
         
-        {/* Profile */}
+        {/* Profile - New version with sidebar menu */}
         <Route
           path="/customer/profile"
           element={
             <RoleGuard roles={[ROLES.CUSTOMER]}>
               <MainLayout>
-                <CustomerProfile />
+                <CustomerProfilePage />
               </MainLayout>
             </RoleGuard>
           }
@@ -391,11 +395,10 @@ export default function AppRoutes() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="products" element={<ProductsPage />} />
-                 <Route path="orders" element={<div style={{padding: '40px', textAlign: 'center'}}>
-                   <h1>📋 Orders Management</h1>
-                   <p>Coming soon...</p>
-                 </div>} />
-                 <Route path="carts" element={<CartsPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders-debug" element={<AdminOrdersDebug />} />
+          <Route path="payment-confirmation" element={<AdminPaymentConfirmationPage />} />
+          <Route path="carts" element={<CartsPage />} />
           <Route path="chat-history" element={<ChatHistory />} />
           <Route path="accounts" element={<div style={{padding: '40px', textAlign: 'center'}}>
             <h1>👥 Accounts Management</h1>

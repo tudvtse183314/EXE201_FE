@@ -1,5 +1,6 @@
 // src/pages/customer/CustomerProfilePage.jsx
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Card, 
   Typography, 
@@ -29,10 +30,17 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { updateAccount, resetPassword } from '../../services/auth';
+import PetProfilePage from './PetProfilePage';
+import Orders from './Orders';
+import OrderStatusTab from './OrderStatusTab';
+import ProfileLayout from '../../layouts/ProfileLayout';
 
 const { Title, Text } = Typography;
 
 export default function CustomerProfilePage() {
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'profile';
+  
   const { user, updateUser } = useAuth();
   const { showSuccess, showError } = useToast();
   const [form] = Form.useForm();
@@ -79,35 +87,50 @@ export default function CustomerProfilePage() {
   const handleSave = async (values) => {
     try {
       setLoading(true);
-      console.log("👤 CustomerProfilePage: Saving profile", values);
+      console.log("👤 CustomerProfilePage: Saving profile", { values, userId: user?.id || user?.userId });
       
-      // Prepare data for API - map form values to API format
-      // Note: API only accepts these fields according to UpdateAccountRequest
+      // Prepare data for API - API chỉ nhận 3 fields: fullName, email, phone
+      // Theo UpdateAccountRequest schema từ backend
       const updateData = {
-        fullName: values.name,
-        email: values.email,
-        phone: values.phone,
-        petName: values.petName || '',
-        petAge: values.petAge || '',
-        petType: values.petType || '',
-        petSize: values.petSize || ''
-        // Note: 'address' field is not accepted by API according to UpdateAccountRequest schema
+        fullName: values.name?.trim() || '',
+        email: values.email?.trim() || '',
+        phone: values.phone?.trim() || ''
       };
       
-      // Call API to update account
-      const result = await updateAccount(user.id, updateData);
-      console.log("👤 CustomerProfilePage: API response", result);
+      // Validate required fields
+      if (!updateData.fullName) {
+        showError('Vui lòng nhập họ và tên!');
+        return;
+      }
+      if (!updateData.email) {
+        showError('Vui lòng nhập email!');
+        return;
+      }
+      if (!updateData.phone) {
+        showError('Vui lòng nhập số điện thoại!');
+        return;
+      }
       
-      // Update local profileData state immediately
+      const accountId = user?.id || user?.userId;
+      if (!accountId) {
+        showError('Không tìm thấy ID tài khoản. Vui lòng đăng nhập lại.');
+        return;
+      }
+      
+      // Call API to update account
+      const result = await updateAccount(accountId, updateData);
+      console.log("👤 CustomerProfilePage: API response", { result, accountId });
+      
+      // Update local profileData state (giữ lại các field local như address, pet info)
       const updatedProfileData = {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        address: values.address || '',
-        petName: values.petName || '',
-        petAge: values.petAge || '',
-        petType: values.petType || '',
-        petSize: values.petSize || '',
+        name: updateData.fullName,
+        email: updateData.email,
+        phone: updateData.phone,
+        address: values.address || profileData.address || '', // Giữ lại address ở local
+        petName: values.petName || profileData.petName || '', // Giữ lại pet info ở local
+        petAge: values.petAge || profileData.petAge || '',
+        petType: values.petType || profileData.petType || '',
+        petSize: values.petSize || profileData.petSize || '',
         avatar: profileData.avatar,
         role: profileData.role,
         createdAt: profileData.createdAt,
@@ -119,14 +142,11 @@ export default function CustomerProfilePage() {
       if (updateUser) {
         const updatedUserData = {
           ...user,
-          fullName: values.name,
-          name: values.name,
-          email: values.email,
-          phone: values.phone,
-          petName: values.petName || '',
-          petAge: values.petAge || '',
-          petType: values.petType || '',
-          petSize: values.petSize || ''
+          fullName: updateData.fullName,
+          name: updateData.fullName,
+          email: updateData.email,
+          phone: updateData.phone,
+          // Giữ lại các field khác từ user hiện tại
         };
         updateUser(updatedUserData);
         console.log("👤 CustomerProfilePage: Updated user context", updatedUserData);
@@ -139,8 +159,30 @@ export default function CustomerProfilePage() {
       showSuccess('Cập nhật thông tin thành công!');
       console.log("👤 CustomerProfilePage: Profile updated successfully");
     } catch (error) {
-      console.error("👤 CustomerProfilePage: Error saving profile", error);
-      showError('Lỗi khi cập nhật thông tin: ' + (error?.response?.data?.message || error.message));
+      console.error("👤 CustomerProfilePage: Error saving profile", {
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        userId: user?.id || user?.userId,
+      });
+      
+      // Hiển thị error message chi tiết
+      let errorMessage = 'Lỗi khi cập nhật thông tin.';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Bạn không có quyền cập nhật tài khoản này.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Không tìm thấy tài khoản để cập nhật.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -149,11 +191,11 @@ export default function CustomerProfilePage() {
   const handlePasswordChange = async (values) => {
     try {
       setLoading(true);
-      console.log("👤 CustomerProfilePage: Changing password");
+      console.log("👤 CustomerProfilePage: Changing password", { email: user.email });
       
-      // Call API to reset password
+      // Call API to reset password - POST /api/reset
       const result = await resetPassword({
-        email: user.email,
+        email: user.email || user.email,
         newPassword: values.newPassword,
         confirmPassword: values.confirmPassword
       });
@@ -161,10 +203,30 @@ export default function CustomerProfilePage() {
       setIsPasswordModalOpen(false);
       passwordForm.resetFields();
       showSuccess('Đổi mật khẩu thành công!');
-      console.log("👤 CustomerProfilePage: Password changed", result);
+      console.log("👤 CustomerProfilePage: Password changed successfully", result);
     } catch (error) {
-      console.error("👤 CustomerProfilePage: Error changing password", error);
-      showError('Lỗi khi đổi mật khẩu: ' + (error?.response?.data?.message || error.message));
+      console.error("👤 CustomerProfilePage: Error changing password", {
+        email: user.email,
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      
+      // Hiển thị error message chi tiết
+      let errorMessage = 'Lỗi khi đổi mật khẩu.';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Không tìm thấy tài khoản với email này.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -209,66 +271,19 @@ export default function CustomerProfilePage() {
     );
   }
 
-  return (
-    <div>
-      {/* Header */}
-      <Card 
-        style={{ 
-          marginBottom: '24px',
-          borderRadius: '12px',
-          background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)'
-        }}
-      >
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={3} style={{ margin: 0, color: 'var(--pv-text-heading, #2a1a10)' }}>
-              👤 Hồ sơ cá nhân
-            </Title>
-            <Text style={{ color: 'var(--pv-text-muted, #7e5c48)' }}>
-              Quản lý thông tin cá nhân và thú cưng của bạn
-            </Text>
-          </Col>
-          <Col>
-            <Space>
-              {!isEditing ? (
-                <Button 
-                  type="primary"
-                  icon={<EditOutlined />}
-                  onClick={() => setIsEditing(true)}
-                  style={{ 
-                    borderRadius: '8px',
-                    background: 'linear-gradient(135deg, var(--pv-primary, #eda274) 0%, var(--pv-accent, #ffb07c) 100%)',
-                    border: 'none'
-                  }}
-                >
-                  Chỉnh sửa
-                </Button>
-              ) : (
-                <Space>
-                  <Button onClick={() => setIsEditing(false)}>
-                    Hủy
-                  </Button>
-                  <Button 
-                    type="primary"
-                    icon={<SaveOutlined />}
-                    onClick={() => form.submit()}
-                    loading={loading}
-                    style={{ 
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, var(--pv-primary, #eda274) 0%, var(--pv-accent, #ffb07c) 100%)',
-                      border: 'none'
-                    }}
-                  >
-                    Lưu thay đổi
-                  </Button>
-                </Space>
-              )}
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      <Row gutter={[24, 24]}>
+  // Render content based on active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'pets':
+        return <PetProfilePage />;
+      case 'orders':
+        return <Orders />;
+      case 'order-status':
+        return <OrderStatusTab />;
+      case 'profile':
+      default:
+        return (
+        <Row gutter={[24, 24]}>
         {/* Profile Information */}
         <Col xs={24} lg={16}>
           <Card title="Thông tin cá nhân" style={{ borderRadius: '12px' }}>
@@ -497,6 +512,52 @@ export default function CustomerProfilePage() {
           </Card>
         </Col>
       </Row>
+        );
+    }
+  };
+
+  return (
+    <ProfileLayout activeKey={activeTab}>
+      {/* Header - chỉ hiển thị khi ở tab profile */}
+      {activeTab === 'profile' && (
+        <Card 
+          style={{ 
+            marginBottom: '24px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #fff 0%, #ffeadd 100%)'
+          }}
+        >
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={3} style={{ margin: 0, color: 'var(--pv-text-heading, #2a1a10)' }}>
+                👤 Thông tin cá nhân
+              </Title>
+              <Text style={{ color: 'var(--pv-text-muted, #7e5c48)' }}>
+                Quản lý thông tin cá nhân và thú cưng của bạn
+              </Text>
+            </Col>
+            {!isEditing && (
+              <Col>
+                <Button 
+                  type="primary"
+                  icon={<EditOutlined />}
+                  onClick={() => setIsEditing(true)}
+                  style={{ 
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, var(--pv-primary, #eda274) 0%, var(--pv-accent, #ffb07c) 100%)',
+                    border: 'none'
+                  }}
+                >
+                  Chỉnh sửa
+                </Button>
+              </Col>
+            )}
+          </Row>
+        </Card>
+      )}
+
+      {/* Content */}
+      {renderContent()}
 
       {/* Password Change Modal */}
       <Modal
@@ -586,6 +647,6 @@ export default function CustomerProfilePage() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </ProfileLayout>
   );
 }

@@ -19,7 +19,7 @@ const ChatWindow = ({
       label: '💬 Tổng quát',
       children: (
         <div className="flex-1 overflow-hidden">
-          <MessageList messages={messages} formatChatDate={formatChatDate} />
+          <MessageList messages={messages} formatChatDate={formatChatDate} currentTab={currentTab} />
         </div>
       ),
     },
@@ -28,7 +28,7 @@ const ChatWindow = ({
       label: '🛍️ Tư vấn sản phẩm',
       children: (
         <div className="flex-1 overflow-hidden">
-          <MessageList messages={messages} formatChatDate={formatChatDate} />
+          <MessageList messages={messages} formatChatDate={formatChatDate} currentTab={currentTab} />
         </div>
       ),
     },
@@ -37,7 +37,7 @@ const ChatWindow = ({
       label: '📦 Hỗ trợ đơn hàng',
       children: (
         <div className="flex-1 overflow-hidden">
-          <MessageList messages={messages} formatChatDate={formatChatDate} />
+          <MessageList messages={messages} formatChatDate={formatChatDate} currentTab={currentTab} />
         </div>
       ),
     },
@@ -77,6 +77,29 @@ const ChatWindow = ({
           tabBarStyle={{ padding: '0 16px', marginBottom: 0 }}
         />
       </div>
+
+
+
+      {/* Quick Suggestions for Product Inquiry */}
+      {currentTab === 'product_inquiry' && messages.length === 0 && (
+        <div className="px-6 py-2 bg-gray-50 flex flex-wrap gap-2 justify-center">
+          {[
+            "Thức ăn cho chó con", 
+            "Đồ chơi cho mèo", 
+            "Sữa tắm trị ve", 
+            "Quần áo thú cưng",
+            "Pate cho mèo kén ăn"
+          ].map((suggestion) => (
+            <button
+              key={suggestion}
+              onClick={() => onSendMessage(suggestion)}
+              className="px-3 py-1 bg-white border border-indigo-100 rounded-full text-sm text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="border-t border-gray-200 bg-white">
         <InputBar

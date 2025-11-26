@@ -59,7 +59,7 @@ export const getOrderById = async (orderId) => {
  */
 export const getOrdersByAccount = async (accountId) => {
   try {
-    const response = await axiosInstance.get(`/orders/orders/account/${accountId}`);
+    const response = await axiosInstance.get(`/orders/account/${accountId}`);
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {
@@ -81,7 +81,7 @@ export const getOrdersByAccount = async (accountId) => {
  */
 export const getAllOrders = async () => {
   try {
-    const response = await axiosInstance.get("/orders");
+    const response = await axiosInstance.get("/orders/all");
     return response.data;
   } catch (error) {
     if (error.response?.status === 401) {

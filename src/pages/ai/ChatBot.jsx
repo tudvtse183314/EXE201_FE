@@ -32,8 +32,17 @@ const ChatBot = () => {
         const records = await chatHistoryApi.getByUserIdAndType(user.userId, currentTab);
         setChatRecords(records || []);
       } catch (error) {
-        console.error('Error loading chat history:', error);
-        toast.error('Không thể tải lịch sử chat');
+        console.error('💬 ChatBot: Error loading chat history', {
+          error: error.response?.data || error.message,
+          status: error.response?.status,
+          userId: user.userId,
+          chatType: currentTab,
+        });
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        } else {
+          toast.error('Không thể tải lịch sử chat. Vui lòng thử lại sau.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -99,27 +108,34 @@ const ChatBot = () => {
       });
 
       // Update pending message with AI response
+      // Response từ chatHistory.js đã được xử lý để trả về chatHistory object
       if (response && response.aiResponse) {
         updateMessage(pendingId, {
           text: response.aiResponse,
           pending: false,
         });
+        toast.success('Đã gửi tin nhắn thành công');
       } else {
-        throw new Error('Invalid response from AI');
+        throw new Error('Invalid response from AI: missing aiResponse');
       }
-
-      toast.success('Đã gửi tin nhắn thành công');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('💬 ChatBot: Error sending message', {
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        userId: user.userId,
+        chatType: currentTab,
+      });
       
       // Remove pending message on error
       removeMessage(pendingId);
       
-      // Show error toast
+      // Show error toast với thông tin chi tiết
       if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         toast.error('Kết nối timeout. Vui lòng thử lại.');
+      } else if (error.response?.data?.message) {
+        toast.error(`Lỗi: ${error.response.data.message}`);
       } else {
         toast.error('Không thể gửi tin nhắn. Vui lòng thử lại sau.');
       }
