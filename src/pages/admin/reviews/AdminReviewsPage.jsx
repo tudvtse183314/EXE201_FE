@@ -25,16 +25,19 @@ import {
   SearchOutlined,
   EyeOutlined,
   DeleteOutlined,
+  EditOutlined,
   StarOutlined,
   UserOutlined,
   ShoppingOutlined
 } from '@ant-design/icons';
-import { getAllReviews, deleteReview, getReviewById } from '../../../services/reviews';
+import { getAllReviews, deleteReview, getReviewById, updateReview } from '../../../services/reviews';
 import { useToast } from '../../../context/ToastContext';
+import { Form, Input as AntInput } from 'antd';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
+const { TextArea } = AntInput;
 
 const formatDate = (dateString) => {
   if (!dateString) return '--';
@@ -49,7 +52,11 @@ export default function AdminReviewsPage() {
   const [ratingFilter, setRatingFilter] = useState('ALL');
   const [selectedReview, setSelectedReview] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [editForm] = Form.useForm();
   const [deleting, setDeleting] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const { showError, showSuccess } = useToast();
 
   const fetchReviews = async () => {
@@ -96,6 +103,40 @@ export default function AdminReviewsPage() {
       console.error('⭐ AdminReviewsPage: Error fetching review detail', err);
       setSelectedReview(review);
       setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleEdit = (review) => {
+    setEditingReview(review);
+    editForm.setFieldsValue({
+      rating: review.rating,
+      comment: review.comment || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateReview = async (values) => {
+    if (!editingReview) return;
+    
+    try {
+      setUpdating(true);
+      const updateData = {
+        rating: values.rating,
+        comment: values.comment || ''
+      };
+      
+      await updateReview(editingReview.id, updateData);
+      showSuccess('Đã cập nhật đánh giá thành công!');
+      setIsEditModalOpen(false);
+      setEditingReview(null);
+      editForm.resetFields();
+      await fetchReviews();
+    } catch (err) {
+      console.error('⭐ AdminReviewsPage: Error updating review', err);
+      const message = err?.message || 'Không thể cập nhật đánh giá.';
+      showError(message);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -218,6 +259,14 @@ export default function AdminReviewsPage() {
             icon={<EyeOutlined />}
             onClick={() => handleViewDetail(record)}
             style={{ color: 'var(--pv-primary, #eda274)' }}
+            title="Xem chi tiết"
+          />
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+            style={{ color: 'var(--pv-primary, #eda274)' }}
+            title="Chỉnh sửa"
           />
           <Popconfirm
             title="Xóa đánh giá"
@@ -371,6 +420,53 @@ export default function AdminReviewsPage() {
         />
       </Card>
 
+      {/* Edit Review Modal */}
+      <Modal
+        title={`Chỉnh sửa đánh giá #${editingReview?.id}`}
+        open={isEditModalOpen}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+          setEditingReview(null);
+          editForm.resetFields();
+        }}
+        onOk={() => editForm.submit()}
+        confirmLoading={updating}
+        okText="Cập nhật"
+        cancelText="Hủy"
+        width={600}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdateReview}
+        >
+          <Form.Item
+            label="Đánh giá (sao)"
+            name="rating"
+            rules={[
+              { required: true, message: 'Vui lòng chọn số sao đánh giá' },
+              { type: 'number', min: 1, max: 5, message: 'Số sao phải từ 1 đến 5' }
+            ]}
+          >
+            <Rate />
+          </Form.Item>
+          <Form.Item
+            label="Nhận xét"
+            name="comment"
+            rules={[
+              { max: 1000, message: 'Nhận xét không được quá 1000 ký tự' }
+            ]}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Nhập nhận xét về sản phẩm..."
+              showCount
+              maxLength={1000}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       {/* Review Detail Modal */}
       <Modal
         title={`Chi tiết đánh giá #${selectedReview?.id}`}
@@ -427,6 +523,16 @@ export default function AdminReviewsPage() {
                   setSelectedReview(null);
                 }}>
                   Đóng
+                </Button>
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    handleEdit(selectedReview);
+                  }}
+                  style={{ color: 'var(--pv-primary, #eda274)' }}
+                >
+                  Chỉnh sửa
                 </Button>
                 <Popconfirm
                   title="Xóa đánh giá"

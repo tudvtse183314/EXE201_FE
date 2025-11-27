@@ -339,6 +339,25 @@ export const cancelOrderLegacy = async (orderId) => {
  */
 export const updateOrderStatus = async (orderId, status) => {
   try {
+    // Validate orderId - phải là số nguyên (integer) theo Swagger spec
+    let numericOrderId = orderId;
+    if (typeof orderId === 'string') {
+      // Nếu là string "ORD-54" hoặc "54", extract số
+      const match = orderId.match(/\d+/);
+      if (match) {
+        numericOrderId = parseInt(match[0], 10);
+      } else {
+        throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên.`);
+      }
+    } else if (typeof orderId !== 'number') {
+      throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên.`);
+    }
+    
+    // Đảm bảo là số nguyên dương
+    if (!Number.isInteger(numericOrderId) || numericOrderId <= 0) {
+      throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên dương.`);
+    }
+    
     // Validate status
     const validStatuses = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
     const normalizedStatus = status?.toUpperCase()?.trim();
@@ -347,14 +366,16 @@ export const updateOrderStatus = async (orderId, status) => {
       throw new Error(`Trạng thái không hợp lệ: ${status}. Phải là một trong: ${validStatuses.join(', ')}`);
     }
     
-    const url = `/orders/${orderId}/status`;
+    const url = `/orders/${numericOrderId}/status`;
     const requestBody = { status: normalizedStatus };
     
     console.log("📦 Orders: Updating order status", {
-      orderId,
+      originalOrderId: orderId,
+      numericOrderId,
       status: normalizedStatus,
       url,
-      requestBody
+      requestBody,
+      fullUrl: `${axiosInstance.defaults.baseURL || ''}${url}`
     });
     
     // Backend chỉ hỗ trợ PATCH method cho endpoint này
@@ -366,7 +387,8 @@ export const updateOrderStatus = async (orderId, status) => {
     });
     
     console.log("📦 Orders: Updated status successfully", {
-      orderId: res.data?.orderId || res.data?.id,
+      orderId: numericOrderId,
+      responseOrderId: res.data?.orderId || res.data?.id,
       oldStatus: status,
       newStatus: res.data?.status,
       fullResponse: res.data
@@ -391,7 +413,8 @@ export const updateOrderStatus = async (orderId, status) => {
     }
     
     console.error("📦 Orders: Error updating order status:", {
-      orderId,
+      originalOrderId: orderId,
+      numericOrderId: typeof orderId === 'number' ? orderId : (orderId?.match(/\d+/)?.[0] ? parseInt(orderId.match(/\d+/)[0], 10) : orderId),
       status,
       errorStatus,
       errorCode,
@@ -400,6 +423,8 @@ export const updateOrderStatus = async (orderId, status) => {
       request: {
         url: error.config?.url,
         method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        fullUrl: error.config ? `${error.config.baseURL || ''}${error.config.url || ''}` : null,
         data: error.config?.data
       },
       fullError: error
