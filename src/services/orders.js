@@ -619,15 +619,64 @@ export const getOrdersByStatus = async (status) => {
 };
 
 // Get payment QR code for existing order
+// GET /api/orders/{orderId}/payment-qr
+// Backend trả về PaymentInfo trực tiếp: { qrCodeUrl, bankId, accountNo, accountName, amount, description, ... }
 export const getPaymentQR = async (orderId) => {
   try {
-    console.log("📦 Orders: Fetching payment QR for order", { orderId });
-    const res = await axiosInstance.get(`/orders/${orderId}/payment-qr`);
-    console.log("📦 Orders: Fetched payment QR successfully", res.data);
+    // Đảm bảo orderId là số nguyên
+    const numericOrderId = typeof orderId === 'string' ? parseInt(orderId, 10) : orderId;
+    if (!numericOrderId || isNaN(numericOrderId) || numericOrderId <= 0) {
+      throw new Error(`Invalid order ID: ${orderId}`);
+    }
+    
+    console.log("📦 Orders: Fetching payment QR for order", { orderId, numericOrderId });
+    const res = await axiosInstance.get(`/orders/${numericOrderId}/payment-qr`);
+    console.log("📦 Orders: Fetched payment QR successfully", {
+      hasData: !!res.data,
+      hasQrCodeUrl: !!res.data?.qrCodeUrl,
+      hasQrData: !!res.data?.qrData,
+      response: res.data
+    });
+    
+    // Backend trả về PaymentInfo trực tiếp, không wrap
     return res.data;
   } catch (e) {
-    console.error("📦 Orders: Error fetching payment QR:", e);
-    throw e;
+    const status = e?.response?.status;
+    const responseData = e?.response?.data;
+    console.error("📦 Orders: Error fetching payment QR:", {
+      orderId,
+      status,
+      responseData,
+      message: e?.message,
+      fullError: e
+    });
+    
+    // Xử lý error message
+    let errorMessage = e?.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
+    
+    if (status === 400) {
+      throw new Error(errorMessage || "Không thể tạo QR code. Đơn hàng không ở trạng thái PENDING.");
+    }
+    if (status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    if (status === 403) {
+      throw new Error("Bạn không có quyền lấy QR code cho đơn hàng này.");
+    }
+    if (status === 404) {
+      throw new Error("Không tìm thấy đơn hàng.");
+    }
+    
+    throw new Error(errorMessage || "Không thể lấy mã QR thanh toán. Vui lòng thử lại.");
   }
 };
 

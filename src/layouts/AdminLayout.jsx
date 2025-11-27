@@ -45,16 +45,16 @@ export default function AdminLayout() {
       icon: <ShoppingOutlined /> 
     },
     { 
-      key: 'orders', 
-      label: 'Đơn hàng', 
-      path: '/admin/orders', 
-      icon: <FileTextOutlined /> 
-    },
-    { 
       key: 'payment-confirmation', 
       label: 'Xác nhận thanh toán', 
       path: '/admin/payment-confirmation', 
       icon: <CheckCircleOutlined /> 
+    },
+    { 
+      key: 'orders', 
+      label: 'Đơn hàng', 
+      path: '/admin/orders', 
+      icon: <FileTextOutlined /> 
     },
     { 
       key: 'revenue', 

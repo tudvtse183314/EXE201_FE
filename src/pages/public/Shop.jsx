@@ -1,7 +1,7 @@
 // src/pages/public/Shop.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, Row, Col, Button, Tag, Input, Select, Alert, Empty, Skeleton } from "antd";
-import { SearchOutlined, ShoppingCartOutlined, HeartOutlined } from "@ant-design/icons";
+import { SearchOutlined, ShoppingCartOutlined, HeartOutlined, HeartFilled } from "@ant-design/icons";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 import { getAllCategories } from "../../services/categories";
@@ -203,12 +203,14 @@ export default function Shop() {
   };
 
   const handleWishlist = (product) => {
+    // Check trước khi toggle để biết action
+    const wasInWishlist = isInWishlist(product.id);
     toggleWishlist(product);
-    const isAdded = isInWishlist(product.id);
-    if (isAdded) {
-      showSuccess("Đã thêm vào danh sách yêu thích!");
-    } else {
+    // Hiển thị toast dựa trên state trước khi toggle
+    if (wasInWishlist) {
       showInfo("Đã xóa khỏi danh sách yêu thích!");
+    } else {
+      showSuccess("Đã thêm vào danh sách yêu thích!");
     }
   };
 
@@ -455,7 +457,7 @@ export default function Shop() {
           position: 'sticky',
           top: '0',
           zIndex: 100,
-          background: 'rgba(255, 255, 255, 0.95)',
+          
           backdropFilter: 'blur(10px)',
           padding: '16px 0',
           marginBottom: '32px',
@@ -472,11 +474,11 @@ export default function Shop() {
               type={activeCatId === "all" ? "primary" : "default"}
               onClick={() => setActiveCatId("all")}
               style={{
-                minWidth: '120px',
+                minWidth: '200px',
                 height: '40px',
                 borderRadius: '20px',
                 fontWeight: '600',
-                fontSize: '14px',
+                fontSize: '18px',
                 background: activeCatId === "all" ? '#d5956d' : '#ffeadd',
                 borderColor: activeCatId === "all" ? '#d5956d' : '#ffeadd',
                 color: activeCatId === "all" ? '#fff' : '#362319',
@@ -492,11 +494,11 @@ export default function Shop() {
                 type={activeCatId === String(category.id) ? "primary" : "default"}
                 onClick={() => setActiveCatId(String(category.id))}
                 style={{
-                  minWidth: '120px',
+                  minWidth: '100px',
                   height: '40px',
                   borderRadius: '20px',
                   fontWeight: '600',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   background: activeCatId === String(category.id) ? '#d5956d' : '#ffeadd',
                   borderColor: activeCatId === String(category.id) ? '#d5956d' : '#ffeadd',
                   color: activeCatId === String(category.id) ? '#fff' : '#362319',
@@ -504,7 +506,7 @@ export default function Shop() {
                   flexShrink: 0
                 }}
               >
-                {category.name} ({allProducts.filter(p => p?.category?.id === category.id).length})
+                {category.name} 
               </Button>
             ))}
           </div>
@@ -774,7 +776,7 @@ export default function Shop() {
                           <Button
                             type="primary"
                             shape="circle"
-                            icon={<HeartOutlined />}
+                            icon={isInWishlist(product.id) ? <HeartFilled /> : <HeartOutlined />}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleWishlist(product);
@@ -791,7 +793,9 @@ export default function Shop() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              boxShadow: '0 2px 8px rgba(255, 77, 79, 0.3)',
+                              boxShadow: isInWishlist(product.id)
+                                ? '0 2px 12px rgba(255, 77, 79, 0.5)'
+                                : '0 2px 8px rgba(255, 77, 79, 0.3)',
                               backdropFilter: 'blur(4px)',
                               transform: isInWishlist(product.id) ? 'scale(1.1)' : 'scale(1)',
                               transition: 'all 0.2s ease'

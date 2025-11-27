@@ -229,7 +229,15 @@ export default function ProductDetail() {
     }
 
     if (product) {
+      // Check trước khi toggle để biết action
+      const wasInWishlist = isInWishlist(product.id);
       toggleWishlist(product);
+      // Hiển thị toast dựa trên state trước khi toggle
+      if (wasInWishlist) {
+        showInfo("Đã xóa khỏi danh sách yêu thích!");
+      } else {
+        showSuccess("Đã thêm vào danh sách yêu thích!");
+      }
     }
   };
 
@@ -533,7 +541,7 @@ export default function ProductDetail() {
                     label="Nhận xét"
                     rules={[
                       { required: true, message: 'Vui lòng nhập nhận xét' },
-                      { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
+                      { min: 1, message: 'Nhận xét phải có ít nhất 1 ký tự' }
                     ]}
                   >
                     <TextArea

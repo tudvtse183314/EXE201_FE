@@ -138,35 +138,62 @@ export const updateReview = async (reviewId, reviewData) => {
       throw new Error("Rating must be between 1 and 5");
     }
     
-    console.log("⭐ Reviews: Updating review", { reviewId, reviewData });
-    const res = await axiosInstance.put(`/reviews/${reviewId}`, reviewData);
+    // Đảm bảo request body có đầy đủ các field cần thiết
+    // Backend có thể yêu cầu full Review object
+    const requestBody = {
+      rating: reviewData.rating || 0,
+      comment: reviewData.comment || null,
+      ...(reviewData.productId && { productId: reviewData.productId }),
+      ...(reviewData.userId && { userId: reviewData.userId }),
+      ...(reviewData.isVerifiedPurchase !== undefined && { isVerifiedPurchase: reviewData.isVerifiedPurchase })
+    };
+    
+    console.log("⭐ Reviews: Updating review", { reviewId, reviewData, requestBody });
+    const res = await axiosInstance.put(`/reviews/${reviewId}`, requestBody, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
     console.log("⭐ Reviews: Updated review successfully", res.data);
     return res.data;
   } catch (e) {
     const status = e?.response?.status;
     const responseData = e?.response?.data;
+    const errorMessage = typeof responseData === 'string' 
+      ? responseData 
+      : (responseData?.message || responseData?.error || e.message);
+    
     console.error("⭐ Reviews: Error updating review:", {
       reviewId,
       reviewData,
       status,
-      message: responseData?.message || e.message,
-      response: responseData
+      message: errorMessage,
+      response: responseData,
+      fullError: e
     });
     
+    // Xử lý lỗi từ backend về quyền truy cập
     if (status === 400) {
-      throw new Error(responseData?.message || "Dữ liệu đánh giá không hợp lệ. Vui lòng kiểm tra lại.");
+      // Kiểm tra xem có phải lỗi về quyền không (lỗi từ Spring Security @PreAuthorize)
+      if (errorMessage?.includes('isReviewOwner') || 
+          errorMessage?.includes('Failed to evaluate expression') ||
+          errorMessage?.includes('hasRole') ||
+          errorMessage?.includes('evaluate expression')) {
+        throw new Error("Lỗi hệ thống: Backend chưa được cấu hình đúng để kiểm tra quyền chỉnh sửa đánh giá. Vui lòng liên hệ Admin để sửa lỗi này. (Thiếu method isReviewOwner trong ReviewService)");
+      }
+      throw new Error(errorMessage || "Dữ liệu đánh giá không hợp lệ. Vui lòng kiểm tra lại.");
     }
     if (status === 401) {
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
     if (status === 403) {
-      throw new Error("Bạn không có quyền cập nhật đánh giá này.");
+      throw new Error("Bạn không có quyền cập nhật đánh giá này. Chỉ người tạo đánh giá hoặc Admin mới có quyền này.");
     }
     if (status === 404) {
       throw new Error("Không tìm thấy đánh giá.");
     }
     
-    throw new Error(responseData?.message || e.message || "Không thể cập nhật đánh giá. Vui lòng thử lại.");
+    throw new Error(errorMessage || "Không thể cập nhật đánh giá. Vui lòng thử lại.");
   }
 };
 

@@ -74,15 +74,18 @@ export default function AdminRevenuePage() {
       filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
     }
 
-    // Chỉ tính các đơn đã thanh toán hoặc đã giao
-    const paidOrders = filteredOrders.filter(order => 
-      order.status === 'PAID' || 
-      order.status === 'SHIPPED' || 
-      order.status === 'DELIVERED' ||
-      order.paymentInfo?.status === 'PAID'
-    );
+    // Chỉ tính các đơn đã thanh toán hoặc đã giao (PAID, SHIPPED, DELIVERED)
+    // Loại bỏ PENDING và CANCELLED/CANCEL
+    const paidOrders = filteredOrders.filter(order => {
+      const status = (order.status || '').toUpperCase();
+      // Chỉ tính các order có status là PAID, SHIPPED, hoặc DELIVERED
+      return status === 'PAID' || status === 'SHIPPED' || status === 'DELIVERED';
+    });
 
-    const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalRevenue = paidOrders.reduce((sum, order) => {
+      const amount = order.totalAmount || order.total_amount || 0;
+      return sum + (typeof amount === 'number' ? amount : 0);
+    }, 0);
     const totalOrders = filteredOrders.length;
     const paidOrdersCount = paidOrders.length;
     const cancelledOrders = filteredOrders.filter(order => 

@@ -209,10 +209,7 @@ export default function AdminReviewsPage() {
       key: 'rating',
       width: 150,
       render: (rating) => (
-        <Space>
-          <Rate disabled value={rating} style={{ fontSize: '14px' }} />
-          <Text strong>({rating}/5)</Text>
-        </Space>
+        <Rate disabled value={rating} style={{ fontSize: '14px' }} />
       ),
     },
     {
@@ -498,10 +495,7 @@ export default function AdminReviewsPage() {
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Đánh giá">
-                <Space>
-                  <Rate disabled value={selectedReview.rating} />
-                  <Text strong>({selectedReview.rating}/5 sao)</Text>
-                </Space>
+                <Rate disabled value={selectedReview.rating} />
               </Descriptions.Item>
               <Descriptions.Item label="Nhận xét" span={1}>
                 <Text>{selectedReview.comment || 'Không có nhận xét'}</Text>
