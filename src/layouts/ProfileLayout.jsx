@@ -23,10 +23,19 @@ export default function ProfileLayout({ children, activeKey = 'profile' }) {
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Xác định active key từ URL
+  // Xác định active key từ URL và query params
   const getActiveKey = () => {
+    // Ưu tiên kiểm tra query params trước
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      return tab; // Trả về tab từ query params: pets, orders, order-status, profile
+    }
+    
+    // Nếu không có query params, kiểm tra pathname
     const path = location.pathname;
     if (path.includes('/my-pets') || path.includes('/pets')) return 'pets';
+    // Nhận diện cả /customer/orders và /customer/orders/:id
     if (path.includes('/orders') && !path.includes('/order-status')) return 'orders';
     if (path.includes('/order-status')) return 'order-status';
     return 'profile';

@@ -10,8 +10,6 @@ import {
   Input,
   Button,
   Space,
-  Avatar,
-  Upload,
   Divider,
   Alert,
   Spin,
@@ -24,7 +22,6 @@ import {
   PhoneOutlined,
   EditOutlined,
   SaveOutlined,
-  CameraOutlined,
   KeyOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext';
@@ -52,15 +49,8 @@ export default function CustomerProfilePage() {
     name: '',
     email: '',
     phone: '',
-    address: '',
-    petName: '',
-    petAge: '',
-    petType: '',
-    petSize: '',
-    avatar: null,
     role: 'CUSTOMER',
-    createdAt: '',
-    lastLogin: ''
+    createdAt: ''
   });
 
   useEffect(() => {
@@ -69,20 +59,17 @@ export default function CustomerProfilePage() {
         name: user.name || user.fullName || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address || '',
-        petName: user.petName || '',
-        petAge: user.petAge || '',
-        petType: user.petType || '',
-        petSize: user.petSize || '',
-        avatar: user.avatar || null,
         role: user.role || 'CUSTOMER',
-        createdAt: user.createdAt || '',
-        lastLogin: user.lastLogin || ''
+        createdAt: user.createdAt || ''
       };
       setProfileData(userData);
-      form.setFieldsValue(userData);
+      form.setFieldsValue({
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone
+      });
     }
-  }, [user]);
+  }, [user, form]);
 
   const handleSave = async (values) => {
     try {
@@ -121,20 +108,13 @@ export default function CustomerProfilePage() {
       const result = await updateAccount(accountId, updateData);
       console.log("👤 CustomerProfilePage: API response", { result, accountId });
       
-      // Update local profileData state (giữ lại các field local như address, pet info)
+      // Update local profileData state
       const updatedProfileData = {
         name: updateData.fullName,
         email: updateData.email,
         phone: updateData.phone,
-        address: values.address || profileData.address || '', // Giữ lại address ở local
-        petName: values.petName || profileData.petName || '', // Giữ lại pet info ở local
-        petAge: values.petAge || profileData.petAge || '',
-        petType: values.petType || profileData.petType || '',
-        petSize: values.petSize || profileData.petSize || '',
-        avatar: profileData.avatar,
         role: profileData.role,
-        createdAt: profileData.createdAt,
-        lastLogin: profileData.lastLogin
+        createdAt: profileData.createdAt
       };
       setProfileData(updatedProfileData);
       
@@ -153,7 +133,11 @@ export default function CustomerProfilePage() {
       }
       
       // Update form fields to reflect new values
-      form.setFieldsValue(updatedProfileData);
+      form.setFieldsValue({
+        name: updatedProfileData.name,
+        email: updatedProfileData.email,
+        phone: updatedProfileData.phone
+      });
       
       setIsEditing(false);
       showSuccess('Cập nhật thông tin thành công!');
@@ -232,33 +216,6 @@ export default function CustomerProfilePage() {
     }
   };
 
-  const handleAvatarUpload = (info) => {
-    if (info.file.status === 'done') {
-      showSuccess('Cập nhật ảnh đại diện thành công!');
-      setProfileData(prev => ({ ...prev, avatar: info.file.response?.url || info.file.thumbUrl }));
-    } else if (info.file.status === 'error') {
-      showError('Lỗi khi tải ảnh lên!');
-    }
-  };
-
-  const uploadProps = {
-    name: 'avatar',
-    showUploadList: false,
-    onChange: handleAvatarUpload,
-    beforeUpload: (file) => {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-      if (!isJpgOrPng) {
-        showError('Chỉ hỗ trợ file JPG/PNG!');
-        return false;
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        showError('Kích thước ảnh không được vượt quá 2MB!');
-        return false;
-      }
-      return true;
-    },
-  };
 
   if (!user) {
     return (
@@ -345,153 +302,30 @@ export default function CustomerProfilePage() {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Địa chỉ (tùy chọn)"
-                    name="address"
-                  >
-                    <Input 
-                      placeholder="Nhập địa chỉ..."
-                      size="large"
-                      style={{ borderRadius: '8px' }}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              {/* Pet Information Section */}
-              <Divider orientation="left" style={{ marginTop: '24px' }}>
-                <Text strong style={{ color: 'var(--pv-primary, #eda274)' }}>
-                  🐾 Thông tin thú cưng
-                </Text>
-              </Divider>
-
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Form.Item
-                    label="Tên thú cưng"
-                    name="petName"
-                  >
-                    <Input 
-                      placeholder="Nhập tên thú cưng..."
-                      size="large"
-                      style={{ borderRadius: '8px' }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Tuổi thú cưng"
-                    name="petAge"
-                  >
-                    <Input 
-                      placeholder="Nhập tuổi thú cưng..."
-                      size="large"
-                      style={{ borderRadius: '8px' }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Loại thú cưng"
-                    name="petType"
-                  >
-                    <Input 
-                      placeholder="Nhập loại thú cưng..."
-                      size="large"
-                      style={{ borderRadius: '8px' }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Kích thước thú cưng"
-                    name="petSize"
-                  >
-                    <Input 
-                      placeholder="Nhập kích thước thú cưng..."
-                      size="large"
-                      style={{ borderRadius: '8px' }}
-                    />
-                  </Form.Item>
-                </Col>
               </Row>
             </Form>
           </Card>
         </Col>
 
-        {/* Avatar and Account Info */}
+        {/* Account Info */}
         <Col xs={24} lg={8}>
-          <Card title="Ảnh đại diện" style={{ borderRadius: '12px', marginBottom: '24px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <Upload {...uploadProps}>
-                <Avatar
-                  size={120}
-                  src={profileData.avatar}
-                  icon={<UserOutlined />}
-                  style={{
-                    background: 'linear-gradient(135deg, var(--pv-primary, #eda274) 0%, var(--pv-accent, #ffb07c) 100%)',
-                    cursor: 'pointer',
-                    border: '3px solid var(--pv-primary, #eda274)'
-                  }}
-                />
-              </Upload>
-              <div style={{ marginTop: '16px' }}>
-                <Button 
-                  icon={<CameraOutlined />}
-                  onClick={() => document.querySelector('input[type="file"]')?.click()}
-                  style={{ borderRadius: '8px' }}
-                >
-                  Thay đổi ảnh
-                </Button>
-              </div>
-            </div>
-          </Card>
-
           <Card title="Thông tin tài khoản" style={{ borderRadius: '12px' }}>
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               <div>
-                <Text strong>Vai trò:</Text>
+                <Text strong style={{ fontSize: '15px' }}>Vai trò:</Text>
                 <br />
-                <Tag color="green" style={{ borderRadius: '6px' }}>
+                <Tag color="green" style={{ borderRadius: '6px', fontSize: '14px', marginTop: '4px' }}>
                   {profileData.role}
                 </Tag>
               </div>
               
               <div>
-                <Text strong>Ngày tạo tài khoản:</Text>
+                <Text strong style={{ fontSize: '15px' }}>Ngày tạo tài khoản:</Text>
                 <br />
-                <Text type="secondary">
+                <Text type="secondary" style={{ fontSize: '14px' }}>
                   {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString('vi-VN') : 'Không xác định'}
                 </Text>
               </div>
-              
-              <div>
-                <Text strong>Lần đăng nhập cuối:</Text>
-                <br />
-                <Text type="secondary">
-                  {profileData.lastLogin ? new Date(profileData.lastLogin).toLocaleString('vi-VN') : 'Không xác định'}
-                </Text>
-              </div>
-
-              {profileData.petName && (
-                <>
-                  <Divider />
-                  <div>
-                    <Text strong>🐾 Thú cưng:</Text>
-                    <br />
-                    <Text type="secondary">{profileData.petName}</Text>
-                    {profileData.petType && (
-                      <>
-                        <br />
-                        <Tag color="green" style={{ marginTop: '4px' }}>
-                          {profileData.petType}
-                        </Tag>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
 
               <Divider />
 
@@ -499,11 +333,13 @@ export default function CustomerProfilePage() {
                 type="default"
                 icon={<KeyOutlined />}
                 onClick={() => setIsPasswordModalOpen(true)}
+                size="large"
                 style={{ 
                   width: '100%',
                   borderRadius: '8px',
                   border: '2px solid var(--pv-primary, #eda274)',
-                  color: 'var(--pv-primary, #eda274)'
+                  color: 'var(--pv-primary, #eda274)',
+                  fontSize: '15px'
                 }}
               >
                 Đổi mật khẩu

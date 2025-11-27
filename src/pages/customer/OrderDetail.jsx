@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import ProfileLayout from '../../layouts/ProfileLayout';
 import {
   Card,
   Typography,
@@ -55,8 +56,12 @@ const formatCurrency = (value) => {
 export default function OrderDetail() {
   const { id: orderId } = useParams(); // Route dùng :id nên cần extract id
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { showSuccess, showError, showWarning } = useToast();
+  
+  // Lấy tab từ location state hoặc mặc định là 'orders'
+  const returnTab = location.state?.fromTab || 'orders';
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -279,68 +284,75 @@ export default function OrderDetail() {
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: '60px 20px', 
-        textAlign: 'center',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <Spin size="large" />
-        <div style={{ marginTop: 16, fontSize: '16px' }}>Đang tải thông tin đơn hàng...</div>
-      </div>
+      <ProfileLayout activeKey={returnTab}>
+        <div style={{ 
+          padding: '60px 20px', 
+          textAlign: 'center',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16, fontSize: '16px' }}>Đang tải thông tin đơn hàng...</div>
+        </div>
+      </ProfileLayout>
     );
   }
 
   if (error) {
     return (
-      <div style={{ 
-        padding: '40px 20px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <Alert
-          message="Không thể tải đơn hàng"
-          description={error}
-          type="error"
-          showIcon
-          style={{ marginBottom: 16, fontSize: '15px' }}
-        />
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')} size="large">
+      <ProfileLayout activeKey={returnTab}>
+        <div style={{ 
+          padding: '40px 20px',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <Alert
+            message="Không thể tải đơn hàng"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16, fontSize: '15px' }}
+          />
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/customer/profile?tab=${returnTab}`)} size="large">
           Quay lại danh sách đơn hàng
         </Button>
-      </div>
+        </div>
+      </ProfileLayout>
     );
   }
 
   if (!order) {
     return (
-      <div style={{ 
-        padding: '40px 20px',
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <Alert
-          message="Không tìm thấy đơn hàng"
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16, fontSize: '15px' }}
-        />
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')} size="large">
+      <ProfileLayout activeKey={returnTab}>
+        <div style={{ 
+          padding: '40px 20px',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <Alert
+            message="Không tìm thấy đơn hàng"
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16, fontSize: '15px' }}
+          />
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/customer/profile?tab=${returnTab}`)} size="large">
           Quay lại danh sách đơn hàng
         </Button>
-      </div>
+        </div>
+      </ProfileLayout>
     );
   }
 
   const qrUrl = paymentInfo.qrCodeUrl || order.qrCodeUrl || '';
 
   return (
-    <div style={{ 
-      padding: '32px 20px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      minHeight: '100vh'
-    }}>
+    <ProfileLayout activeKey={returnTab}>
+      <div style={{ 
+        maxWidth: '1200px',
+        margin: '0 auto',
+        width: '100%',
+        padding: '0'
+      }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div style={{ 
           display: 'flex', 
@@ -353,7 +365,7 @@ export default function OrderDetail() {
           <Space size="middle" wrap>
             <Button 
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate('/customer/orders')}
+              onClick={() => navigate(`/customer/profile?tab=${returnTab}`)}
               size="large"
             >
               Quay lại
@@ -834,7 +846,8 @@ export default function OrderDetail() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+      </div>
+    </ProfileLayout>
   );
 }
 

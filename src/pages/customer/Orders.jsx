@@ -178,12 +178,12 @@ export default function Orders() {
   };
 
   const handleViewOrder = (orderId) => {
-    navigate(`/customer/orders/${orderId}`);
+    navigate(`/customer/orders/${orderId}`, { state: { fromTab: 'orders' } });
   };
 
   const handleReview = (orderId) => {
     // Navigate to order detail page where user can review products
-    navigate(`/customer/orders/${orderId}`);
+    navigate(`/customer/orders/${orderId}`, { state: { fromTab: 'orders' } });
   };
 
   const columns = [

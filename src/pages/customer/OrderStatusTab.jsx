@@ -193,7 +193,7 @@ export default function OrderStatusTab() {
   };
 
   const handleViewOrder = (orderId) => {
-    navigate(`/customer/orders/${orderId}`);
+    navigate(`/customer/orders/${orderId}`, { state: { fromTab: 'order-status' } });
   };
 
   const handleViewStatus = (order) => {
