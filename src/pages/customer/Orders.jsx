@@ -10,17 +10,18 @@ import {
   Spin,
   Alert,
   Empty,
-  Select
+  Select,
+  Timeline,
+  Descriptions,
+  Modal
 } from 'antd';
-import { EyeOutlined, ReloadOutlined, FilterOutlined, StarOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, FilterOutlined, StarOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   getOrdersByAccount,
   getStatusColor,
-  getStatusText,
-  getPaymentStatusColor,
-  getPaymentStatusText
+  getStatusText
 } from '../../services/orders';
 import { toast } from 'react-toastify';
 
@@ -30,6 +31,18 @@ const { Option } = Select;
 const formatCurrency = (value) => {
   if (typeof value !== 'number') return '--';
   return `${value.toLocaleString('vi-VN')}đ`;
+};
+
+// Order status flow visualization
+const ORDER_STATUS_FLOW = [
+  { status: 'PENDING', label: 'Chờ thanh toán', color: 'orange' },
+  { status: 'PAID', label: 'Đã thanh toán', color: 'blue' },
+  { status: 'SHIPPED', label: 'Đang giao hàng', color: 'purple' },
+  { status: 'DELIVERED', label: 'Đã giao hàng', color: 'green' }
+];
+
+const getStatusIndex = (status) => {
+  return ORDER_STATUS_FLOW.findIndex(s => s.status === status.toUpperCase());
 };
 
 export default function Orders() {
@@ -45,6 +58,7 @@ export default function Orders() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [allOrdersData, setAllOrdersData] = useState([]);
   const [previousOrdersMap, setPreviousOrdersMap] = useState(new Map()); // Lưu status cũ để phát hiện thay đổi
+  const [selectedOrder, setSelectedOrder] = useState(null); // Order được chọn để xem trạng thái
 
   const fetchOrders = async (silent = false) => {
     if (!accountId) return;
@@ -186,6 +200,46 @@ export default function Orders() {
     navigate(`/customer/orders/${orderId}`, { state: { fromTab: 'orders' } });
   };
 
+  const handleViewStatus = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const renderStatusTimeline = (order) => {
+    const currentStatus = order.status?.toUpperCase();
+    const currentIndex = getStatusIndex(currentStatus);
+    
+    return (
+      <Timeline
+        items={ORDER_STATUS_FLOW.map((statusItem, index) => {
+          const isCompleted = index <= currentIndex;
+          const isCurrent = index === currentIndex;
+          
+          return {
+            color: isCompleted ? statusItem.color : 'gray',
+            dot: isCurrent ? <CheckCircleOutlined style={{ fontSize: '16px' }} /> : undefined,
+            children: (
+              <div>
+                <Text strong={isCurrent} style={{ color: isCompleted ? undefined : '#999' }}>
+                  {statusItem.label}
+                </Text>
+                {isCurrent && (
+                  <Tag color={statusItem.color} style={{ marginLeft: 8 }}>
+                    Trạng thái hiện tại
+                  </Tag>
+                )}
+                {(order.status?.toUpperCase() === 'CANCELLED' || order.status?.toUpperCase() === 'CANCEL') && statusItem.status === 'PENDING' && (
+                  <Tag color="red" style={{ marginLeft: 8 }}>
+                    Đã hủy
+                  </Tag>
+                )}
+              </div>
+            )
+          };
+        })}
+      />
+    );
+  };
+
   const columns = [
     {
       title: 'Mã đơn hàng',
@@ -200,19 +254,6 @@ export default function Orders() {
       render: (status) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
-    },
-    {
-      title: 'Thanh toán',
-      dataIndex: ['paymentInfo', 'status'],
-      key: 'paymentStatus',
-      render: (_, record) => {
-        const paymentStatus = record?.paymentInfo?.status;
-        return (
-          <Tag color={getPaymentStatusColor(paymentStatus)}>
-            {getPaymentStatusText(paymentStatus)}
-          </Tag>
-        );
-      }
     },
     {
       title: 'Tổng tiền',
@@ -237,11 +278,19 @@ export default function Orders() {
     {
       title: 'Hành động',
       key: 'actions',
-      width: 250,
+      width: 300,
       render: (_, record) => {
         const isDelivered = record.status?.toUpperCase() === 'DELIVERED';
         return (
           <Space size="small" wrap>
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewStatus(record)}
+              size="small"
+            >
+              Xem trạng thái
+            </Button>
             <Button
               type="link"
               icon={<EyeOutlined />}
@@ -273,10 +322,10 @@ export default function Orders() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Title level={3} style={{ margin: 0 }}>
-              📋 Đơn hàng của tôi
+              📋 Lịch sử giao dịch
             </Title>
             <p style={{ margin: '8px 0 0 0', color: '#666' }}>
-              Quản lý và theo dõi các đơn hàng cùng trạng thái thanh toán
+              Quản lý và theo dõi các đơn hàng của bạn
             </p>
           </div>
           <Space wrap>
@@ -344,6 +393,50 @@ export default function Orders() {
           }}
         />
       </Card>
+
+      {/* Modal hiển thị trạng thái đơn hàng */}
+      <Modal
+        title={`Chi tiết trạng thái đơn hàng #${selectedOrder?.orderId || ''}`}
+        open={!!selectedOrder}
+        onCancel={() => setSelectedOrder(null)}
+        footer={[
+          <Button key="close" onClick={() => setSelectedOrder(null)}>
+            Đóng
+          </Button>
+        ]}
+        width={700}
+      >
+        {selectedOrder && (
+          <>
+            <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+              <Descriptions.Item label="Mã đơn hàng">
+                #{selectedOrder.orderId}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag color={getStatusColor(selectedOrder.status)}>
+                  {getStatusText(selectedOrder.status)}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Tổng tiền">
+                <Text strong style={{ color: '#1890ff' }}>
+                  {formatCurrency(selectedOrder.totalAmount)}
+                </Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày tạo">
+                {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleString('vi-VN') : '--'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Cập nhật lần cuối" span={2}>
+                {selectedOrder.updatedAt ? new Date(selectedOrder.updatedAt).toLocaleString('vi-VN') : '--'}
+              </Descriptions.Item>
+            </Descriptions>
+            
+            <div>
+              <Title level={5}>Tiến trình đơn hàng</Title>
+              {renderStatusTimeline(selectedOrder)}
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -229,7 +229,15 @@ export default function ProductDetail() {
     }
 
     if (product) {
+      // Check trước khi toggle để biết action
+      const wasInWishlist = isInWishlist(product.id);
       toggleWishlist(product);
+      // Hiển thị toast dựa trên state trước khi toggle
+      if (wasInWishlist) {
+        showInfo("Đã xóa khỏi danh sách yêu thích!");
+      } else {
+        showSuccess("Đã thêm vào danh sách yêu thích!");
+      }
     }
   };
 

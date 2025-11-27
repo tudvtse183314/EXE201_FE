@@ -6,7 +6,6 @@ import {
   UserOutlined,
   HeartOutlined,
   ShoppingOutlined,
-  FileTextOutlined,
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -36,8 +35,7 @@ export default function ProfileLayout({ children, activeKey = 'profile' }) {
     const path = location.pathname;
     if (path.includes('/my-pets') || path.includes('/pets')) return 'pets';
     // Nhận diện cả /customer/orders và /customer/orders/:id
-    if (path.includes('/orders') && !path.includes('/order-status')) return 'orders';
-    if (path.includes('/order-status')) return 'order-status';
+    if (path.includes('/orders')) return 'orders';
     return 'profile';
   };
 
@@ -59,12 +57,6 @@ export default function ProfileLayout({ children, activeKey = 'profile' }) {
       label: 'Lịch sử giao dịch', 
       icon: <ShoppingOutlined />,
       onClick: () => navigate('/customer/profile?tab=orders')
-    },
-    { 
-      key: 'order-status', 
-      label: 'Trạng thái đơn hàng', 
-      icon: <FileTextOutlined />,
-      onClick: () => navigate('/customer/profile?tab=order-status')
     },
   ];
 

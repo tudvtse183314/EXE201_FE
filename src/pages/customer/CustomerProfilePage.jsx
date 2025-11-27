@@ -29,7 +29,6 @@ import { useToast } from '../../context/ToastContext';
 import { updateAccount, resetPassword } from '../../services/auth';
 import PetProfilePage from './PetProfilePage';
 import Orders from './Orders';
-import OrderStatusTab from './OrderStatusTab';
 import ProfileLayout from '../../layouts/ProfileLayout';
 
 const { Title, Text } = Typography;
@@ -235,8 +234,6 @@ export default function CustomerProfilePage() {
         return <PetProfilePage />;
       case 'orders':
         return <Orders />;
-      case 'order-status':
-        return <OrderStatusTab />;
       case 'profile':
       default:
         return (
