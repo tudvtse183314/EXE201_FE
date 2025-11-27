@@ -541,7 +541,7 @@ export default function ProductDetail() {
                     label="Nhận xét"
                     rules={[
                       { required: true, message: 'Vui lòng nhập nhận xét' },
-                      { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
+                      { min: 1, message: 'Nhận xét phải có ít nhất 1 ký tự' }
                     ]}
                   >
                     <TextArea

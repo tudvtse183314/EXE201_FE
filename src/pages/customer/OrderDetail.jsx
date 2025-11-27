@@ -202,10 +202,17 @@ export default function OrderDetail() {
   // Tự động load QR code khi order PENDING và chưa có QR
   useEffect(() => {
     if (order && order.status?.toUpperCase() === 'PENDING' && !qrUrl && !refreshingQR && !loading) {
+      console.log('📦 OrderDetail: Auto-loading QR code for PENDING order', {
+        orderId: order.id,
+        status: order.status,
+        hasQrUrl: !!qrUrl,
+        refreshingQR,
+        loading
+      });
       handleRefreshQR();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order?.status, qrUrl, loading]);
+  }, [order?.id, order?.status, qrUrl, loading]);
 
   const currentStep = useMemo(() => {
     if (!order?.status) return 0;
@@ -269,13 +276,21 @@ export default function OrderDetail() {
     if (!order?.id && !order?.orderId) return;
     try {
       setRefreshingQR(true);
-      // Sử dụng order.id (numeric) cho API call
+      // Sử dụng order.id (numeric) cho API call - API endpoint: GET /orders/{orderId}/payment-qr
       const orderIdForAPI = order.id || order.orderId;
+      console.log('📦 OrderDetail: Fetching QR code for order', { orderIdForAPI, orderId: order.id, orderIdString: order.orderId });
+      
       const response = await getPaymentQR(orderIdForAPI);
-      const qrPayload = response?.paymentInfo || response;
+      console.log('📦 OrderDetail: QR response received', { response, hasQrCodeUrl: !!response?.qrCodeUrl, hasQrData: !!response?.qrData });
+      
+      // Backend trả về PaymentInfo trực tiếp (không wrap trong paymentInfo)
+      // Response structure: { qrCodeUrl, bankId, accountNo, accountName, amount, description, ... }
+      const qrPayload = response;
+      
       if (!qrPayload?.qrCodeUrl && !qrPayload?.qrData) {
-        throw new Error('Không thể lấy lại mã QR.');
+        throw new Error('Không thể lấy lại mã QR. Backend không trả về QR code.');
       }
+      
       setOrder((prev) => ({
         ...(prev || {}),
         paymentInfo: {
@@ -285,8 +300,13 @@ export default function OrderDetail() {
       }));
       showSuccess('Đã làm mới mã QR.');
     } catch (err) {
-      console.error('📦 Order Detail: Error refreshing QR', err);
-      const message = err?.response?.data?.message || err?.message || 'Không thể lấy lại mã QR.';
+      console.error('📦 Order Detail: Error refreshing QR', {
+        error: err,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        message: err?.message
+      });
+      const message = err?.response?.data?.message || err?.response?.data || err?.message || 'Không thể lấy lại mã QR.';
       showError(message);
     } finally {
       setRefreshingQR(false);
@@ -822,7 +842,7 @@ export default function OrderDetail() {
             label="Nhận xét"
             rules={[
               { required: true, message: 'Vui lòng nhập nhận xét' },
-              { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' },
+              { min: 1, message: 'Nhận xét phải có ít nhất 1 ký tự' },
               { max: 1000, message: 'Nhận xét không được quá 1000 ký tự' }
             ]}
           >

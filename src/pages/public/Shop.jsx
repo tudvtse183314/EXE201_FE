@@ -457,7 +457,7 @@ export default function Shop() {
           position: 'sticky',
           top: '0',
           zIndex: 100,
-          background: 'rgba(255, 255, 255, 0.95)',
+          
           backdropFilter: 'blur(10px)',
           padding: '16px 0',
           marginBottom: '32px',
@@ -474,11 +474,11 @@ export default function Shop() {
               type={activeCatId === "all" ? "primary" : "default"}
               onClick={() => setActiveCatId("all")}
               style={{
-                minWidth: '120px',
+                minWidth: '200px',
                 height: '40px',
                 borderRadius: '20px',
                 fontWeight: '600',
-                fontSize: '14px',
+                fontSize: '18px',
                 background: activeCatId === "all" ? '#d5956d' : '#ffeadd',
                 borderColor: activeCatId === "all" ? '#d5956d' : '#ffeadd',
                 color: activeCatId === "all" ? '#fff' : '#362319',
@@ -494,11 +494,11 @@ export default function Shop() {
                 type={activeCatId === String(category.id) ? "primary" : "default"}
                 onClick={() => setActiveCatId(String(category.id))}
                 style={{
-                  minWidth: '120px',
+                  minWidth: '100px',
                   height: '40px',
                   borderRadius: '20px',
                   fontWeight: '600',
-                  fontSize: '14px',
+                  fontSize: '18px',
                   background: activeCatId === String(category.id) ? '#d5956d' : '#ffeadd',
                   borderColor: activeCatId === String(category.id) ? '#d5956d' : '#ffeadd',
                   color: activeCatId === String(category.id) ? '#fff' : '#362319',
@@ -506,7 +506,7 @@ export default function Shop() {
                   flexShrink: 0
                 }}
               >
-                {category.name} ({allProducts.filter(p => p?.category?.id === category.id).length})
+                {category.name} 
               </Button>
             ))}
           </div>

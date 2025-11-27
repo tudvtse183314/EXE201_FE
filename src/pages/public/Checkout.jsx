@@ -252,26 +252,26 @@ export default function Checkout() {
     const qrUrl = paymentInfo.qrCodeUrl || order?.qrCodeUrl || '';
 
     return (
-      <div style={{ padding: '20px' }}>
-        <Card>
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
-            <Title level={2} style={{ color: '#52c41a' }}>
+      <Card style={{ borderRadius: '12px' }}>
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <CheckCircleOutlined style={{ fontSize: 56, color: '#52c41a', marginBottom: 12 }} />
+            <Title level={2} style={{ color: '#52c41a', marginBottom: 8 }}>
               Đặt hàng thành công!
             </Title>
-            <Text style={{ fontSize: 16, color: '#666' }}>
+            <Text style={{ fontSize: 14, color: '#666' }}>
               Vui lòng quét mã QR bên dưới và chuyển khoản đúng số tiền, nội dung.
             </Text>
 
             {/* Order Summary */}
             <Card
               type="inner"
-              title="Chi tiết đơn hàng"
+              title={<span style={{ fontSize: '16px', fontWeight: '600' }}>Chi tiết đơn hàng</span>}
               style={{ 
-                marginTop: 32,
+                marginTop: 24,
                 textAlign: 'left',
                 maxWidth: 800,
-                margin: '32px auto 0'
+                margin: '24px auto 0',
+                borderRadius: '10px'
               }}
             >
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -339,25 +339,25 @@ export default function Checkout() {
               </Space>
             </Card>
 
-            <div style={{ marginTop: 32 }}>
-              <Title level={4}>Mã QR thanh toán</Title>
+            <div style={{ marginTop: 24 }}>
+              <Title level={4} style={{ fontSize: '18px', marginBottom: 16 }}>Mã QR thanh toán</Title>
               <div
                 style={{
                   background: '#f9f9f9',
                   padding: '20px',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   margin: '16px auto',
-                  maxWidth: 320
+                  maxWidth: 300
                 }}
               >
                 {qrUrl ? (
                   <QRCode
                     value={qrUrl}
-                    size={220}
+                    size={200}
                     style={{ margin: '0 auto', display: 'block' }}
                   />
                 ) : (
-                  <div style={{ padding: '40px 0' }}>
+                  <div style={{ padding: '32px 0' }}>
                     <Spin />
                   </div>
                 )}
@@ -381,7 +381,7 @@ export default function Checkout() {
                   textAlign: 'left'
                 }}
               >
-                <Title level={5} style={{ margin: '0 0 12px 0' }}>Thông tin chuyển khoản</Title>
+                <Title level={5} style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Thông tin chuyển khoản</Title>
                 <div style={{ fontSize: '14px' }}>
                   <div><Text strong>Ngân hàng:</Text> {paymentInfo.bankId || '---'}</div>
                   <div><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo || '---'}</div>
@@ -397,7 +397,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div style={{ marginTop: 32 }}>
+            <div style={{ marginTop: 24 }}>
               <Space wrap size="middle" align="center" style={{ justifyContent: 'center' }}>
                 {paymentInfo.status !== 'PAID' && (
                   <Button
@@ -425,17 +425,21 @@ export default function Checkout() {
             </div>
           </div>
         </Card>
-      </div>
+      
     );
   };
 
   if (order) {
-    return renderOrderSuccess();
+    return (
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 16px' }}>
+        {renderOrderSuccess()}
+      </div>
+    );
   }
 
   if (cartItems.length === 0) {
     return (
-      <div style={{ padding: '20px' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '20px 16px' }}>
         <Alert
           message="Giỏ hàng trống"
           description="Bạn cần có sản phẩm trong giỏ hàng để thanh toán."
@@ -451,23 +455,26 @@ export default function Checkout() {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: 24 }}>
+    <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '20px 16px' }}>
+      <div style={{ marginBottom: 20 }}>
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/customer/cart')}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 12 }}
         >
           Quay lại giỏ hàng
         </Button>
-        <Title level={2} style={{ margin: 0 }}>
+        <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: '700' }}>
           💳 Thanh toán
         </Title>
       </div>
 
-      <Row gutter={[24, 24]} align="stretch">
+      <Row gutter={[20, 20]} align="stretch">
         <Col xs={24} lg={16}>
-          <Card title="Thông tin giao hàng">
+          <Card 
+            title={<span style={{ fontSize: '18px', fontWeight: '600' }}>Thông tin giao hàng</span>}
+            style={{ borderRadius: '10px' }}
+          >
             <Form
               form={form}
               layout="vertical"
@@ -564,16 +571,17 @@ export default function Checkout() {
             title={
               <Space>
                 <ShoppingCartOutlined />
-                <span>Tổng kết đơn hàng</span>
+                <span style={{ fontSize: '18px', fontWeight: '600' }}>Tổng kết đơn hàng</span>
               </Space>
             }
             style={{
               position: 'sticky',
-              top: 20
+              top: 20,
+              borderRadius: '10px'
             }}
           >
-            <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 16 }}>Sản phẩm trong đơn ({cartItems.length})</Text>
+            <div style={{ marginBottom: 12 }}>
+              <Text strong style={{ fontSize: 14 }}>Sản phẩm trong đơn ({cartItems.length})</Text>
             </div>
             
             <List
@@ -592,7 +600,7 @@ export default function Checkout() {
                   <List.Item
                     key={itemId}
                     style={{ 
-                      padding: '12px 0',
+                      padding: '10px 0',
                       borderBottom: `1px solid ${THEME.colors.border}`
                     }}
                   >
@@ -637,18 +645,18 @@ export default function Checkout() {
               }}
             />
 
-            <Divider style={{ margin: '16px 0' }} />
+            <Divider style={{ margin: '12px 0' }} />
 
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Row justify="space-between">
-                <Text>Tạm tính:</Text>
-                <Text>{formatCurrency(totalPrice)}</Text>
+                <Text style={{ fontSize: '14px' }}>Tạm tính:</Text>
+                <Text style={{ fontSize: '14px' }}>{formatCurrency(totalPrice)}</Text>
               </Row>
               <Row justify="space-between">
-                <Text>Phí vận chuyển:</Text>
-                <Text type="success">Miễn phí</Text>
+                <Text style={{ fontSize: '14px' }}>Phí vận chuyển:</Text>
+                <Text type="success" style={{ fontSize: '14px' }}>Miễn phí</Text>
               </Row>
-              <Divider style={{ margin: '12px 0' }} />
+              <Divider style={{ margin: '10px 0' }} />
               <Row justify="space-between" style={{ 
                 padding: '12px',
                 background: THEME.colors.backgroundLight,
@@ -656,7 +664,7 @@ export default function Checkout() {
                 marginTop: 8
               }}>
                 <Text strong style={{ fontSize: 16 }}>Tổng cộng:</Text>
-                <Text strong style={{ fontSize: 20, color: THEME.colors.primary }}>
+                <Text strong style={{ fontSize: 18, color: THEME.colors.primary }}>
                   {formatCurrency(totalPrice)}
                 </Text>
               </Row>
@@ -666,7 +674,7 @@ export default function Checkout() {
               message="Vui lòng kiểm tra lại thông tin đơn hàng"
               type="info"
               showIcon
-              style={{ marginTop: 16 }}
+              style={{ marginTop: 12, fontSize: '13px' }}
             />
           </Card>
         </Col>
