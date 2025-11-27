@@ -41,7 +41,7 @@ import {
   getPaymentStatusText,
   ORDER_STATUS_FLOW
 } from '../../services/orders';
-import { createReview } from '../../services/reviews';
+import { createReview, getReviewsByUserId } from '../../services/reviews';
 
 const { Title, Text } = Typography;
 
@@ -66,6 +66,8 @@ export default function OrderDetail() {
   const [selectedProductForReview, setSelectedProductForReview] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewForm] = Form.useForm();
+  const [userReviews, setUserReviews] = useState([]); // Lưu danh sách review của user
+  const [loadingReviews, setLoadingReviews] = useState(false);
   const previousStatusRef = useRef(null); // Lưu status cũ để phát hiện thay đổi
 
   const loadOrder = useCallback(async (silent = false) => {
@@ -136,6 +138,23 @@ export default function OrderDetail() {
     }
   }, [orderId, showWarning]);
 
+  // Load reviews của user khi có user và order
+  const loadUserReviews = useCallback(async () => {
+    if (!user?.id && !user?.userId) return;
+    
+    try {
+      setLoadingReviews(true);
+      const userId = user.id || user.userId;
+      const reviews = await getReviewsByUserId(userId);
+      setUserReviews(reviews || []);
+    } catch (err) {
+      console.error('⭐ OrderDetail: Error loading user reviews', err);
+      setUserReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     // Chỉ load khi có orderId hợp lệ
     const validOrderId = orderId ? String(orderId).trim() : null;
@@ -150,6 +169,13 @@ export default function OrderDetail() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]); // Chỉ phụ thuộc vào orderId
+
+  // Load reviews khi có user và order đã DELIVERED
+  useEffect(() => {
+    if (user && order?.status?.toUpperCase() === 'DELIVERED') {
+      loadUserReviews();
+    }
+  }, [user, order?.status, loadUserReviews]);
 
   // Auto-refresh mỗi 30 giây khi đang xem order detail
   useEffect(() => {
@@ -458,27 +484,40 @@ export default function OrderDetail() {
           {order.items && order.items.length > 0 ? (
             <List
               dataSource={order.items}
-              renderItem={(item) => (
-                <List.Item
-                  actions={
-                    isDelivered
-                      ? [
-                          <Button
-                            key="review"
-                            type="link"
-                            icon={<StarOutlined />}
-                            onClick={() => {
-                              setSelectedProductForReview(item);
-                              setReviewModalVisible(true);
-                              reviewForm.resetFields();
-                            }}
-                            style={{ color: 'var(--pv-primary, #eda274)' }}
-                          >
-                            Đánh giá
-                          </Button>
-                        ]
-                      : []
-                  }
+              renderItem={(item) => {
+                const productId = item.productId || item.product?.id;
+                // Kiểm tra xem sản phẩm đã được review chưa
+                const hasReviewed = userReviews.some(
+                  review => review.productId === productId && !review.isDeleted
+                );
+                
+                return (
+                  <List.Item
+                    actions={
+                      isDelivered
+                        ? hasReviewed
+                          ? [
+                              <Tag key="reviewed" color="green" icon={<CheckCircleOutlined />}>
+                                Đã đánh giá
+                              </Tag>
+                            ]
+                          : [
+                              <Button
+                                key="review"
+                                type="link"
+                                icon={<StarOutlined />}
+                                onClick={() => {
+                                  setSelectedProductForReview(item);
+                                  setReviewModalVisible(true);
+                                  reviewForm.resetFields();
+                                }}
+                                style={{ color: 'var(--pv-primary, #eda274)' }}
+                              >
+                                Đánh giá
+                              </Button>
+                            ]
+                        : []
+                    }
                 >
                   <List.Item.Meta
                     title={
@@ -495,7 +534,8 @@ export default function OrderDetail() {
                     }
                   />
                 </List.Item>
-              )}
+                );
+              }}
             />
           ) : (
             <Alert type="info" message="Đơn hàng không có sản phẩm." showIcon />
@@ -554,6 +594,8 @@ export default function OrderDetail() {
               setReviewModalVisible(false);
               setSelectedProductForReview(null);
               reviewForm.resetFields();
+              // Reload reviews để cập nhật UI
+              await loadUserReviews();
             } catch (err) {
               console.error('⭐ OrderDetail: Error submitting review', err);
               const message = err?.response?.data?.message || err?.message || 'Không thể gửi đánh giá.';

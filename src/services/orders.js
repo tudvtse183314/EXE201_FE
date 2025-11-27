@@ -357,6 +357,8 @@ export const updateOrderStatus = async (orderId, status) => {
       requestBody
     });
     
+    // Backend chỉ hỗ trợ PATCH method cho endpoint này
+    // Không dùng POST fallback vì backend không hỗ trợ
     const res = await axiosInstance.patch(url, requestBody, {
       headers: {
         'Content-Type': 'application/json'
@@ -364,7 +366,7 @@ export const updateOrderStatus = async (orderId, status) => {
     });
     
     console.log("📦 Orders: Updated status successfully", {
-      orderId: res.data?.orderId,
+      orderId: res.data?.orderId || res.data?.id,
       oldStatus: status,
       newStatus: res.data?.status,
       fullResponse: res.data
@@ -374,14 +376,27 @@ export const updateOrderStatus = async (orderId, status) => {
   } catch (error) {
     const errorStatus = error.response?.status;
     const errorCode = error.code;
+    const responseData = error.response?.data;
+    
+    // Xử lý error message từ BE
+    let errorMessage = error.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
     
     console.error("📦 Orders: Error updating order status:", {
       orderId,
       status,
       errorStatus,
       errorCode,
-      message: error.response?.data?.message || error.message,
-      response: error.response?.data,
+      message: errorMessage,
+      response: responseData,
       request: {
         url: error.config?.url,
         method: error.config?.method,
@@ -392,22 +407,43 @@ export const updateOrderStatus = async (orderId, status) => {
     
     // Xử lý lỗi CORS/Network
     if (errorCode === 'ERR_NETWORK' || error.message?.includes('CORS') || error.message?.includes('Network Error')) {
-      throw new Error("Lỗi kết nối: Backend chưa cấu hình CORS cho PATCH method. Vui lòng liên hệ admin để cập nhật CORS config (thêm 'PATCH' vào allowedMethods).");
+      throw new Error("Lỗi kết nối: Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc cấu hình CORS trên backend.");
+    }
+    
+    // Xử lý lỗi 403 - có thể là CORS preflight (OPTIONS) bị reject hoặc không có quyền
+    if (errorStatus === 403) {
+      // Kiểm tra xem có phải là lỗi CORS preflight không
+      // OPTIONS request thường không có response data, chỉ có status 403
+      const isOptionsRequest = error.config?.method?.toUpperCase() === 'OPTIONS';
+      const isMethodNotSupported = errorMessage?.toLowerCase().includes('method') || 
+                                   errorMessage?.toLowerCase().includes('not supported') ||
+                                   errorMessage?.toLowerCase().includes('post') ||
+                                   errorMessage?.toLowerCase().includes('patch');
+      
+      if (isOptionsRequest || isMethodNotSupported) {
+        throw new Error("Lỗi CORS: Backend đang chặn OPTIONS preflight request. Vui lòng cập nhật Filter.java trong backend để cho phép OPTIONS request đi qua mà không cần token (thêm điều kiện: if (request.getMethod().equals(\"OPTIONS\")) { filterChain.doFilter(request, response); return; }).");
+      }
+      throw new Error("Bạn không có quyền cập nhật đơn hàng. Chỉ Admin/Staff mới có quyền này.");
     }
     
     if (errorStatus === 401) {
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    if (errorStatus === 403) {
-      throw new Error("Bạn không có quyền cập nhật đơn hàng.");
-    }
     if (errorStatus === 404) {
       throw new Error("Không tìm thấy đơn hàng.");
     }
     if (errorStatus === 400) {
-      throw new Error(error.response?.data?.message || "Không thể cập nhật trạng thái đơn hàng ở trạng thái hiện tại.");
+      // BE trả về 400 với message về transition không hợp lệ
+      // Ví dụ: "Cannot transition from PAID to PENDING. Valid transitions: SHIPPED, CANCELLED"
+      throw new Error(errorMessage || "Không thể cập nhật trạng thái đơn hàng. Vui lòng kiểm tra trạng thái hiện tại của đơn hàng.");
     }
-    throw error;
+    
+    // Xử lý lỗi 500 hoặc các lỗi khác từ BE
+    if (errorStatus === 500) {
+      throw new Error(errorMessage || "Lỗi server khi cập nhật trạng thái đơn hàng. Vui lòng thử lại sau.");
+    }
+    
+    throw new Error(errorMessage || "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.");
   }
 };
 

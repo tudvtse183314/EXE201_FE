@@ -235,11 +235,34 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setUpdatingStatus(true);
+      
+      // Tìm order để validate trước (optional, để hiển thị message tốt hơn)
+      const order = orders.find(o => (o.orderId || o.id) === orderId);
+      if (order) {
+        const currentStatus = order.status;
+        // Validate transitions dựa trên BE logic
+        const validTransitions = {
+          'PENDING': ['PAID', 'CANCELLED'],
+          'PAID': ['SHIPPED', 'CANCELLED'],
+          'SHIPPED': ['DELIVERED', 'CANCELLED'],
+          'DELIVERED': [],
+          'CANCELLED': []
+        };
+        
+        const allowed = validTransitions[currentStatus] || [];
+        if (!allowed.includes(newStatus)) {
+          showError(`Không thể chuyển từ ${getStatusText(currentStatus)} sang ${getStatusText(newStatus)}. Chỉ có thể chuyển sang: ${allowed.map(s => getStatusText(s)).join(', ') || 'không có'}`);
+          setUpdatingStatus(false);
+          return;
+        }
+      }
+      
       await updateOrderStatus(orderId, newStatus);
       await handleReload();
       showSuccess(`Đã cập nhật trạng thái đơn hàng thành ${getStatusText(newStatus)}`);
     } catch (error) {
-      const message = error?.response?.data?.message || error?.message || 'Không thể cập nhật trạng thái đơn hàng.';
+      // Error message từ service đã được format sẵn từ BE response
+      const message = error?.message || error?.response?.data?.message || 'Không thể cập nhật trạng thái đơn hàng.';
       showError(message);
     } finally {
       setUpdatingStatus(false);
