@@ -2,17 +2,19 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Breadcrumb, Typography, Avatar, Dropdown, Button, Space } from 'antd';
-import { 
-  DashboardOutlined, 
-  AppstoreOutlined, 
-  ShoppingOutlined, 
-  FileTextOutlined, 
+import {
+  DashboardOutlined,
+  AppstoreOutlined,
+  ShoppingOutlined,
+  FileTextOutlined,
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  DollarOutlined,
+  HeartOutlined,
+  StarOutlined
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -55,16 +57,28 @@ export default function AdminLayout() {
       icon: <CheckCircleOutlined /> 
     },
     { 
-      key: 'chat-history', 
-      label: 'Chat History', 
-      path: '/admin/chat-history', 
-      icon: <MessageOutlined /> 
+      key: 'revenue', 
+      label: 'Tổng doanh thu', 
+      path: '/admin/revenue', 
+      icon: <DollarOutlined /> 
     },
-    { 
-      key: 'accounts', 
-      label: 'Tài khoản', 
-      path: '/admin/accounts', 
-      icon: <UserOutlined /> 
+    {
+      key: 'pet-profiles',
+      label: 'Hồ sơ thú cưng',
+      path: '/admin/pet-profiles',
+      icon: <HeartOutlined />
+    },
+    {
+      key: 'reviews',
+      label: 'Quản lý đánh giá',
+      path: '/admin/reviews',
+      icon: <StarOutlined />
+    },
+    {
+      key: 'accounts',
+      label: 'Tài khoản',
+      path: '/admin/accounts',
+      icon: <UserOutlined />
     },
   ];
 

@@ -141,20 +141,52 @@ export const CartProvider = ({ children }) => {
     } catch (e) {
       console.error('🛒 Cart Context: Error loading cart', e);
       
-      // Xử lý lỗi 400 (endpoint không tồn tại) - không hiển thị lỗi, chỉ set empty cart
-      if (e?.response?.status === 400) {
+      const status = e?.response?.status;
+      const responseData = e?.response?.data;
+      const isTokenError = status === 401 || 
+                          (status === 400 && (
+                            responseData?.message?.toLowerCase().includes('token') ||
+                            responseData?.toLowerCase?.includes('empty token') ||
+                            JSON.stringify(responseData).toLowerCase().includes('empty token')
+                          ));
+      
+      // Xử lý lỗi token - KHÔNG set cart rỗng, giữ nguyên cart hiện tại
+      if (isTokenError) {
+        console.warn('🛒 Cart Context: Token error when loading cart - keeping current cart state', {
+          status,
+          responseData
+        });
+        // Không set cart rỗng, giữ nguyên state hiện tại
+        // Interceptor sẽ xử lý 401 (logout + redirect)
+        setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        hasLoadedRef.current = false; // Đánh dấu chưa load thành công để có thể retry
+        throw e; // Throw để component biết có lỗi
+      }
+      
+      // Xử lý lỗi 400 (endpoint không tồn tại hoặc bad request) - chỉ set empty nếu không phải token error
+      if (status === 400) {
+        console.warn('🛒 Cart Context: 400 error - setting empty cart', { responseData });
         setCartItems([]);
         hasLoadedRef.current = true;
         setError(null); // Clear error cho 400
         return; // Không throw error cho 400
       }
       
+      // Xử lý 404 - cart không tồn tại (có thể là user mới)
+      if (status === 404) {
+        console.log('🛒 Cart Context: 404 - cart not found, setting empty cart');
+        setCartItems([]);
+        hasLoadedRef.current = true;
+        setError(null);
+        return;
+      }
+      
       // Xử lý các lỗi khác
-      const errorMessage = e?.response?.data?.message || e?.message || 'Không thể tải giỏ hàng';
+      const errorMessage = responseData?.message || e?.message || 'Không thể tải giỏ hàng';
       setError(errorMessage);
       
       // Hiển thị toast cho các lỗi (trừ 401/403 đã được interceptor xử lý)
-      if (e?.response?.status !== 401 && e?.response?.status !== 403) {
+      if (status !== 401 && status !== 403) {
         showError(errorMessage);
       }
       
@@ -288,28 +320,64 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Xóa item khỏi giỏ hàng - Optimistic update
+  // Xóa item khỏi giỏ hàng - Optimistic update với rollback
   const removeFromCart = async (itemId) => {
     // Lưu item để có thể rollback nếu lỗi
     const itemToRemove = cartItems.find(item => (item.id || item.itemId) === itemId);
+    
+    if (!itemToRemove) {
+      console.warn('🛒 Cart: Item not found for removal', { itemId });
+      return;
+    }
     
     // Optimistic update: Xóa ngay khỏi UI
     setCartItems(prevItems => 
       prevItems.filter(item => (item.id || item.itemId) !== itemId)
     );
+    console.log('🛒 Cart: Removed item (optimistic)', { itemId });
     
-    // Gọi API ở background (không chờ)
-    deleteCartItem(itemId).catch((e) => {
+    try {
+      // Gọi API và chờ kết quả
+      await deleteCartItem(itemId);
+      // Chỉ show success sau khi API thành công
+      showSuccess('Đã xóa sản phẩm khỏi giỏ hàng');
+      console.log('🛒 Cart: Deleted item successfully from API', { itemId });
+    } catch (e) {
       console.error('🛒 Cart: Error removing item from API', e);
-      // Rollback nếu lỗi
+      
+      // Kiểm tra lỗi "Empty token" hoặc 401
+      const responseData = e?.response?.data;
+      const status = e?.response?.status;
+      const isTokenError = status === 401 || 
+                          status === 400 && (
+                            responseData?.message?.toLowerCase().includes('token') ||
+                            responseData?.toLowerCase?.includes('empty token') ||
+                            JSON.stringify(responseData).toLowerCase().includes('empty token')
+                          );
+      
+      // Rollback: Khôi phục item vào cart
       if (itemToRemove) {
-        setCartItems(prevItems => [...prevItems, itemToRemove]);
-        showError('Không thể xóa sản phẩm. Vui lòng thử lại.');
+        setCartItems(prevItems => {
+          // Kiểm tra xem item đã tồn tại chưa (tránh duplicate)
+          const exists = prevItems.some(item => (item.id || item.itemId) === itemId);
+          if (exists) {
+            return prevItems;
+          }
+          return [...prevItems, itemToRemove];
+        });
       }
-    });
-    
-    showSuccess('Đã xóa sản phẩm khỏi giỏ hàng');
-    console.log('🛒 Cart: Removed item (optimistic)');
+      
+      // Hiển thị thông báo lỗi phù hợp
+      if (isTokenError) {
+        showError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        console.error('🛒 Cart: Token error - may need to refresh or re-login');
+      } else {
+        const errorMsg = responseData?.message || 
+                        e?.message || 
+                        'Không thể xóa sản phẩm. Vui lòng thử lại.';
+        showError(errorMsg);
+      }
+    }
   };
 
   // Hàm private để schedule quantity update với debounce

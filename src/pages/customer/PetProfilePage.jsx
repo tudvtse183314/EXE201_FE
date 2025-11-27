@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PawPrint, Plus, Edit, Trash2, Heart, Calendar, Weight, Stethoscope, Camera } from "lucide-react";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -7,6 +8,7 @@ import { getMyPets, createPetProfile, updatePetProfile, deletePetProfile } from 
 import { useToast } from "../../context/ToastContext";
 
 export default function PetProfilePage() {
+  const location = useLocation();
   const [pets, setPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
   const [open, setOpen] = useState(false);
@@ -25,33 +27,30 @@ export default function PetProfilePage() {
     petSize: ""
   });
 
-  // Ref để tránh gọi API liên tục
-  const hasLoadedRef = useRef(false);
+  // Ref để tránh gọi API liên tục trong cùng một mount cycle
   const isLoadingRef = useRef(false);
   const isMountedRef = useRef(true);
+  const lastLocationRef = useRef(null);
 
   useEffect(() => {
     isMountedRef.current = true;
+    lastLocationRef.current = location.pathname;
     
-    // Session guard: tránh fetch lặp khi trang bị remount ngoài ý muốn
-    const sessionKey = 'pv-pets-loaded';
-    const alreadyLoaded = sessionStorage.getItem(sessionKey) === '1';
-
-    // Chỉ fetch nếu chưa load và không đang load
-    if (!hasLoadedRef.current && !isLoadingRef.current && !alreadyLoaded) {
-      fetchPets().finally(() => {
-        sessionStorage.setItem(sessionKey, '1');
-      });
+    // Luôn fetch khi component mount hoặc khi location thay đổi (user quay lại trang)
+    // Chỉ skip nếu đang load
+    if (!isLoadingRef.current) {
+      fetchPets();
     }
 
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   const fetchPets = async () => {
     // Guard: tránh gọi nhiều lần
     if (isLoadingRef.current) {
+      console.log("🐾 PetProfilePage: Already loading, skipping fetch");
       return;
     }
 
@@ -60,18 +59,55 @@ export default function PetProfilePage() {
     try {
       setLoading(true);
       setError(null);
+      console.log("🐾 PetProfilePage: Fetching pets...", { 
+        location: location.pathname,
+        timestamp: new Date().toISOString()
+      });
       const data = await getMyPets();
       
+      console.log("🐾 PetProfilePage: Fetched pets response", { 
+        data, 
+        isArray: Array.isArray(data),
+        count: Array.isArray(data) ? data.length : 0,
+        rawData: data
+      });
+      
       if (isMountedRef.current) {
-        setPets(Array.isArray(data) ? data : []);
+        // Đảm bảo data là array và normalize petId
+        const normalizedPets = Array.isArray(data) ? data.map(pet => ({
+          ...pet,
+          // Đảm bảo có petId (API trả về petId, không phải id)
+          petId: pet.petId || pet.id,
+          // Normalize các field khác nếu cần
+          id: pet.petId || pet.id
+        })) : [];
+        
+        setPets(normalizedPets);
         setError(null);
-        hasLoadedRef.current = true;
+        console.log("🐾 PetProfilePage: Pets loaded successfully", { count: normalizedPets.length });
       }
     } catch (err) {
+      console.error("🐾 PetProfilePage: Error fetching pets", {
+        error: err,
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        location: location.pathname
+      });
       if (isMountedRef.current) {
         // Xử lý lỗi 502 Bad Gateway
         if (err?.response?.status === 502) {
           setError("Máy chủ đang quá tải. Vui lòng thử lại sau vài giây.");
+        } else if (err?.response?.status === 401) {
+          setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        } else if (err?.response?.status === 403) {
+          setError("Bạn không có quyền xem hồ sơ thú cưng.");
+        } else if (err?.response?.status === 404) {
+          // 404 có thể là không có pets, không phải lỗi
+          console.log("🐾 PetProfilePage: No pets found (404), setting empty array");
+          setPets([]);
+          setError(null);
         } else {
           setError(err.message || "Không thể tải danh sách thú cưng. Vui lòng thử lại!");
         }
@@ -127,10 +163,8 @@ export default function PetProfilePage() {
         petAge: "",
         petSize: ""
       });
-      // Reset flag để fetch lại sau khi tạo/sửa
-      hasLoadedRef.current = false;
-      sessionStorage.removeItem('pv-pets-loaded');
-      fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
+      // Fetch lại sau khi tạo/sửa
+      fetchPets();
     } catch (err) {
       setError(err.message);
       showError(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
@@ -143,10 +177,8 @@ export default function PetProfilePage() {
         const targetId = id?.id || id?.petId || id;
         await deletePetProfile(targetId);
         showSuccess("Xóa hồ sơ thú cưng thành công!");
-        // Reset flag để fetch lại sau khi xóa
-        hasLoadedRef.current = false;
-        sessionStorage.removeItem('pv-pets-loaded');
-        fetchPets().finally(() => sessionStorage.setItem('pv-pets-loaded', '1'));
+        // Fetch lại sau khi xóa
+        fetchPets();
       } catch (err) {
         setError(err.message);
         showError(err.message || "Có lỗi xảy ra khi xóa!");
@@ -480,9 +512,6 @@ export default function PetProfilePage() {
                         <option value="">Chọn loại thú cưng</option>
                         <option value="dog">Chó</option>
                         <option value="cat">Mèo</option>
-                        <option value="bird">Chim</option>
-                        <option value="rabbit">Thỏ</option>
-                        <option value="other">Khác</option>
                       </select>
                     </div>
 

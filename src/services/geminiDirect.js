@@ -2,7 +2,17 @@
 // Service để gọi Google Gemini API trực tiếp từ frontend (không qua backend)
 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || '';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent'; 
+
+// Debug: Log API key status (chỉ log trong development, không log key thật)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔑 Gemini API Key Status:', {
+    hasKey: !!GEMINI_API_KEY,
+    keyLength: GEMINI_API_KEY ? GEMINI_API_KEY.length : 0,
+    keyPrefix: GEMINI_API_KEY ? GEMINI_API_KEY.substring(0, 10) + '...' : 'N/A',
+    envVar: process.env.REACT_APP_GEMINI_API_KEY ? 'Found' : 'Not found'
+  });
+}
 
 /**
  * Gọi Gemini API trực tiếp từ frontend
@@ -74,6 +84,8 @@ ${contextData.page ? `Người dùng đang ở trang: ${contextData.page}` : ''}
       },
       body: JSON.stringify(requestBody),
     });
+    console.log('🤖 Gemini Direct: Response', response.body);
+    
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -83,14 +95,22 @@ ${contextData.page ? `Người dùng đang ở trang: ${contextData.page}` : ''}
         error: errorData
       });
       
+      // Xử lý lỗi API key expired/invalid
       if (response.status === 400) {
-        throw new Error('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại tin nhắn.');
+        const errorMessage = errorData?.error?.message || '';
+        const errorReason = errorData?.error?.details?.[0]?.reason || '';
+        
+        if (errorMessage.includes('API key expired') || errorMessage.includes('API key') || errorReason === 'API_KEY_INVALID') {
+          throw new Error('🔑 API key đã hết hạn hoặc không hợp lệ. Vui lòng:\n1. Kiểm tra API key trong file .env.local\n2. Tạo API key mới tại https://aistudio.google.com/apikey\n3. Cập nhật REACT_APP_GEMINI_API_KEY trong .env.local\n4. Restart dev server (npm start)');
+        }
+        
+        throw new Error(`Yêu cầu không hợp lệ: ${errorMessage || 'Vui lòng kiểm tra lại tin nhắn.'}`);
       } else if (response.status === 401 || response.status === 403) {
-        throw new Error('API key không hợp lệ hoặc không có quyền truy cập.');
+        throw new Error('🔑 API key không hợp lệ hoặc không có quyền truy cập. Vui lòng kiểm tra lại API key trong file .env.local và restart dev server.');
       } else if (response.status === 429) {
-        throw new Error('Đã vượt quá giới hạn API. Vui lòng thử lại sau.');
+        throw new Error('⏱️ Đã vượt quá giới hạn API. Vui lòng thử lại sau vài phút.');
       } else {
-        throw new Error(`Lỗi từ Gemini API: ${response.statusText}`);
+        throw new Error(`Lỗi từ Gemini API (${response.status}): ${errorData?.error?.message || response.statusText}`);
       }
     }
 
@@ -138,8 +158,10 @@ export const chatWithGeminiStream = async (message, history = [], contextData = 
   return response;
 };
 
-export default {
+const geminiDirectService = {
   chatWithGemini,
   chatWithGeminiStream,
 };
+
+export default geminiDirectService;
 

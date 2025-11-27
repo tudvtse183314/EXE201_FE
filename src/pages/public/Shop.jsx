@@ -20,9 +20,16 @@ const { Option } = Select;
 export default function Shop() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { showSuccess, showError, showInfo } = useToast();
+  
+  // Helper function to check if product is in cart
+  const isInCart = (productId) => {
+    return cartItems.some(item => 
+      (item.productId || item.product?.id) === productId
+    );
+  };
   const [categories, setCategories] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -852,29 +859,12 @@ export default function Shop() {
                         fontSize: '20px', 
                         fontWeight: '700', 
                         color: '#eda274',
-                        marginBottom: '10px',
+                        marginBottom: '12px',
                         fontFamily: "'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
                         height: '28px'
                       }}>
                         {product.price ? `${product.price.toLocaleString()}đ` : 'Liên hệ'}
                       </div>
-                      {product.stock !== undefined && (
-                        <Tag 
-                          color={product.stock > 0 ? 'green' : 'red'}
-                          style={{ 
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            padding: '3px 10px',
-                            borderRadius: '10px',
-                            marginBottom: '12px',
-                            height: '22px',
-                            display: 'inline-flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          {product.stock > 0 ? `Còn ${product.stock}` : 'Hết hàng'}
-                        </Tag>
-                      )}
                       
                       {/* Add to Cart Button */}
                       <Button
@@ -884,12 +874,20 @@ export default function Shop() {
                           e.stopPropagation();
                           handleAddToCart(product);
                         }}
-                        disabled={product.stock === 0}
+                        disabled={product.stock === 0 || isInCart(product.id)}
                         style={{
                           width: '100%',
                           height: '40px',
-                          background: product.stock > 0 ? '#eda274' : '#ccc',
-                          borderColor: product.stock > 0 ? '#eda274' : '#ccc',
+                          background: product.stock === 0 
+                            ? '#ccc' 
+                            : isInCart(product.id)
+                            ? '#8B4513' // Màu nâu đậm khi đã thêm vào giỏ
+                            : '#eda274', // Màu nâu nhạt khi chưa thêm
+                          borderColor: product.stock === 0 
+                            ? '#ccc' 
+                            : isInCart(product.id)
+                            ? '#8B4513'
+                            : '#eda274',
                           borderRadius: '8px',
                           fontWeight: '600',
                           fontSize: '14px',
@@ -897,24 +895,29 @@ export default function Shop() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          cursor: (product.stock === 0 || isInCart(product.id)) ? 'not-allowed' : 'pointer'
                         }}
                         onMouseEnter={(e) => {
-                          if (product.stock > 0) {
+                          if (product.stock > 0 && !isInCart(product.id)) {
                             e.target.style.background = '#d5956d';
                             e.target.style.borderColor = '#d5956d';
                             e.target.style.transform = 'translateY(-1px)';
                           }
                         }}
                         onMouseLeave={(e) => {
-                          if (product.stock > 0) {
+                          if (product.stock > 0 && !isInCart(product.id)) {
                             e.target.style.background = '#eda274';
                             e.target.style.borderColor = '#eda274';
                             e.target.style.transform = 'translateY(0)';
                           }
                         }}
                       >
-                        {product.stock > 0 ? 'Thêm vào giỏ' : 'Hết hàng'}
+                        {product.stock === 0 
+                          ? 'Hết hàng' 
+                          : isInCart(product.id)
+                          ? 'Đã thêm vào giỏ'
+                          : 'Thêm vào giỏ'}
                       </Button>
                     </div>
                           </Card>

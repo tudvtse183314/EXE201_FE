@@ -37,6 +37,7 @@ import { useToast } from '../../context/ToastContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { getProductById } from '../../services/products';
 import { getReviewsByProductId, createReview } from '../../services/reviews';
+import { getOrdersByAccount } from '../../services/orders';
 import { getFallbackImageByIndex } from '../../utils/imageUtils';
 import { THEME } from '../../constants/theme';
 
@@ -51,10 +52,17 @@ const formatCurrency = (value) => {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { user } = useAuth();
   const { showSuccess, showError, showWarning } = useToast();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  
+  // Helper function to check if product is in cart
+  const isInCart = (productId) => {
+    return cartItems.some(item => 
+      (item.productId || item.product?.id) === productId
+    );
+  };
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,11 +73,16 @@ export default function ProductDetail() {
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewForm] = Form.useForm();
+  const [canReview, setCanReview] = useState(false);
+  const [checkingReviewPermission, setCheckingReviewPermission] = useState(false);
 
   useEffect(() => {
     loadProduct();
     loadReviews();
-  }, [id]);
+    if (user && id) {
+      checkReviewPermission();
+    }
+  }, [id, user]);
 
   const loadProduct = async () => {
     if (!id) {
@@ -108,6 +121,36 @@ export default function ProductDetail() {
     }
   };
 
+  // Kiểm tra xem user đã mua và nhận hàng (DELIVERED) sản phẩm này chưa
+  const checkReviewPermission = async () => {
+    if (!user || !id) {
+      setCanReview(false);
+      return;
+    }
+
+    try {
+      setCheckingReviewPermission(true);
+      const accountId = user.id || user.userId;
+      const orders = await getOrdersByAccount(accountId);
+      
+      // Kiểm tra xem có đơn hàng nào với status DELIVERED chứa sản phẩm này không
+      const hasDeliveredOrder = orders.some(order => {
+        const isDelivered = order.status?.toUpperCase() === 'DELIVERED';
+        const hasProduct = order.items?.some(item => 
+          (item.productId || item.product?.id) === Number(id)
+        );
+        return isDelivered && hasProduct;
+      });
+
+      setCanReview(hasDeliveredOrder);
+    } catch (err) {
+      console.error('⭐ ProductDetail: Error checking review permission', err);
+      setCanReview(false);
+    } finally {
+      setCheckingReviewPermission(false);
+    }
+  };
+
   const handleSubmitReview = async (values) => {
     if (!user) {
       showWarning('Vui lòng đăng nhập để đánh giá sản phẩm');
@@ -129,6 +172,7 @@ export default function ProductDetail() {
       showSuccess('Đánh giá của bạn đã được gửi thành công!');
       reviewForm.resetFields();
       await loadReviews(); // Reload reviews
+      await checkReviewPermission(); // Refresh permission check
     } catch (err) {
       console.error('⭐ ProductDetail: Error submitting review', err);
       const message = err?.response?.data?.message || err?.message || 'Không thể gửi đánh giá.';
@@ -379,16 +423,29 @@ export default function ProductDetail() {
                   icon={<ShoppingCartOutlined />}
                   onClick={handleAddToCart}
                   loading={addingToCart}
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || (product && isInCart(product.id))}
                   style={{
                     flex: 1,
                     minWidth: 200,
-                    background: '#eda274',
-                    borderColor: '#eda274',
-                    height: 48
+                    background: isOutOfStock 
+                      ? '#ccc' 
+                      : (product && isInCart(product.id))
+                      ? '#8B4513' // Màu nâu đậm khi đã thêm vào giỏ
+                      : '#eda274', // Màu nâu nhạt khi chưa thêm
+                    borderColor: isOutOfStock 
+                      ? '#ccc' 
+                      : (product && isInCart(product.id))
+                      ? '#8B4513'
+                      : '#eda274',
+                    height: 48,
+                    cursor: (isOutOfStock || (product && isInCart(product.id))) ? 'not-allowed' : 'pointer'
                   }}
                 >
-                  Thêm vào giỏ hàng
+                  {isOutOfStock 
+                    ? 'Hết hàng' 
+                    : (product && isInCart(product.id))
+                    ? 'Đã thêm vào giỏ'
+                    : 'Thêm vào giỏ hàng'}
                 </Button>
                 <Button
                   size="large"
@@ -454,48 +511,61 @@ export default function ProductDetail() {
                 borderRadius: THEME.borderRadius.medium
               }}
             >
-              <Form
-                form={reviewForm}
-                layout="vertical"
-                onFinish={handleSubmitReview}
-              >
-                <Form.Item
-                  name="rating"
-                  label="Đánh giá của bạn"
-                  rules={[{ required: true, message: 'Vui lòng chọn số sao' }]}
+              {checkingReviewPermission ? (
+                <div style={{ textAlign: 'center', padding: '20px' }}>
+                  <Spin /> <Text type="secondary">Đang kiểm tra quyền đánh giá...</Text>
+                </div>
+              ) : canReview ? (
+                <Form
+                  form={reviewForm}
+                  layout="vertical"
+                  onFinish={handleSubmitReview}
                 >
-                  <Rate />
-                </Form.Item>
-                <Form.Item
-                  name="comment"
-                  label="Nhận xét"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập nhận xét' },
-                    { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
-                  ]}
-                >
-                  <TextArea
-                    rows={4}
-                    placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-                    maxLength={500}
-                    showCount
-                  />
-                </Form.Item>
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={submittingReview}
-                    icon={<SendOutlined />}
-                    style={{
-                      background: THEME.colors.primary,
-                      borderColor: THEME.colors.primary
-                    }}
+                  <Form.Item
+                    name="rating"
+                    label="Đánh giá của bạn (1-5 sao)"
+                    rules={[{ required: true, message: 'Vui lòng chọn số sao từ 1-5' }]}
                   >
-                    Gửi đánh giá
-                  </Button>
-                </Form.Item>
-              </Form>
+                    <Rate allowClear />
+                  </Form.Item>
+                  <Form.Item
+                    name="comment"
+                    label="Nhận xét"
+                    rules={[
+                      { required: true, message: 'Vui lòng nhập nhận xét' },
+                      { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
+                    ]}
+                  >
+                    <TextArea
+                      rows={4}
+                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                      maxLength={500}
+                      showCount
+                    />
+                  </Form.Item>
+                  <Form.Item>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={submittingReview}
+                      icon={<SendOutlined />}
+                      style={{
+                        background: THEME.colors.primary,
+                        borderColor: THEME.colors.primary
+                      }}
+                    >
+                      Gửi đánh giá
+                    </Button>
+                  </Form.Item>
+                </Form>
+              ) : (
+                <Alert
+                  type="info"
+                  message="Bạn chưa thể đánh giá sản phẩm này"
+                  description="Chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao thành công (trạng thái: Đã giao)."
+                  showIcon
+                />
+              )}
             </Card>
           )}
 

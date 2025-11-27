@@ -235,11 +235,34 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setUpdatingStatus(true);
+      
+      // Tìm order để validate trước (optional, để hiển thị message tốt hơn)
+      const order = orders.find(o => (o.orderId || o.id) === orderId);
+      if (order) {
+        const currentStatus = order.status;
+        // Validate transitions dựa trên BE logic
+        const validTransitions = {
+          'PENDING': ['PAID', 'CANCELLED'],
+          'PAID': ['SHIPPED', 'CANCELLED'],
+          'SHIPPED': ['DELIVERED', 'CANCELLED'],
+          'DELIVERED': [],
+          'CANCELLED': []
+        };
+        
+        const allowed = validTransitions[currentStatus] || [];
+        if (!allowed.includes(newStatus)) {
+          showError(`Không thể chuyển từ ${getStatusText(currentStatus)} sang ${getStatusText(newStatus)}. Chỉ có thể chuyển sang: ${allowed.map(s => getStatusText(s)).join(', ') || 'không có'}`);
+          setUpdatingStatus(false);
+          return;
+        }
+      }
+      
       await updateOrderStatus(orderId, newStatus);
       await handleReload();
       showSuccess(`Đã cập nhật trạng thái đơn hàng thành ${getStatusText(newStatus)}`);
     } catch (error) {
-      const message = error?.response?.data?.message || error?.message || 'Không thể cập nhật trạng thái đơn hàng.';
+      // Error message từ service đã được format sẵn từ BE response
+      const message = error?.message || error?.response?.data?.message || 'Không thể cập nhật trạng thái đơn hàng.';
       showError(message);
     } finally {
       setUpdatingStatus(false);
@@ -347,7 +370,10 @@ export default function AdminOrdersPage() {
       },
       width: 200,
       render: (address) => (
-        <Tooltip title={address || '---'}>
+        <Tooltip 
+          title={address || '---'}
+          overlayInnerStyle={{ color: '#000' }}
+        >
           <Text style={{ color: 'var(--pv-text-muted, #7e5c48)' }}>
             {address || '---'}
           </Text>
@@ -455,10 +481,15 @@ export default function AdminOrdersPage() {
         const paymentStatus = record.paymentInfo?.status?.toUpperCase();
         const canConfirmPayment = record.status === 'PENDING' && 
           (paymentStatus === 'PENDING' || paymentStatus === 'WAITING' || !paymentStatus);
+        const isPaid = record.status === 'PAID';
+        const isShipped = record.status === 'SHIPPED';
 
         return (
           <Space size="small">
-            <Tooltip title="Xem chi tiết">
+            <Tooltip 
+              title="Xem chi tiết"
+              overlayInnerStyle={{ color: '#000' }}
+            >
               <Button
                 type="text"
                 icon={<EyeOutlined />}
@@ -468,7 +499,10 @@ export default function AdminOrdersPage() {
             </Tooltip>
             
             {canConfirmPayment && (
-              <Tooltip title="Xác nhận thanh toán">
+              <Tooltip 
+                title="Xác nhận thanh toán"
+                overlayInnerStyle={{ color: '#000' }}
+              >
                 <Button
                   type="text"
                   icon={<CheckCircleOutlined />}
@@ -484,8 +518,53 @@ export default function AdminOrdersPage() {
               </Tooltip>
             )}
             
+            {isPaid && (
+              <Tooltip 
+                title="Bắt đầu giao hàng (PAID → SHIPPED)"
+                overlayInnerStyle={{ color: '#000' }}
+              >
+                <Button
+                  type="text"
+                  icon={<TruckOutlined />}
+                  onClick={() => {
+                    modal.confirm({
+                      title: 'Bắt đầu giao hàng',
+                      content: `Bạn có chắc muốn chuyển trạng thái đơn hàng ORD-${record.orderId || record.id} từ PAID sang SHIPPED?`,
+                      onOk: () => handleStatusUpdate(record.orderId || record.id, 'SHIPPED'),
+                    });
+                  }}
+                  style={{ color: '#722ed1' }}
+                  loading={updatingStatus}
+                />
+              </Tooltip>
+            )}
+            
+            {isShipped && (
+              <Tooltip 
+                title="Hoàn thành giao hàng (SHIPPED → DELIVERED)"
+                overlayInnerStyle={{ color: '#000' }}
+              >
+                <Button
+                  type="text"
+                  icon={<ShopOutlined />}
+                  onClick={() => {
+                    modal.confirm({
+                      title: 'Hoàn thành giao hàng',
+                      content: `Bạn có chắc muốn chuyển trạng thái đơn hàng ORD-${record.orderId || record.id} từ SHIPPED sang DELIVERED? Khách hàng sẽ có thể đánh giá sản phẩm sau khi đơn hàng được xác nhận đã giao.`,
+                      onOk: () => handleStatusUpdate(record.orderId || record.id, 'DELIVERED'),
+                    });
+                  }}
+                  style={{ color: '#52c41a' }}
+                  loading={updatingStatus}
+                />
+              </Tooltip>
+            )}
+            
             {record.status === 'PENDING' && (
-              <Tooltip title="Hủy đơn hàng">
+              <Tooltip 
+                title="Hủy đơn hàng"
+                overlayInnerStyle={{ color: '#000' }}
+              >
                 <Button
                   type="text"
                   icon={<CloseCircleOutlined />}
@@ -716,7 +795,10 @@ export default function AdminOrdersPage() {
                       key: 'productName',
                       ellipsis: true,
                       render: (productName) => (
-                        <Tooltip title={productName}>
+                        <Tooltip 
+                          title={productName}
+                          overlayInnerStyle={{ color: '#000' }}
+                        >
                           <Text strong>{productName || '---'}</Text>
                         </Tooltip>
                       ),

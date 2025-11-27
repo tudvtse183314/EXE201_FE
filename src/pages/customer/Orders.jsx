@@ -12,7 +12,7 @@ import {
   Empty,
   Select
 } from 'antd';
-import { EyeOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, FilterOutlined, StarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -44,12 +44,15 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [allOrdersData, setAllOrdersData] = useState([]);
+  const [previousOrdersMap, setPreviousOrdersMap] = useState(new Map()); // Lưu status cũ để phát hiện thay đổi
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     if (!accountId) return;
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
       const allOrders = await getOrdersByAccount(accountId);
@@ -59,6 +62,30 @@ export default function Orders() {
         const dateB = new Date(b.createdAt || 0);
         return dateB - dateA;
       });
+
+      // Phát hiện order bị cancel bởi admin
+      if (!silent && previousOrdersMap.size > 0) {
+        sortedOrders.forEach(order => {
+          const orderId = order.orderId || order.id;
+          const previousStatus = previousOrdersMap.get(orderId);
+          const currentStatus = (order.status || '').toUpperCase();
+          
+          // Nếu order chuyển từ PENDING sang CANCELLED/CANCEL
+          if (previousStatus === 'PENDING' && (currentStatus === 'CANCELLED' || currentStatus === 'CANCEL')) {
+            toast.warning(`Đơn hàng #${orderId} đã bị hủy bởi admin.`, {
+              autoClose: 5000,
+            });
+          }
+        });
+      }
+
+      // Cập nhật map status cũ
+      const newStatusMap = new Map();
+      sortedOrders.forEach(order => {
+        const orderId = order.orderId || order.id;
+        newStatusMap.set(orderId, (order.status || '').toUpperCase());
+      });
+      setPreviousOrdersMap(newStatusMap);
 
       setAllOrdersData(sortedOrders);
     } catch (err) {
@@ -73,9 +100,13 @@ export default function Orders() {
         err?.message ||
         'Không thể tải danh sách đơn hàng.';
       setError(message);
-      toast.error(message);
+      if (!silent) {
+        toast.error(message);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -87,11 +118,34 @@ export default function Orders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId]); // không cần fetchOrders trong deps
 
+  // Auto-refresh mỗi 30 giây khi component đang mount
+  useEffect(() => {
+    if (!accountId) return;
+
+    const intervalId = setInterval(() => {
+      // Silent refresh - không hiển thị loading spinner
+      fetchOrders(true);
+    }, 30000); // 30 giây
+
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId]);
+
   // Filter + paginate
   useEffect(() => {
     let filteredOrders = allOrdersData;
     if (statusFilter !== 'ALL') {
-      filteredOrders = allOrdersData.filter(order => order.status === statusFilter);
+      filteredOrders = allOrdersData.filter(order => {
+        const orderStatus = (order.status || "").toUpperCase();
+        const filterStatus = statusFilter.toUpperCase();
+        // Hỗ trợ cả CANCEL và CANCELLED
+        if (filterStatus === 'CANCELLED') {
+          return orderStatus === 'CANCELLED' || orderStatus === 'CANCEL';
+        }
+        return orderStatus === filterStatus;
+      });
     }
 
     const startIndex = (pagination.current - 1) * pagination.pageSize;
@@ -124,6 +178,11 @@ export default function Orders() {
   };
 
   const handleViewOrder = (orderId) => {
+    navigate(`/customer/orders/${orderId}`);
+  };
+
+  const handleReview = (orderId) => {
+    // Navigate to order detail page where user can review products
     navigate(`/customer/orders/${orderId}`);
   };
 
@@ -178,15 +237,33 @@ export default function Orders() {
     {
       title: 'Hành động',
       key: 'actions',
-      render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewOrder(record.orderId)}
-        >
-          Xem chi tiết
-        </Button>
-      ),
+      width: 250,
+      render: (_, record) => {
+        const isDelivered = record.status?.toUpperCase() === 'DELIVERED';
+        return (
+          <Space size="small" wrap>
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewOrder(record.orderId)}
+              size="small"
+            >
+              Xem chi tiết
+            </Button>
+            {isDelivered && (
+              <Button
+                type="link"
+                icon={<StarOutlined />}
+                onClick={() => handleReview(record.orderId)}
+                size="small"
+                style={{ color: 'var(--pv-primary, #eda274)' }}
+              >
+                Review
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -215,7 +292,7 @@ export default function Orders() {
               <Option value="PAID">Đã thanh toán</Option>
               <Option value="SHIPPED">Đang giao</Option>
               <Option value="DELIVERED">Đã giao</Option>
-              <Option value="CANCELLED">Đã hủy</Option>
+              <Option value="CANCELLED">Đã hủy (CANCEL/CANCELLED)</Option>
             </Select>
             <Button
               icon={<ReloadOutlined />}

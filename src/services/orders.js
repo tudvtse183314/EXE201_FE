@@ -38,15 +38,29 @@ export const createOrder = async (orderData) => {
  */
 export const getOrderById = async (orderId) => {
   try {
-    console.log("📦 Orders: Fetching order by ID", { orderId });
-    const res = await axiosInstance.get(`/orders/${orderId}`);
-    console.log("📦 Orders: Fetched order successfully", res.data);
+    console.log("📦 Orders: Fetching order by ID", { orderId, type: typeof orderId });
+    const url = `/orders/${orderId}`;
+    console.log("📦 Orders: Request URL", url);
+    
+    const res = await axiosInstance.get(url);
+    
+    console.log("📦 Orders: Fetched order successfully", {
+      orderId: res.data?.orderId,
+      status: res.data?.status,
+      hasPaymentInfo: !!res.data?.paymentInfo,
+      paymentInfo: res.data?.paymentInfo,
+      itemsCount: Array.isArray(res.data?.items) ? res.data.items.length : 0,
+      fullResponse: res.data
+    });
+    
     return res.data;
   } catch (error) {
     const status = error.response?.status;
     console.error("📦 Orders: Error fetching order by ID:", {
+      orderId,
       status,
       message: error.response?.data?.message || error.message,
+      response: error.response?.data,
       error
     });
     
@@ -321,34 +335,140 @@ export const cancelOrderLegacy = async (orderId) => {
 /**
  * Cập nhật trạng thái đơn hàng (Admin only)
  * PATCH /api/orders/{orderId}/status
+ * Request body: { "status": "SHIPPED" | "DELIVERED" }
  */
 export const updateOrderStatus = async (orderId, status) => {
   try {
-    console.log("📦 Orders: Updating order status", { orderId, status });
-    const res = await axiosInstance.patch(`/orders/${orderId}/status`, { status });
-    console.log("📦 Orders: Updated status successfully", res.data);
-    return res.data;
-  } catch (error) {
-    const status = error.response?.status;
-    console.error("📦 Orders: Error updating order status:", {
-      status,
-      message: error.response?.data?.message || error.message,
-      error
+    // Validate orderId - phải là số nguyên (integer) theo Swagger spec
+    let numericOrderId = orderId;
+    if (typeof orderId === 'string') {
+      // Nếu là string "ORD-54" hoặc "54", extract số
+      const match = orderId.match(/\d+/);
+      if (match) {
+        numericOrderId = parseInt(match[0], 10);
+      } else {
+        throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên.`);
+      }
+    } else if (typeof orderId !== 'number') {
+      throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên.`);
+    }
+    
+    // Đảm bảo là số nguyên dương
+    if (!Number.isInteger(numericOrderId) || numericOrderId <= 0) {
+      throw new Error(`Order ID không hợp lệ: ${orderId}. Phải là số nguyên dương.`);
+    }
+    
+    // Validate status
+    const validStatuses = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+    const normalizedStatus = status?.toUpperCase()?.trim();
+    
+    if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
+      throw new Error(`Trạng thái không hợp lệ: ${status}. Phải là một trong: ${validStatuses.join(', ')}`);
+    }
+    
+    const url = `/orders/${numericOrderId}/status`;
+    const requestBody = { status: normalizedStatus };
+    
+    console.log("📦 Orders: Updating order status", {
+      originalOrderId: orderId,
+      numericOrderId,
+      status: normalizedStatus,
+      url,
+      requestBody,
+      fullUrl: `${axiosInstance.defaults.baseURL || ''}${url}`
     });
     
-    if (status === 401) {
+    // Backend chỉ hỗ trợ PATCH method cho endpoint này
+    // Không dùng POST fallback vì backend không hỗ trợ
+    const res = await axiosInstance.patch(url, requestBody, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log("📦 Orders: Updated status successfully", {
+      orderId: numericOrderId,
+      responseOrderId: res.data?.orderId || res.data?.id,
+      oldStatus: status,
+      newStatus: res.data?.status,
+      fullResponse: res.data
+    });
+    
+    return res.data;
+  } catch (error) {
+    const errorStatus = error.response?.status;
+    const errorCode = error.code;
+    const responseData = error.response?.data;
+    
+    // Xử lý error message từ BE
+    let errorMessage = error.message;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
+    }
+    
+    console.error("📦 Orders: Error updating order status:", {
+      originalOrderId: orderId,
+      numericOrderId: typeof orderId === 'number' ? orderId : (orderId?.match(/\d+/)?.[0] ? parseInt(orderId.match(/\d+/)[0], 10) : orderId),
+      status,
+      errorStatus,
+      errorCode,
+      message: errorMessage,
+      response: responseData,
+      request: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        fullUrl: error.config ? `${error.config.baseURL || ''}${error.config.url || ''}` : null,
+        data: error.config?.data
+      },
+      fullError: error
+    });
+    
+    // Xử lý lỗi CORS/Network
+    if (errorCode === 'ERR_NETWORK' || error.message?.includes('CORS') || error.message?.includes('Network Error')) {
+      throw new Error("Lỗi kết nối: Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc cấu hình CORS trên backend.");
+    }
+    
+    // Xử lý lỗi 403 - có thể là CORS preflight (OPTIONS) bị reject hoặc không có quyền
+    if (errorStatus === 403) {
+      // Kiểm tra xem có phải là lỗi CORS preflight không
+      // OPTIONS request thường không có response data, chỉ có status 403
+      const isOptionsRequest = error.config?.method?.toUpperCase() === 'OPTIONS';
+      const isMethodNotSupported = errorMessage?.toLowerCase().includes('method') || 
+                                   errorMessage?.toLowerCase().includes('not supported') ||
+                                   errorMessage?.toLowerCase().includes('post') ||
+                                   errorMessage?.toLowerCase().includes('patch');
+      
+      if (isOptionsRequest || isMethodNotSupported) {
+        throw new Error("Lỗi CORS: Backend đang chặn OPTIONS preflight request. Vui lòng cập nhật Filter.java trong backend để cho phép OPTIONS request đi qua mà không cần token (thêm điều kiện: if (request.getMethod().equals(\"OPTIONS\")) { filterChain.doFilter(request, response); return; }).");
+      }
+      throw new Error("Bạn không có quyền cập nhật đơn hàng. Chỉ Admin/Staff mới có quyền này.");
+    }
+    
+    if (errorStatus === 401) {
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    if (status === 403) {
-      throw new Error("Bạn không có quyền cập nhật đơn hàng.");
-    }
-    if (status === 404) {
+    if (errorStatus === 404) {
       throw new Error("Không tìm thấy đơn hàng.");
     }
-    if (status === 400) {
-      throw new Error(error.response?.data?.message || "Không thể cập nhật trạng thái đơn hàng ở trạng thái hiện tại.");
+    if (errorStatus === 400) {
+      // BE trả về 400 với message về transition không hợp lệ
+      // Ví dụ: "Cannot transition from PAID to PENDING. Valid transitions: SHIPPED, CANCELLED"
+      throw new Error(errorMessage || "Không thể cập nhật trạng thái đơn hàng. Vui lòng kiểm tra trạng thái hiện tại của đơn hàng.");
     }
-    throw error;
+    
+    // Xử lý lỗi 500 hoặc các lỗi khác từ BE
+    if (errorStatus === 500) {
+      throw new Error(errorMessage || "Lỗi server khi cập nhật trạng thái đơn hàng. Vui lòng thử lại sau.");
+    }
+    
+    throw new Error(errorMessage || "Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.");
   }
 };
 
@@ -580,7 +700,8 @@ export const getStatusColor = (status) => {
     PAID: 'blue',
     SHIPPED: 'purple',
     DELIVERED: 'green',
-    CANCELLED: 'red'
+    CANCELLED: 'red',
+    CANCEL: 'red' // Hỗ trợ cả CANCEL và CANCELLED
   };
   return colors[normalized] || 'default';
 };
@@ -593,7 +714,8 @@ export const getStatusText = (status) => {
     PAID: 'Đã thanh toán',
     SHIPPED: 'Đang giao',
     DELIVERED: 'Đã giao',
-    CANCELLED: 'Đã hủy'
+    CANCELLED: 'Đã hủy',
+    CANCEL: 'Đã hủy' // Hỗ trợ cả CANCEL và CANCELLED
   };
   return texts[normalized] || status;
 };
