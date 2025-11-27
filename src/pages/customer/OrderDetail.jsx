@@ -51,7 +51,7 @@ const formatCurrency = (value) => {
 };
 
 export default function OrderDetail() {
-  const { orderId } = useParams();
+  const { id: orderId } = useParams(); // Route dùng :id nên cần extract id
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showSuccess, showError, showWarning } = useToast();
