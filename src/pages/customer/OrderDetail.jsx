@@ -26,7 +26,8 @@ import {
   CheckOutlined,
   CloseCircleOutlined,
   CheckCircleOutlined,
-  StarOutlined
+  StarOutlined,
+  EditOutlined
 } from '@ant-design/icons';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
@@ -41,9 +42,10 @@ import {
   getPaymentStatusText,
   ORDER_STATUS_FLOW
 } from '../../services/orders';
-import { createReview, getReviewsByUserId } from '../../services/reviews';
+import { createReview, getReviewsByUserId, updateReview } from '../../services/reviews';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const formatCurrency = (value) => {
   if (typeof value !== 'number') return '--';
@@ -64,10 +66,10 @@ export default function OrderDetail() {
   const [cancelling, setCancelling] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedProductForReview, setSelectedProductForReview] = useState(null);
+  const [editingReview, setEditingReview] = useState(null); // Review đang được edit
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewForm] = Form.useForm();
   const [userReviews, setUserReviews] = useState([]); // Lưu danh sách review của user
-  const [loadingReviews, setLoadingReviews] = useState(false);
   const previousStatusRef = useRef(null); // Lưu status cũ để phát hiện thay đổi
 
   const loadOrder = useCallback(async (silent = false) => {
@@ -143,15 +145,12 @@ export default function OrderDetail() {
     if (!user?.id && !user?.userId) return;
     
     try {
-      setLoadingReviews(true);
       const userId = user.id || user.userId;
       const reviews = await getReviewsByUserId(userId);
       setUserReviews(reviews || []);
     } catch (err) {
       console.error('⭐ OrderDetail: Error loading user reviews', err);
       setUserReviews([]);
-    } finally {
-      setLoadingReviews(false);
     }
   }, [user]);
 
@@ -280,24 +279,33 @@ export default function OrderDetail() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
+      <div style={{ 
+        padding: '60px 20px', 
+        textAlign: 'center',
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
         <Spin size="large" />
-        <div style={{ marginTop: 16 }}>Đang tải thông tin đơn hàng...</div>
+        <div style={{ marginTop: 16, fontSize: '16px' }}>Đang tải thông tin đơn hàng...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px' }}>
+      <div style={{ 
+        padding: '40px 20px',
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
         <Alert
           message="Không thể tải đơn hàng"
           description={error}
           type="error"
           showIcon
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, fontSize: '15px' }}
         />
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')} size="large">
           Quay lại danh sách đơn hàng
         </Button>
       </div>
@@ -306,14 +314,18 @@ export default function OrderDetail() {
 
   if (!order) {
     return (
-      <div style={{ padding: '20px' }}>
+      <div style={{ 
+        padding: '40px 20px',
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
         <Alert
           message="Không tìm thấy đơn hàng"
           type="warning"
           showIcon
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, fontSize: '15px' }}
         />
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')} size="large">
           Quay lại danh sách đơn hàng
         </Button>
       </div>
@@ -323,27 +335,53 @@ export default function OrderDetail() {
   const qrUrl = paymentInfo.qrCodeUrl || order.qrCodeUrl || '';
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ 
+      padding: '32px 20px',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      minHeight: '100vh'
+    }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          justifyContent: 'space-between', 
+          gap: 16, 
+          alignItems: 'center',
+          marginBottom: '8px'
+        }}>
           <Space size="middle" wrap>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customer/orders')}>
+            <Button 
+              icon={<ArrowLeftOutlined />} 
+              onClick={() => navigate('/customer/orders')}
+              size="large"
+            >
               Quay lại
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={loadOrder}>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={loadOrder}
+              size="large"
+            >
               Làm mới
             </Button>
           </Space>
-          <Space direction="vertical" size={4}>
-            <Title level={3} style={{ margin: 0 }}>
-              Đơn hàng {order.orderId}
+          <Space direction="vertical" size={8} style={{ textAlign: 'right' }}>
+            <Title level={2} style={{ margin: 0, fontSize: '28px', fontWeight: 600 }}>
+              Đơn hàng {order.orderCode || order.orderId || order.id}
             </Title>
             <Space size="small" wrap>
-              <Tag color={getStatusColor(order.status)}>{getStatusText(order.status)}</Tag>
+              <Tag color={getStatusColor(order.status)} style={{ fontSize: '14px', padding: '4px 12px' }}>
+                {getStatusText(order.status)}
+              </Tag>
               {paymentInfo?.status && (
-                <Tag color={getPaymentStatusColor(paymentInfo.status)}>{getPaymentStatusText(paymentInfo.status)}</Tag>
+                <Tag color={getPaymentStatusColor(paymentInfo.status)} style={{ fontSize: '14px', padding: '4px 12px' }}>
+                  {getPaymentStatusText(paymentInfo.status)}
+                </Tag>
               )}
-              <Tag color="blue">Tổng tiền: {formatCurrency(order.totalAmount)}</Tag>
+              <Tag color="blue" style={{ fontSize: '14px', padding: '4px 12px', fontWeight: 500 }}>
+                Tổng tiền: {formatCurrency(order.totalAmount)}
+              </Tag>
             </Space>
           </Space>
         </div>
@@ -354,14 +392,17 @@ export default function OrderDetail() {
             showIcon
             message="Đơn hàng đã bị hủy"
             description="Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ đội ngũ chăm sóc khách hàng."
+            style={{ fontSize: '15px' }}
           />
         ) : (
-          <Card title="Tiến trình đơn hàng">
+          <Card 
+            title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Tiến trình đơn hàng</span>}
+            style={{ borderRadius: '12px' }}
+          >
             <Steps
-              size="small"
               current={currentStep}
               items={ORDER_STATUS_FLOW.map((status) => ({
-                title: getStatusText(status),
+                title: <span style={{ fontSize: '15px' }}>{getStatusText(status)}</span>,
                 status: order.status?.toUpperCase() === status
                   ? 'process'
                   : ORDER_STATUS_FLOW.indexOf(status) < ORDER_STATUS_FLOW.indexOf(order.status?.toUpperCase() || '')
@@ -375,7 +416,8 @@ export default function OrderDetail() {
         <Row gutter={[24, 24]}>
           <Col xs={24} lg={12}>
             <Card
-              title="Thông tin thanh toán"
+              title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Thông tin thanh toán</span>}
+              style={{ borderRadius: '12px' }}
               extra={
                 !isPaid && (
                   <Space>
@@ -413,18 +455,28 @@ export default function OrderDetail() {
                     icon={<CheckCircleOutlined />}
                   />
                   <div>
-                    <Title level={5}>Thông tin thanh toán</Title>
-                    <Space direction="vertical" size={4}>
-                      <Text><Text strong>Tổng tiền đã thanh toán:</Text> {formatCurrency(order.totalAmount)}</Text>
-                      <Text><Text strong>Trạng thái:</Text> <Tag color="green">Đã thanh toán</Tag></Text>
+                    <Title level={5} style={{ fontSize: '16px', marginBottom: '12px' }}>Thông tin thanh toán</Title>
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Tổng tiền đã thanh toán:</Text> {formatCurrency(order.totalAmount)}
+                      </Text>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Trạng thái:</Text> <Tag color="green" style={{ fontSize: '14px' }}>Đã thanh toán</Tag>
+                      </Text>
                       {paymentInfo.bankId && (
-                        <Text><Text strong>Ngân hàng:</Text> {paymentInfo.bankId}</Text>
+                        <Text style={{ fontSize: '15px' }}>
+                          <Text strong style={{ fontSize: '15px' }}>Ngân hàng:</Text> {paymentInfo.bankId}
+                        </Text>
                       )}
                       {paymentInfo.accountNo && (
-                        <Text><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo}</Text>
+                        <Text style={{ fontSize: '15px' }}>
+                          <Text strong style={{ fontSize: '15px' }}>Số tài khoản:</Text> {paymentInfo.accountNo}
+                        </Text>
                       )}
                       {paymentInfo.description && (
-                        <Text><Text strong>Nội dung:</Text> {paymentInfo.description}</Text>
+                        <Text style={{ fontSize: '15px' }}>
+                          <Text strong style={{ fontSize: '15px' }}>Nội dung:</Text> {paymentInfo.description}
+                        </Text>
                       )}
                     </Space>
                   </div>
@@ -450,15 +502,25 @@ export default function OrderDetail() {
                   </div>
 
                   <div>
-                    <Title level={5}>Chi tiết chuyển khoản</Title>
-                    <Space direction="vertical" size={4}>
-                      <Text><Text strong>Ngân hàng:</Text> {paymentInfo.bankId || '---'}</Text>
-                      <Text><Text strong>Số tài khoản:</Text> {paymentInfo.accountNo || '---'}</Text>
-                      <Text><Text strong>Tên tài khoản:</Text> {paymentInfo.accountName || '---'}</Text>
-                      <Text><Text strong>Số tiền:</Text> {formatCurrency(paymentInfo.amount ?? order.totalAmount)}</Text>
-                      <Text><Text strong>Nội dung:</Text> {paymentInfo.description || `Thanh toan don hang ${order.orderId}`}</Text>
+                    <Title level={5} style={{ fontSize: '16px', marginBottom: '12px' }}>Chi tiết chuyển khoản</Title>
+                    <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Ngân hàng:</Text> {paymentInfo.bankId || '---'}
+                      </Text>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Số tài khoản:</Text> {paymentInfo.accountNo || '---'}
+                      </Text>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Tên tài khoản:</Text> {paymentInfo.accountName || '---'}
+                      </Text>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Số tiền:</Text> {formatCurrency(paymentInfo.amount ?? order.totalAmount)}
+                      </Text>
+                      <Text style={{ fontSize: '15px' }}>
+                        <Text strong style={{ fontSize: '15px' }}>Nội dung:</Text> {paymentInfo.description || `Thanh toan don hang ${order.orderId}`}
+                      </Text>
                       {paymentInfo.message && (
-                        <Text type="secondary">{paymentInfo.message}</Text>
+                        <Text type="secondary" style={{ fontSize: '14px' }}>{paymentInfo.message}</Text>
                       )}
                     </Space>
                   </div>
@@ -468,28 +530,46 @@ export default function OrderDetail() {
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Thông tin giao hàng" extra={<Tag color="geekblue">📞 {order.phoneContact}</Tag>}>
-              <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                <Text><Text strong>Địa chỉ:</Text> {order.shippingAddress}</Text>
-                {order.note && <Text><Text strong>Ghi chú:</Text> {order.note}</Text>}
-                <Divider style={{ margin: '12px 0' }} />
-                <Text type="secondary">Tạo lúc: {order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '--'}</Text>
-                <Text type="secondary">Cập nhật: {order.updatedAt ? new Date(order.updatedAt).toLocaleString('vi-VN') : '--'}</Text>
+            <Card 
+              title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Thông tin giao hàng</span>}
+              extra={<Tag color="geekblue" style={{ fontSize: '14px', padding: '4px 12px' }}>📞 {order.phoneContact}</Tag>}
+              style={{ borderRadius: '12px' }}
+            >
+              <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                <Text style={{ fontSize: '15px' }}>
+                  <Text strong style={{ fontSize: '15px' }}>Địa chỉ:</Text> {order.shippingAddress}
+                </Text>
+                {order.note && (
+                  <Text style={{ fontSize: '15px' }}>
+                    <Text strong style={{ fontSize: '15px' }}>Ghi chú:</Text> {order.note}
+                  </Text>
+                )}
+                <Divider style={{ margin: '16px 0' }} />
+                <Text type="secondary" style={{ fontSize: '14px' }}>
+                  Tạo lúc: {order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '--'}
+                </Text>
+                <Text type="secondary" style={{ fontSize: '14px' }}>
+                  Cập nhật: {order.updatedAt ? new Date(order.updatedAt).toLocaleString('vi-VN') : '--'}
+                </Text>
               </Space>
             </Card>
           </Col>
         </Row>
 
-        <Card title="Sản phẩm trong đơn">
+        <Card 
+          title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Sản phẩm trong đơn</span>}
+          style={{ borderRadius: '12px' }}
+        >
           {order.items && order.items.length > 0 ? (
             <List
               dataSource={order.items}
               renderItem={(item) => {
                 const productId = item.productId || item.product?.id;
-                // Kiểm tra xem sản phẩm đã được review chưa
-                const hasReviewed = userReviews.some(
-                  review => review.productId === productId && !review.isDeleted
+                // Tìm review của sản phẩm này
+                const productReview = userReviews.find(
+                  review => review.productId === productId && !review.deleted
                 );
+                const hasReviewed = !!productReview;
                 
                 return (
                   <List.Item
@@ -497,9 +577,23 @@ export default function OrderDetail() {
                       isDelivered
                         ? hasReviewed
                           ? [
-                              <Tag key="reviewed" color="green" icon={<CheckCircleOutlined />}>
-                                Đã đánh giá
-                              </Tag>
+                              <Button
+                                key="edit"
+                                type="link"
+                                icon={<EditOutlined />}
+                                onClick={() => {
+                                  setSelectedProductForReview(item);
+                                  setEditingReview(productReview);
+                                  setReviewModalVisible(true);
+                                  reviewForm.setFieldsValue({
+                                    rating: productReview.rating,
+                                    comment: productReview.comment || ''
+                                  });
+                                }}
+                                style={{ color: 'var(--pv-primary, #eda274)' }}
+                              >
+                                Chỉnh sửa
+                              </Button>
                             ]
                           : [
                               <Button
@@ -508,6 +602,7 @@ export default function OrderDetail() {
                                 icon={<StarOutlined />}
                                 onClick={() => {
                                   setSelectedProductForReview(item);
+                                  setEditingReview(null);
                                   setReviewModalVisible(true);
                                   reviewForm.resetFields();
                                 }}
@@ -518,22 +613,78 @@ export default function OrderDetail() {
                             ]
                         : []
                     }
-                >
-                  <List.Item.Meta
+                  >
+                    <List.Item.Meta
                     title={
                       <Space size={12} wrap>
-                        <Text strong>{item.productName || item.product?.name || `Sản phẩm ${item.productId}`}</Text>
-                        <Tag>SL: {item.quantity}</Tag>
+                        <Text strong style={{ fontSize: '16px' }}>
+                          {item.productName || item.product?.name || `Sản phẩm ${item.productId}`}
+                        </Text>
+                        <Tag style={{ fontSize: '14px', padding: '4px 12px' }}>SL: {item.quantity}</Tag>
                       </Space>
                     }
                     description={
-                      <Space direction="vertical" size={0}>
-                        <Text>Đơn giá: {formatCurrency(item.price || item.product?.price)}</Text>
-                        <Text type="secondary">Thành tiền: {formatCurrency((item.price || item.product?.price || 0) * (item.quantity || 0))}</Text>
-                      </Space>
-                    }
-                  />
-                </List.Item>
+                      <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                        <Space direction="vertical" size={4}>
+                          <Text style={{ fontSize: '15px' }}>
+                            Đơn giá: {formatCurrency(item.price || item.product?.price)}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: '15px', fontWeight: 500 }}>
+                            Thành tiền: {formatCurrency((item.price || item.product?.price || 0) * (item.quantity || 0))}
+                          </Text>
+                        </Space>
+                          {/* Hiển thị review nếu đã có */}
+                          {hasReviewed && productReview && (
+                            <Card 
+                              size="small" 
+                              style={{ 
+                                marginTop: 12, 
+                                background: '#f9f9f9',
+                                border: '1px solid #e8e8e8',
+                                borderRadius: '8px'
+                              }}
+                            >
+                              <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                                <Space wrap>
+                                  <Text strong style={{ fontSize: '14px' }}>Đánh giá của bạn:</Text>
+                                  <Rate 
+                                    disabled 
+                                    value={productReview.rating} 
+                                    style={{ fontSize: '16px' }}
+                                  />
+                                  <Tag color="green" icon={<CheckCircleOutlined />} style={{ fontSize: '13px', padding: '2px 8px' }}>
+                                    Đã đánh giá
+                                  </Tag>
+                                </Space>
+                                {productReview.comment && (
+                                  <Text 
+                                    style={{ 
+                                      fontSize: '14px', 
+                                      color: '#666',
+                                      fontStyle: 'italic',
+                                      display: 'block',
+                                      marginTop: 4,
+                                      lineHeight: '1.6'
+                                    }}
+                                  >
+                                    "{productReview.comment}"
+                                  </Text>
+                                )}
+                                {productReview.createdAt && (
+                                  <Text 
+                                    type="secondary" 
+                                    style={{ fontSize: '12px' }}
+                                  >
+                                    {new Date(productReview.createdAt).toLocaleString('vi-VN')}
+                                  </Text>
+                                )}
+                              </Space>
+                            </Card>
+                          )}
+                        </Space>
+                      }
+                    />
+                  </List.Item>
                 );
               }}
             />
@@ -549,26 +700,37 @@ export default function OrderDetail() {
               icon={<CloseCircleOutlined />}
               onClick={handleCancelOrder}
               loading={cancelling}
+              size="large"
+              style={{ fontSize: '15px' }}
             >
               Hủy đơn hàng
             </Button>
           )}
           {!canConfirmPayment && (
-            <Tag color="green" icon={<CheckCircleOutlined />}>Đơn hàng đã thanh toán</Tag>
+            <Tag color="green" icon={<CheckCircleOutlined />} style={{ fontSize: '14px', padding: '4px 12px' }}>
+              Đơn hàng đã thanh toán
+            </Tag>
           )}
           {isDelivered && (
-            <Tag color="blue" icon={<StarOutlined />}>Đơn hàng đã giao - Bạn có thể đánh giá sản phẩm</Tag>
+            <Tag color="blue" icon={<StarOutlined />} style={{ fontSize: '14px', padding: '4px 12px' }}>
+              Đơn hàng đã giao - Bạn có thể đánh giá sản phẩm
+            </Tag>
           )}
         </Space>
       </Space>
 
       {/* Review Modal */}
       <Modal
-        title={`Đánh giá sản phẩm: ${selectedProductForReview?.productName || selectedProductForReview?.product?.name || 'Sản phẩm'}`}
+        title={
+          editingReview 
+            ? `Chỉnh sửa đánh giá: ${selectedProductForReview?.productName || selectedProductForReview?.product?.name || 'Sản phẩm'}`
+            : `Đánh giá sản phẩm: ${selectedProductForReview?.productName || selectedProductForReview?.product?.name || 'Sản phẩm'}`
+        }
         open={reviewModalVisible}
         onCancel={() => {
           setReviewModalVisible(false);
           setSelectedProductForReview(null);
+          setEditingReview(null);
           reviewForm.resetFields();
         }}
         footer={null}
@@ -582,23 +744,43 @@ export default function OrderDetail() {
 
             try {
               setSubmittingReview(true);
-              const reviewData = {
-                productId: selectedProductForReview.productId || selectedProductForReview.product?.id,
-                rating: values.rating,
-                comment: values.comment,
-                userId: user.id || user.userId
-              };
+              const productId = selectedProductForReview.productId || selectedProductForReview.product?.id;
               
-              await createReview(reviewData);
-              showSuccess('Đánh giá của bạn đã được gửi thành công!');
+              if (editingReview) {
+                // Update existing review - gửi đầy đủ thông tin để backend validate quyền
+                const updateData = {
+                  rating: values.rating,
+                  comment: values.comment,
+                  productId: editingReview.productId || productId,
+                  userId: editingReview.userId || user.id || user.userId,
+                  isVerifiedPurchase: editingReview.isVerifiedPurchase !== undefined 
+                    ? editingReview.isVerifiedPurchase 
+                    : true
+                };
+                await updateReview(editingReview.id, updateData);
+                showSuccess('Đã cập nhật đánh giá thành công!');
+              } else {
+                // Create new review
+                const reviewData = {
+                  productId: productId,
+                  rating: values.rating,
+                  comment: values.comment,
+                  userId: user.id || user.userId
+                };
+                await createReview(reviewData);
+                showSuccess('Đánh giá của bạn đã được gửi thành công!');
+              }
+              
               setReviewModalVisible(false);
               setSelectedProductForReview(null);
+              setEditingReview(null);
               reviewForm.resetFields();
               // Reload reviews để cập nhật UI
               await loadUserReviews();
             } catch (err) {
               console.error('⭐ OrderDetail: Error submitting review', err);
-              const message = err?.response?.data?.message || err?.message || 'Không thể gửi đánh giá.';
+              const message = err?.response?.data?.message || err?.message || 
+                (editingReview ? 'Không thể cập nhật đánh giá.' : 'Không thể gửi đánh giá.');
               showError(message);
             } finally {
               setSubmittingReview(false);
@@ -617,13 +799,14 @@ export default function OrderDetail() {
             label="Nhận xét"
             rules={[
               { required: true, message: 'Vui lòng nhập nhận xét' },
-              { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' }
+              { min: 10, message: 'Nhận xét phải có ít nhất 10 ký tự' },
+              { max: 1000, message: 'Nhận xét không được quá 1000 ký tự' }
             ]}
           >
-            <Input.TextArea
+            <TextArea
               rows={4}
               placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
-              maxLength={500}
+              maxLength={1000}
               showCount
             />
           </Form.Item>
@@ -633,14 +816,15 @@ export default function OrderDetail() {
                 type="primary"
                 htmlType="submit"
                 loading={submittingReview}
-                icon={<StarOutlined />}
+                icon={editingReview ? <EditOutlined /> : <StarOutlined />}
               >
-                Gửi đánh giá
+                {editingReview ? 'Cập nhật đánh giá' : 'Gửi đánh giá'}
               </Button>
               <Button
                 onClick={() => {
                   setReviewModalVisible(false);
                   setSelectedProductForReview(null);
+                  setEditingReview(null);
                   reviewForm.resetFields();
                 }}
               >
