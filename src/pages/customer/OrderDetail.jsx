@@ -197,6 +197,15 @@ export default function OrderDetail() {
   }, [orderId]);
 
   const paymentInfo = order?.paymentInfo || {};
+  const qrUrl = paymentInfo?.qrCodeUrl || paymentInfo?.qrData || order?.qrCodeUrl || '';
+
+  // Tự động load QR code khi order PENDING và chưa có QR
+  useEffect(() => {
+    if (order && order.status?.toUpperCase() === 'PENDING' && !qrUrl && !refreshingQR && !loading) {
+      handleRefreshQR();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.status, qrUrl, loading]);
 
   const currentStep = useMemo(() => {
     if (!order?.status) return 0;
@@ -257,12 +266,14 @@ export default function OrderDetail() {
   };
 
   const handleRefreshQR = async () => {
-    if (!order?.orderId) return;
+    if (!order?.id && !order?.orderId) return;
     try {
       setRefreshingQR(true);
-      const response = await getPaymentQR(order.orderId);
+      // Sử dụng order.id (numeric) cho API call
+      const orderIdForAPI = order.id || order.orderId;
+      const response = await getPaymentQR(orderIdForAPI);
       const qrPayload = response?.paymentInfo || response;
-      if (!qrPayload?.qrCodeUrl) {
+      if (!qrPayload?.qrCodeUrl && !qrPayload?.qrData) {
         throw new Error('Không thể lấy lại mã QR.');
       }
       setOrder((prev) => ({
@@ -342,8 +353,6 @@ export default function OrderDetail() {
       </ProfileLayout>
     );
   }
-
-  const qrUrl = paymentInfo.qrCodeUrl || order.qrCodeUrl || '';
 
   return (
     <ProfileLayout activeKey={returnTab}>
@@ -445,14 +454,16 @@ export default function OrderDetail() {
                         </Button>
                       </Tooltip>
                     )}
-                    <Button
-                      icon={<ReloadOutlined />}
-                      onClick={handleRefreshQR}
-                      loading={refreshingQR}
-                      disabled={!qrUrl}
-                    >
-                      Lấy lại mã QR
-                    </Button>
+                    {orderStatus === 'PENDING' && (
+                      <Button
+                        icon={<ReloadOutlined />}
+                        onClick={handleRefreshQR}
+                        loading={refreshingQR}
+                        disabled={refreshingQR}
+                      >
+                        Lấy lại mã QR
+                      </Button>
+                    )}
                   </Space>
                 )
               }
@@ -543,35 +554,9 @@ export default function OrderDetail() {
 
           <Col xs={24} lg={12}>
             <Card 
-              title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Thông tin giao hàng</span>}
-              extra={<Tag color="geekblue" style={{ fontSize: '14px', padding: '4px 12px' }}>📞 {order.phoneContact}</Tag>}
+              title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Sản phẩm trong đơn</span>}
               style={{ borderRadius: '12px' }}
             >
-              <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                <Text style={{ fontSize: '15px' }}>
-                  <Text strong style={{ fontSize: '15px' }}>Địa chỉ:</Text> {order.shippingAddress}
-                </Text>
-                {order.note && (
-                  <Text style={{ fontSize: '15px' }}>
-                    <Text strong style={{ fontSize: '15px' }}>Ghi chú:</Text> {order.note}
-                  </Text>
-                )}
-                <Divider style={{ margin: '16px 0' }} />
-                <Text type="secondary" style={{ fontSize: '14px' }}>
-                  Tạo lúc: {order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '--'}
-                </Text>
-                <Text type="secondary" style={{ fontSize: '14px' }}>
-                  Cập nhật: {order.updatedAt ? new Date(order.updatedAt).toLocaleString('vi-VN') : '--'}
-                </Text>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-
-        <Card 
-          title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Sản phẩm trong đơn</span>}
-          style={{ borderRadius: '12px' }}
-        >
           {order.items && order.items.length > 0 ? (
             <List
               dataSource={order.items}
@@ -703,6 +688,32 @@ export default function OrderDetail() {
           ) : (
             <Alert type="info" message="Đơn hàng không có sản phẩm." showIcon />
           )}
+            </Card>
+          </Col>
+        </Row>
+
+        <Card 
+          title={<span style={{ fontSize: '18px', fontWeight: 600 }}>Thông tin giao hàng</span>}
+          extra={<Tag color="geekblue" style={{ fontSize: '14px', padding: '4px 12px' }}>📞 {order.phoneContact}</Tag>}
+          style={{ borderRadius: '12px', marginTop: '24px' }}
+        >
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <Text style={{ fontSize: '15px' }}>
+              <Text strong style={{ fontSize: '15px' }}>Địa chỉ:</Text> {order.shippingAddress}
+            </Text>
+            {order.note && (
+              <Text style={{ fontSize: '15px' }}>
+                <Text strong style={{ fontSize: '15px' }}>Ghi chú:</Text> {order.note}
+              </Text>
+            )}
+            <Divider style={{ margin: '16px 0' }} />
+            <Text type="secondary" style={{ fontSize: '14px' }}>
+              Tạo lúc: {order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '--'}
+            </Text>
+            <Text type="secondary" style={{ fontSize: '14px' }}>
+              Cập nhật: {order.updatedAt ? new Date(order.updatedAt).toLocaleString('vi-VN') : '--'}
+            </Text>
+          </Space>
         </Card>
 
         <Space size="middle" wrap>
